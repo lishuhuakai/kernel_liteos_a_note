@@ -44,30 +44,34 @@
 /**
  * @brief 
  * @verbatim
-鸿蒙的/proc目录是一种文件系统，即proc文件系统。与其它常见的文件系统不同的是，/proc是一种伪文件系统（也即虚拟文件系统），
-存储的是当前内核运行状态的一系列特殊文件，用户可以通过这些文件查看有关系统硬件及当前正在运行进程的信息，
-甚至可以通过更改其中某些文件来改变内核的运行状态。
+ * 鸿蒙的/proc目录是一种文件系统，即proc文件系统。与其它常见的文件系统不同的是，/proc是一种伪文件系统（也即虚拟文件系统），
+ * 存储的是当前内核运行状态的一系列特殊文件，用户可以通过这些文件查看有关系统硬件及当前正在运行进程的信息，
+ * 甚至可以通过更改其中某些文件来改变内核的运行状态。
 
-基于/proc文件系统如上所述的特殊性，其内的文件也常被称作虚拟文件，并具有一些独特的特点。
-例如，其中有些文件虽然使用查看命令查看时会返回大量信息，但文件本身的大小却会显示为0字节。
-此外，这些特殊文件中大多数文件的时间及日期属性通常为当前系统时间和日期，这跟它们随时会被刷新（存储于RAM中）有关。
+ * 基于/proc文件系统如上所述的特殊性，其内的文件也常被称作虚拟文件，并具有一些独特的特点。
+ * 例如，其中有些文件虽然使用查看命令查看时会返回大量信息，但文件本身的大小却会显示为0字节。
+ * 此外，这些特殊文件中大多数文件的时间及日期属性通常为当前系统时间和日期，这跟它们随时会被刷新（存储于RAM中）有关。
 
-为了查看及使用上的方便，这些文件通常会按照相关性进行分类存储于不同的目录甚至子目录中，
-如/proc/mounts 目录中存储的就是当前系统上所有装载点的相关信息，
+ * 为了查看及使用上的方便，这些文件通常会按照相关性进行分类存储于不同的目录甚至子目录中，
+ * 如/proc/mounts 目录中存储的就是当前系统上所有装载点的相关信息，
 
-大多数虚拟文件可以使用文件查看命令如cat、more或者less进行查看，有些文件信息表述的内容可以一目了然，
+ * 大多数虚拟文件可以使用文件查看命令如cat、more或者less进行查看，有些文件信息表述的内容可以一目了然，
  * @endverbatim
  */
 #ifdef LOSCFG_FS_PROC
 static struct VnodeOps g_procfsVops; /// proc 文件系统
 static struct file_operations_vfs g_procfsFops;
 
-/// 通过节点获取私有内存对象,注意要充分理解 node->data 的作用,那是个可以通天的神奇变量. 
+/*!
+ * 通过节点获取私有内存对象,注意要充分理解 node->data 的作用,那是个可以通天的神奇变量. 
+ */
 struct ProcDirEntry *VnodeToEntry(struct Vnode *node)
 {
     return (struct ProcDirEntry *)(node->data);
 }
-/// 创建节点,通过实体对象转成vnode节点,如此达到统一管理的目的.
+/*!
+ * 创建节点,通过实体对象转成vnode节点,如此达到统一管理的目的.
+ */
 static struct Vnode *EntryToVnode(struct ProcDirEntry *entry)
 {
     struct Vnode *node = NULL;
@@ -81,7 +85,9 @@ static struct Vnode *EntryToVnode(struct ProcDirEntry *entry)
     node->mode = entry->mode;//读/写/执行模式
     return node;
 }
-///实体匹配,通过名称匹配
+/*!
+ * 实体匹配,通过名称匹配
+ */
 static int EntryMatch(const char *name, int len, const struct ProcDirEntry *pn)
 {
     if (len != pn->nameLen) {
@@ -94,7 +100,9 @@ int VfsProcfsTruncate(struct Vnode *pVnode, off_t len)
 {
     return 0;
 }
-///创建vnode节点,并绑定私有内容项
+/*!
+ * 创建vnode节点,并绑定私有内容项
+ */
 int VfsProcfsCreate(struct Vnode* parent, const char *name, int mode, struct Vnode **vnode)
 {
     int ret;
@@ -177,6 +185,9 @@ int VfsProcfsWrite(struct file *filep, const char *buffer, size_t buflen)
     return size;
 }
 
+/*!
+ * 查找Vnode
+ */
 int VfsProcfsLookup(struct Vnode *parent, const char *name, int len, struct Vnode **vpp)
 {
     if (parent == NULL || name == NULL || len <= 0 || vpp == NULL) {
@@ -194,7 +205,7 @@ int VfsProcfsLookup(struct Vnode *parent, const char *name, int len, struct Vnod
         if (EntryMatch(name, len, entry)) {
             break;
         }
-        entry = entry->next;
+        entry = entry->next; // 不断遍历子目录项
     }
 
     *vpp = EntryToVnode(entry);
@@ -205,23 +216,25 @@ int VfsProcfsLookup(struct Vnode *parent, const char *name, int len, struct Vnod
     (*vpp)->parent = parent;
     return LOS_OK;
 }
-///挂s载实现,找个vnode节点挂上去 
+/*!
+ * 挂载实现,找个vnode节点挂上去 
+ */
 int VfsProcfsMount(struct Mount *mnt, struct Vnode *device, const void *data)
 {
     struct Vnode *vp = NULL;
     int ret;
 
     spin_lock_init(&procfsLock);
-    procfsInit = true;		//已初始化 /proc 模块
+    procfsInit = true;	//已初始化 /proc 模块
 
-    ret = VnodeAlloc(&g_procfsVops, &vp);//分配一个节点
+    ret = VnodeAlloc(&g_procfsVops, &vp);//分配一个Vnode节点,驱动为g_procfsVops
     if (ret != 0) {
         return -ENOMEM;
     }
 
     struct ProcDirEntry *root = GetProcRootEntry();
     vp->data = root;
-    vp->originMount = mnt;//绑定mount
+    vp->originMount = mnt; //绑定mount
     vp->fop = &g_procfsFops;//指定文件系统
     mnt->data = NULL;
     mnt->vnodeCovered = vp;
@@ -282,6 +295,9 @@ int VfsProcfsMkdir(struct Vnode *parent, const char *dirName, mode_t mode, struc
     return ret;
 }
 
+/*!
+ * 移除目录项
+ */
 int VfsProcfsRmdir(struct Vnode *parent, struct Vnode *vnode, const char *dirName)
 {
     if (parent == NULL) {
@@ -294,7 +310,7 @@ int VfsProcfsRmdir(struct Vnode *parent, struct Vnode *vnode, const char *dirNam
     }
 
     struct ProcDirEntry *dirEntry = VnodeToEntry(vnode);
-    int ret = parentEntry->procDirOps->rmdir(parentEntry, dirEntry, dirName);
+    int ret = parentEntry->procDirOps->rmdir(parentEntry, dirEntry, dirName); // 调用rmdir回调
     if (ret < 0) {
         return ret;
     }
@@ -356,7 +372,9 @@ int VfsProcfsReaddir(struct Vnode *node, struct fs_dirent_s *dir)
     VnodeDrop();
     return i;
 }
-///proc 打开目录
+/*!
+ * proc 打开目录
+ */
 int VfsProcfsOpendir(struct Vnode *node,  struct fs_dirent_s *dir)
 {
     VnodeHold();
@@ -375,7 +393,9 @@ int VfsProcfsOpendir(struct Vnode *node,  struct fs_dirent_s *dir)
     VnodeDrop();
     return LOS_OK;
 }
-///proc 打开文件
+/*!
+ * proc 打开文件
+ */
 int VfsProcfsOpen(struct file *filep)
 {
     if (filep == NULL) {
@@ -428,7 +448,9 @@ int VfsProcfsClose(struct file *filep)
     VnodeDrop();
     return result;
 }
-///统计信息接口,简单实现
+/*!
+ * 统计信息接口,简单实现
+ */
 int VfsProcfsStatfs(struct Mount *mnt, struct statfs *buf)
 {
     (void)memset_s(buf, sizeof(struct statfs), 0, sizeof(struct statfs));
@@ -459,13 +481,17 @@ ssize_t VfsProcfsReadlink(struct Vnode *vnode, char *buffer, size_t bufLen)
     }
     return result;
 }
-/// proc 对 MountOps 接口实现
+/*!
+ * proc 对 MountOps 接口实现
+ */
 const struct MountOps procfs_operations = {
     .Mount = VfsProcfsMount,//装载
     .Unmount = NULL,
     .Statfs = VfsProcfsStatfs,//统计信息
 };
-// proc 对 VnodeOps 接口实现,暂没有实现创建节点的功能.
+/*!
+ * proc 对 VnodeOps 接口实现,暂没有实现创建节点的功能.
+ */
 static struct VnodeOps g_procfsVops = { 
     .Lookup = VfsProcfsLookup,
     .Getattr = VfsProcfsStat,
@@ -479,7 +505,9 @@ static struct VnodeOps g_procfsVops = {
     .Rmdir = VfsProcfsRmdir,
 #endif
 };
-// proc 对 file_operations_vfs 接口实现
+/*!
+ * proc 对 file_operations_vfs 接口实现
+ */
 static struct file_operations_vfs g_procfsFops = {
     .read = VfsProcfsRead,	// 最终调用 ProcFileOperations -> read
     .write = VfsProcfsWrite,// 最终调用 ProcFileOperations -> write

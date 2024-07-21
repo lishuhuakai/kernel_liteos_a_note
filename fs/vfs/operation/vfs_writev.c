@@ -75,7 +75,9 @@ static int iov_trans_to_buf(char *buf, ssize_t totallen, const struct iovec *iov
 
     return (int)((intptr_t)curbuf - (intptr_t)buf);
 }
-
+/*!
+ * 执行写操作
+ */
 ssize_t vfs_writev(int fd, const struct iovec *iov, int iovcnt, off_t *offset)
 {
     int i, ret;
@@ -94,7 +96,7 @@ ssize_t vfs_writev(int fd, const struct iovec *iov, int iovcnt, off_t *offset)
             set_errno(EINVAL);
             return VFS_ERROR;
         }
-        buflen += iov[i].iov_len;
+        buflen += iov[i].iov_len; // 计算数据长度
     }
 
     if (buflen == 0) {
@@ -131,7 +133,9 @@ ssize_t vfs_writev(int fd, const struct iovec *iov, int iovcnt, off_t *offset)
 #endif
     return totalbyteswritten;
 }
-
+/*!
+ * 对文件执行写操作
+ */
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 {
     return vfs_writev(fd, iov, iovcnt, NULL);

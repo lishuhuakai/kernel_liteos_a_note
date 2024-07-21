@@ -46,7 +46,7 @@
 #endif
 #include "los_mp.h"
 
-SchedRunqueue g_schedRunqueue[LOSCFG_KERNEL_CORE_NUM];
+SchedRunqueue g_schedRunqueue[LOSCFG_KERNEL_CORE_NUM]; // 一共有32个调度队列
 
 STATIC INLINE VOID SchedNextExpireTimeSet(UINT32 responseID, UINT64 taskEndTime, UINT32 oldResponseID)
 {
@@ -85,6 +85,9 @@ STATIC INLINE VOID SchedNextExpireTimeSet(UINT32 responseID, UINT64 taskEndTime,
     rq->responseTime = currTime + HalClockTickTimerReload(nextResponseTime);
 }
 
+/*!
+ * 执行回调函数
+ */
 VOID OsSchedExpireTimeUpdate(VOID)
 {
     UINT32 intSave;
@@ -185,7 +188,7 @@ STATIC INLINE BOOL SchedTimeoutQueueScan(SchedRunqueue *rq)
 
 VOID OsSchedTick(VOID)
 {
-    SchedRunqueue *rq = OsSchedRunqueue();
+    SchedRunqueue *rq = OsSchedRunqueue(); // 获取本cpu的调度队列
 
     if (rq->responseID == OS_INVALID_VALUE) {
         if (SchedTimeoutQueueScan(rq)) {
@@ -221,10 +224,13 @@ VOID OsSchedRunqueueIdleInit(LosTaskCB *idleTask)
     rq->idleTask = idleTask;
 }
 
+/*!
+ * 调度子系统初始化
+ */
 UINT32 OsSchedInit(VOID)
 {
     for (UINT16 cpuid = 0; cpuid < LOSCFG_KERNEL_CORE_NUM; cpuid++) {
-        SchedRunqueue *rq = OsSchedRunqueueByID(cpuid);
+        SchedRunqueue *rq = OsSchedRunqueueByID(cpuid); // 获得每个cpu的调度队列
         EDFSchedPolicyInit(rq);
         HPFSchedPolicyInit(rq);
     }
@@ -296,7 +302,9 @@ VOID OsSchedProcessDefaultSchedParamGet(UINT16 policy, SchedParam *param)
     }
     return;
 }
-
+/*!
+ * 获得一个新的待调度的任务
+ */
 STATIC LosTaskCB *TopTaskGet(SchedRunqueue *rq)
 {
     LosTaskCB *newTask = EDFRunqueueTopTaskGet(rq->edfRunqueue);
@@ -388,6 +396,9 @@ STATIC INLINE VOID SchedSwitchCheck(LosTaskCB *runTask, LosTaskCB *newTask)
     OsHookCall(LOS_HOOK_TYPE_TASK_SWITCHEDIN, newTask, runTask);
 }
 
+/*!
+ * Task切换
+ */
 STATIC VOID SchedTaskSwitch(SchedRunqueue *rq, LosTaskCB *runTask, LosTaskCB *newTask)
 {
     SchedSwitchCheck(runTask, newTask);
@@ -404,7 +415,7 @@ STATIC VOID SchedTaskSwitch(SchedRunqueue *rq, LosTaskCB *runTask, LosTaskCB *ne
     OsCurrTaskSet((VOID *)newTask);
 #ifdef LOSCFG_KERNEL_VM
     if (newTask->archMmu != runTask->archMmu) {
-        LOS_ArchMmuContextSwitch((LosArchMmu *)newTask->archMmu);
+        LOS_ArchMmuContextSwitch((LosArchMmu *)newTask->archMmu); //mmu切换,也就是页表切换
     }
 #endif
 
@@ -470,7 +481,9 @@ VOID OsSchedIrqEndCheckNeedSched(VOID)
         OsSchedExpireTimeUpdate();
     }
 }
-
+/*!
+ * 任务调度
+ */
 VOID OsSchedResched(VOID)
 {
     LOS_ASSERT(LOS_SpinHeld(&g_taskSpin));
@@ -487,7 +500,7 @@ VOID OsSchedResched(VOID)
     if (runTask == newTask) {
         return;
     }
-
+	// 进程切换
     SchedTaskSwitch(rq, runTask, newTask);
 }
 

@@ -101,7 +101,9 @@ LITE_OS_SEC_TEXT_INIT STATIC UINT32 ArchEarlyInit(VOID)
 
     return LOS_OK;
 }
-//平台早期初始化
+/*!
+ * 平台早期初始化
+ */
 LITE_OS_SEC_TEXT_INIT STATIC UINT32 PlatformEarlyInit(VOID)
 {
 #if defined(LOSCFG_PLATFORM_UART_WITHOUT_VFS) && defined(LOSCFG_DRIVERS)
@@ -145,7 +147,9 @@ LITE_OS_SEC_TEXT_INIT STATIC UINT32 PlatformInit(VOID)
 {
     return LOS_OK;
 }
-//内核关键模块初始化
+/*!
+ * 内核关键模块初始化
+ */
 LITE_OS_SEC_TEXT_INIT STATIC UINT32 KModInit(VOID)
 {
 #ifdef LOSCFG_BASE_CORE_SWTMR_ENABLE
@@ -182,7 +186,9 @@ LITE_OS_SEC_TEXT_INIT VOID OsSystemInfo(VOID)
                   HalIrqVersion(), __DATE__, __TIME__,\
                   KERNEL_NAME, KERNEL_MAJOR, KERNEL_MINOR, KERNEL_PATCH, KERNEL_ITRE, buildType);
 }
-///由汇编调用,鸿蒙C语言层级的入口点 
+/*! 
+ * 由汇编调用,鸿蒙C语言层级的入口点
+ */
 LITE_OS_SEC_TEXT_INIT UINT32 OsMain(VOID)
 {
     UINT32 ret;
@@ -236,7 +242,7 @@ LITE_OS_SEC_TEXT_INIT UINT32 OsMain(VOID)
         return ret;
     }
 
-    ret = OsSystemProcessCreate();//创建系统进程 
+    ret = OsSystemProcessCreate();//创建系统进程
     if (ret != LOS_OK) {
         return ret;
     }
@@ -286,7 +292,9 @@ STATIC VOID SystemInit(VOID)
 extern VOID SystemInit(VOID);
 #endif
 #ifndef LOSCFG_ENABLE_KERNEL_TEST
-///创建系统初始任务并申请调度
+/*!
+ * 创建系统初始任务并申请调度
+ */
 STATIC UINT32 OsSystemInitTaskCreate(VOID)
 {
     UINT32 taskID;
@@ -304,7 +312,9 @@ STATIC UINT32 OsSystemInitTaskCreate(VOID)
     return LOS_TaskCreate(&taskID, &sysTask);
 }
 
-//系统任务初始化
+/*!
+ * 系统任务初始化
+ */
 STATIC UINT32 OsSystemInit(VOID)
 {
     UINT32 ret;

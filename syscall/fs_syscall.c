@@ -106,7 +106,9 @@ static int CheckNewAttrTime(struct IATTR *attr, struct timespec times[TIMESPEC_T
 
     return ret;
 }
-///获取全路径
+/*!
+ * 获取全路径
+ */
 static int GetFullpathNull(int fd, const char *path, char **filePath)
 {
     int ret;
@@ -133,7 +135,9 @@ static int GetFullpathNull(int fd, const char *path, char **filePath)
     *filePath = fullPath;
     return ret;
 }
-///用户空间 io向量地址范围检查
+/*!
+ * 用户空间 io向量地址范围检查
+ */
 static int UserIovItemCheck(const struct iovec *iov, const int iovcnt)
 {
     int i;
@@ -215,7 +219,9 @@ static void RestorePollfd(struct pollfd *fds, nfds_t nfds, const int *pollFds)
         p_fds->fd = pollFds[i];
     }
 }
-///使用poll方式 实现IO多路复用的机制
+/*!
+ * 使用poll方式 实现IO多路复用的机制
+ */
 static int UserPoll(struct pollfd *fds, nfds_t nfds, int timeout)
 {
     int *pollFds = NULL;
@@ -232,7 +238,9 @@ static int UserPoll(struct pollfd *fds, nfds_t nfds, int timeout)
     return ret;
 }
 
-//关闭文件句柄
+/*!
+ * 关闭文件句柄
+ */
 int SysClose(int fd)
 {
     int ret;
@@ -248,7 +256,9 @@ int SysClose(int fd)
     FreeProcessFd(fd);//释放进程fd
     return ret;
 }
-///系统调用|读文件:从文件中读取nbytes长度的内容到buf中(用户空间)
+/*!
+ * 系统调用|读文件:从文件中读取nbytes长度的内容到buf中(用户空间)
+ */
 ssize_t SysRead(int fd, void *buf, size_t nbytes)
 {
     int ret;
@@ -269,7 +279,9 @@ ssize_t SysRead(int fd, void *buf, size_t nbytes)
     }
     return ret;
 }
-///系统调用|写文件:将buf中(用户空间)nbytes长度的内容写到文件中
+/*!
+ * 系统调用|写文件:将buf中(用户空间)nbytes长度的内容写到文件中
+ */
 ssize_t SysWrite(int fd, const void *buf, size_t nbytes)
 {
     int ret;
@@ -408,7 +420,9 @@ static int GetPath(const char *path, char **pathRet)
 #endif
     return 0;
 }
-///系统调用|打开文件, 正常情况下返回进程的FD值
+/*!
+ * 系统调用|打开文件, 正常情况下返回进程的FD值
+ */
 int SysOpen(const char *path, int oflags, ...)
 {
     int ret;
@@ -476,14 +490,14 @@ ERROUT:
  * @param pathname 
  * @param mode 
  * @verbatim 常用标签如下:
-    O_CREAT:若文件存在，此标志无用；若不存在，建新文件
-    O_TRUNC:若文件存在，则长度被截为0，属性不变
-    O_WRONLY:写文件 
-    O_RDONLY:读文件
-    O_BINARY:此标志可显示地给出以二进制方式打开文件 
-    O_TEXT :此标志可用于显示地给出以文本方式打开文件
-    O_RDWR :即读也写
-    O_APPEND:即读也写，但每次写总是在文件尾添加
+ *  O_CREAT:若文件存在，此标志无用；若不存在，建新文件
+ *  O_TRUNC:若文件存在，则长度被截为0，属性不变
+ *  O_WRONLY:写文件 
+ *  O_RDONLY:读文件
+ *  O_BINARY:此标志可显示地给出以二进制方式打开文件 
+ *  O_TEXT :此标志可用于显示地给出以文本方式打开文件
+ *  O_RDWR :即读也写
+ *  O_APPEND:即读也写，但每次写总是在文件尾添加
  * @endverbatim
  * @return int 
  */
@@ -637,10 +651,10 @@ OUT:
 /**
  * @brief 删除链:删除由装入点管理的文件
  * @verbatim 
-    执行unlink()函数并不一定会真正的删除文件，它先会检查文件系统中此文件的连接数是否为1，
-    如果不是1说明此文件还有其他链接对象，因此只对此文件的连接数进行减1操作。若连接数为1，
-    并且在此时没有任何进程打开该文件，此内容才会真正地被删除掉。在有进程打开此文件的情况下，
-    则暂时不会删除，直到所有打开该文件的进程都结束时文件就会被删除。
+ *  执行unlink()函数并不一定会真正的删除文件，它先会检查文件系统中此文件的连接数是否为1，
+ *  如果不是1说明此文件还有其他链接对象，因此只对此文件的连接数进行减1操作。若连接数为1，
+ *  并且在此时没有任何进程打开该文件，此内容才会真正地被删除掉。在有进程打开此文件的情况下，
+ *  则暂时不会删除，直到所有打开该文件的进程都结束时文件就会被删除。
  * @endverbatim
  */
 int SysUnlink(const char *pathname)
@@ -668,10 +682,10 @@ OUT:
 }
 ///动态加载程序过程
 #ifdef LOSCFG_KERNEL_DYNLOAD
-/*
-argv :参数数组 {"ls", "-al", "/etc/passwd", NULL};
-envp :环境变量数组 {"PATH=/bin", NULL}  
-*/
+/*!
+ * argv :参数数组 {"ls", "-al", "/etc/passwd", NULL};
+ * envp :环境变量数组 {"PATH=/bin", NULL}  
+ */
 int SysExecve(const char *fileName, char *const *argv, char *const *envp)
 {
     return LOS_DoExecveFile(fileName, argv, envp);
@@ -725,7 +739,9 @@ OUT:
     }
     return ret;
 }
-///移动文件指针
+/*!
+ * 移动文件指针
+ */
 off_t SysLseek(int fd, off_t offset, int whence)
 {
     /* Process fd convert to system global fd */
@@ -734,7 +750,9 @@ off_t SysLseek(int fd, off_t offset, int whence)
     return _lseek(fd, offset, whence);
 }
 
-//移动文件指针
+/*!
+ * 移动文件指针
+ */
 off64_t SysLseek64(int fd, int offsetHigh, int offsetLow, off64_t *result, int whence)
 {
     off64_t ret;
@@ -857,7 +875,9 @@ OUT:
     }
     return ret;
 }
-///卸载文件系统,当某个文件系统不需要再使用了，那么可以将它卸载掉。
+/*!
+ * 卸载文件系统,当某个文件系统不需要再使用了，那么可以将它卸载掉。
+ */
 int SysUmount(const char *target)
 {
     int ret;
@@ -885,7 +905,9 @@ OUT:
     }
     return ret;
 }
-///确定文件的可存取性
+/*!
+ * 确定文件的可存取性
+ */
 int SysAccess(const char *path, int amode)
 {
     int ret;
@@ -910,7 +932,9 @@ OUT:
 
     return ret;
 }
-///重命名文件
+/*!
+ * 重命名文件
+ */
 int SysRename(const char *oldpath, const char *newpath)
 {
     int ret;
@@ -946,7 +970,9 @@ OUT:
     }
     return ret;
 }
-///创建目录
+/*!
+ * 创建目录
+ */
 int SysMkdir(const char *pathname, mode_t mode)
 {
     int ret;
@@ -970,7 +996,9 @@ OUT:
     }
     return ret;
 }
-///删除目录
+/*!
+ * 删除目录
+ */
 int SysRmdir(const char *pathname)
 {
     int ret;
@@ -1012,12 +1040,16 @@ int SysDup(int fd)
     AssociateSystemFd(dupfd, sysfd);
     return dupfd;
 }
-///将内存缓冲区数据写回硬盘
+/*!
+ * 将内存缓冲区数据写回硬盘
+ */
 void SysSync(void)
 {
     sync();
 }
-///卸载文件系统
+/*!
+ * 卸载文件系统
+ */
 int SysUmount2(const char *target, int flags)
 {
     if (flags != 0) {
@@ -1025,7 +1057,9 @@ int SysUmount2(const char *target, int flags)
     }
     return SysUmount(target);
 }
-///I/O总控制函数
+/*!
+ * I/O总控制函数
+ */
 int SysIoctl(int fd, int req, void *arg)
 {
     int ret;
@@ -1058,28 +1092,27 @@ int SysIoctl(int fd, int req, void *arg)
 /**
  * @brief 
  * @verbatim 
-用来修改已经打开文件的属性的函数包含5个功能：
-1.复制一个已有文件描述符，功能和dup和dup2相同，对应的cmd：F_DUPFD、F_DUPFD_CLOEXEC。
-	当使用这两个cmd时，需要传入第三个参数，fcntl返回复制后的文件描述符，此返回值是之前未被占用的描述符，
-	并且必须一个大于等于第三个参数值。
-	F_DUPFD命令要求返回的文件描述符会清除对应的FD_CLOEXEC
-	F_DUPFD_CLOEXEC要求设置新描述符的FD_CLOEXEC标志。
+ * 用来修改已经打开文件的属性的函数包含5个功能：
+ * 1.复制一个已有文件描述符，功能和dup和dup2相同，对应的cmd：F_DUPFD、F_DUPFD_CLOEXEC。
+ *	当使用这两个cmd时，需要传入第三个参数，fcntl返回复制后的文件描述符，此返回值是之前未被占用的描述符，
+ *	并且必须一个大于等于第三个参数值。
+ *	F_DUPFD命令要求返回的文件描述符会清除对应的FD_CLOEXEC
+ *	F_DUPFD_CLOEXEC要求设置新描述符的FD_CLOEXEC标志。
 
-2.获取、设置文件描述符标志，对应的cmd：F_GETFD、F_SETFD。
-	用于设置FD_CLOEXEC标志，此标志的含义是：当进程执行exec系统调用后此文件描述符会被自动关闭。
+ * 2.获取、设置文件描述符标志，对应的cmd：F_GETFD、F_SETFD。
+ *	用于设置FD_CLOEXEC标志，此标志的含义是：当进程执行exec系统调用后此文件描述符会被自动关闭。
 
-3.获取、设置文件访问状态标志，对应的cmd：F_GETFL、F_SETFL。
-	获取当前打开文件的访问标志，设置对应的访问标志，一般常用来设置做非阻塞读写操作。
+ * 3.获取、设置文件访问状态标志，对应的cmd：F_GETFL、F_SETFL。
+ *	获取当前打开文件的访问标志，设置对应的访问标志，一般常用来设置做非阻塞读写操作。
 
-4.获取、设置记录锁功能，对应的cmd：F_GETLK、F_SETLK、F_SETLKW。
+ * 4.获取、设置记录锁功能，对应的cmd：F_GETLK、F_SETLK、F_SETLKW。
 
-5.获取、设置异步I/O所有权，对应的cmd：F_GETOWN、F_SETOWN。
-  	获取和设置用来接收SIGIO/SIGURG信号的进程id或者进程组id。返回对应的进程id或者进程组id取负值。
+ * 5.获取、设置异步I/O所有权，对应的cmd：F_GETOWN、F_SETOWN。
+ *  	获取和设置用来接收SIGIO/SIGURG信号的进程id或者进程组id。返回对应的进程id或者进程组id取负值。
  * @endverbatim  
  * @param fd 
  * @param cmd 
  * @param arg 
- * @return int 
  */
 int SysFcntl(int fd, int cmd, void *arg)
 {
@@ -1101,20 +1134,20 @@ int SysFcntl(int fd, int cmd, void *arg)
 /**
  * @brief 
  * @verbatim 
-    管道是一种最基本的IPC机制，作用于有血缘关系的进程之间，完成数据传递。
-    调用pipe系统函数即可创建一个管道。有如下特质：
+ *   管道是一种最基本的IPC机制，作用于有血缘关系的进程之间，完成数据传递。
+ *   调用pipe系统函数即可创建一个管道。有如下特质：
 
-    1. 其本质是一个伪文件(实为内核缓冲区)
-    2. 由两个文件描述符引用，一个表示读端，一个表示写端。
-    3. 规定数据从管道的写端流入管道，从读端流出。
+ *  1. 其本质是一个伪文件(实为内核缓冲区)
+ *  2. 由两个文件描述符引用，一个表示读端，一个表示写端。
+ *  3. 规定数据从管道的写端流入管道，从读端流出。
 
-    管道的原理: 管道实为内核使用环形队列机制，借助内核缓冲区(4k)实现。
-    管道的局限性：
-        ① 数据自己读不能自己写。
-        ② 数据一旦被读走，便不在管道中存在，不可反复读取。
-        ③ 由于管道采用半双工通信方式。因此，数据只能在一个方向上流动。
-        ④ 只能在有公共祖先的进程间使用管道。
-    常见的通信方式有，单工通信、半双工通信、全双工通信。
+ *  管道的原理: 管道实为内核使用环形队列机制，借助内核缓冲区(4k)实现。
+ *  管道的局限性：
+ *      ① 数据自己读不能自己写。
+ *      ② 数据一旦被读走，便不在管道中存在，不可反复读取。
+ *      ③ 由于管道采用半双工通信方式。因此，数据只能在一个方向上流动。
+ *      ④ 只能在有公共祖先的进程间使用管道。
+ *  常见的通信方式有，单工通信、半双工通信、全双工通信。
  * @endverbatim 
  * @param pipefd 
  * @return int 
@@ -1161,7 +1194,9 @@ int SysPipe(int pipefd[2]) /* 2 : pipe fds for read and write */
 }
 #endif
 
-/// 复制文件描述符
+/*!
+ * 复制文件描述符
+ */
 int SysDup2(int fd1, int fd2)
 {
     int ret;
@@ -1199,7 +1234,9 @@ int SysDup2(int fd1, int fd2)
     ClearCloexecFlag(fd2);
     return fd2;
 }
-///select()参数检查
+/*!
+ * select()参数检查
+ */
 static int SelectParamCheckCopy(fd_set *readfds, fd_set *writefds, fd_set *exceptfds, fd_set **fdsBuf)
 {
     fd_set *readfdsRet = NULL;
@@ -1315,7 +1352,9 @@ ERROUT:
     (void)LOS_MemFree(OS_SYS_MEM_ADDR, fdsRet);
     return -EFAULT;
 }
-///系统调用|文件系统|截断功能
+/*!
+ * 系统调用|文件系统|截断功能
+ */
 int SysTruncate(const char *path, off_t length)
 {
     int ret;
@@ -1348,7 +1387,9 @@ OUT:
     }
     return ret;
 }
-///系统调用|文件系统|截断功能
+/*!
+ * 系统调用|文件系统|截断功能
+ */
 int SysTruncate64(const char *path, off64_t length)
 {
     int ret;
@@ -1381,7 +1422,9 @@ OUT:
     }
     return ret;
 }
-///系统调用|文件系统|截断功能
+/*!
+ * 系统调用|文件系统|截断功能
+ */
 int SysFtruncate(int fd, off_t length)
 {
     int ret;
@@ -1395,7 +1438,9 @@ int SysFtruncate(int fd, off_t length)
     }
     return ret;
 }
-///获取指定路径下文件的文件系统信息
+/*!
+ * 获取指定路径下文件的文件系统信息
+ */
 int SysStatfs(const char *path, struct statfs *buf)
 {
     int ret;
@@ -1426,7 +1471,9 @@ OUT:
     }
     return ret;
 }
-///获取文件系统信息
+/*!
+ * 获取文件系统信息
+ */
 int SysStatfs64(const char *path, size_t sz, struct statfs *buf)
 {
     int ret;
@@ -1462,7 +1509,9 @@ OUT:
     }
     return ret;
 }
-///获取文件状态信息
+/*!
+ * 获取文件状态信息
+ */
 int SysStat(const char *path, struct kstat *buf)
 {
     int ret;
@@ -1493,7 +1542,9 @@ OUT:
     }
     return ret;
 }
-///参见SysStat
+/*!
+ * 参见SysStat
+ */
 int SysLstat(const char *path, struct kstat *buffer)
 {
     int ret;
@@ -1524,7 +1575,9 @@ OUT:
     }
     return ret;
 }
-///参见SysStat
+/*!
+ * 参见SysStat
+ */
 int SysFstat(int fd, struct kstat *buf)
 {
     int ret;
@@ -1560,7 +1613,9 @@ int SysStatx(int fd, const char *restrict path, int flag, unsigned mask, struct 
 {
     return -ENOSYS;
 }
-///把文件在内存中的部分写回磁盘
+/*!
+ * 把文件在内存中的部分写回磁盘
+ */
 int SysFsync(int fd)
 {
     int ret;
@@ -1587,7 +1642,9 @@ int SysFsync(int fd)
     }
     return ret;
 }
-///通过FD读入数据到缓冲数组中,fd为进程描述符
+/*!
+ * 通过FD读入数据到缓冲数组中,fd为进程描述符
+ */
 ssize_t SysReadv(int fd, const struct iovec *iov, int iovcnt)
 {
     int ret;
@@ -1623,7 +1680,9 @@ OUT:
     (void)LOS_MemFree(OS_SYS_MEM_ADDR, iovRet);
     return ret;
 }
-///将缓冲数组里的数据写入文件
+/*!
+ * 将缓冲数组里的数据写入文件
+ */
 ssize_t SysWritev(int fd, const struct iovec *iov, int iovcnt)
 {
     int ret;
@@ -1720,7 +1779,9 @@ OUT_KFD:
     free(kfds);
     return ret;
 }
-///对进程进行特定操作
+/*!
+ * 对进程进行特定操作
+ */
 int SysPrctl(int option, ...)
 {
     unsigned long name;
@@ -1752,7 +1813,9 @@ ERROR:
     va_end(ap);
     return -err;
 }
-///对进程进行特定操作
+/*!
+ * 对进程进行特定操作
+ */
 ssize_t SysPread64(int fd, void *buf, size_t nbytes, off64_t offset)
 {
     int ret, retVal;

@@ -108,7 +108,9 @@ static LosMux g_jffs2FsLock;  /* lock for all jffs2 ops | 操作 jffs2文件系�
 
 static pthread_mutex_t g_jffs2NodeLock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 struct Vnode *g_jffs2PartList[CONFIG_MTD_PATTITION_NUM]; ///< jffs2 分区列表
-/// 设置vnode节点的文件类型
+/*!
+ * 设置vnode节点的文件类型
+ */
 static void Jffs2SetVtype(struct jffs2_inode *node, struct Vnode *pVnode)
 {
     switch (node->i_mode & S_IFMT) {
@@ -147,20 +149,17 @@ void Jffs2NodeUnlock(void)
 
 /*!
  * @brief VfsJffs2Bind	挂载JFFS2分区
- @verbatim
-	 运行命令：
-	 	OHOS # mount /dev/spinorblk1 /jffs1 jffs2
-	 将从串口得到如下回应信息，表明挂载成功。
-		OHOS # mount /dev/spinorblk1 /jffs1 jffs2
-		mount OK
-	 挂载成功后，用户就能对norflash进行读写操作。	
- @endverbatim	
+ * @verbatim
+ *	运行命令：
+ * 	OHOS # mount /dev/spinorblk1 /jffs1 jffs2
+ *	 将从串口得到如下回应信息，表明挂载成功。
+ *	OHOS # mount /dev/spinorblk1 /jffs1 jffs2
+ *	mount OK
+ *	 挂载成功后，用户就能对norflash进行读写操作。	
+ * @endverbatim	
  * @param blkDriver	
  * @param data	
- * @param mnt	
- * @return	
- *
- * @see
+ * @param mnt
  */
 int VfsJffs2Bind(struct Mount *mnt, struct Vnode *blkDriver, const void *data)
 {
@@ -194,8 +193,8 @@ int VfsJffs2Bind(struct Mount *mnt, struct Vnode *blkDriver, const void *data)
         LOS_MuxUnlock(&g_jffs2FsLock);
         goto ERROR_WITH_VNODE;
     }
-    pv->type = VNODE_TYPE_DIR;	
-    pv->data = (void *)rootNode;
+    pv->type = VNODE_TYPE_DIR; // 目录
+    pv->data = (void *)rootNode; // 记录下私有数据
     pv->originMount = mnt;
     pv->fop = &g_jffs2Fops;
     mnt->data = p;
@@ -217,19 +216,16 @@ ERROR_WITH_VNODE:
 
 /*!
  * @brief VfsJffs2Unbind 卸载JFFS2分区	 
- @verbatim	
- 	调用int umount(const char *target)函数卸载分区，只需要正确给出挂载点即可。
-    运行命令：
-	OHOS # umount /jffs1
-	将从串口得到如下回应信息，表明卸载成功。
-		OHOS # umount /jffs1
-		umount ok
- @endverbatim			
+ * @verbatim	
+ *	调用int umount(const char *target)函数卸载分区，只需要正确给出挂载点即可。
+ *   运行命令：
+ *	OHOS # umount /jffs1
+ *	将从串口得到如下回应信息，表明卸载成功。
+ *		OHOS # umount /jffs1
+ *		umount ok
+ * @endverbatim			
  * @param blkDriver	
- * @param mnt	
- * @return	
- *
- * @see
+ * @param mnt
  */
 int VfsJffs2Unbind(struct Mount *mnt, struct Vnode **blkDriver)
 {
@@ -260,6 +256,9 @@ int VfsJffs2Unbind(struct Mount *mnt, struct Vnode **blkDriver)
     return 0;
 }
 
+/*!
+ * 在jffs2文件系统之中查找对应的文件
+ */
 int VfsJffs2Lookup(struct Vnode *parentVnode, const char *path, int len, struct Vnode **ppVnode)
 {
     int ret;
@@ -310,7 +309,9 @@ int VfsJffs2Lookup(struct Vnode *parentVnode, const char *path, int len, struct 
     LOS_MuxUnlock(&g_jffs2FsLock);
     return 0;
 }
-///创建一个jffs2 索引节点
+/*!
+ * 创建一个jffs2 索引节点
+ */
 int VfsJffs2Create(struct Vnode *parentVnode, const char *path, int mode, struct Vnode **ppVnode)
 {
     int ret;

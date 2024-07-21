@@ -82,11 +82,12 @@
 extern "C" {
 #endif /* __cplusplus */
 #endif /* __cplusplus */
-/// 内存管理单元（英语：memory management unit，缩写为MMU），有时称作分页内存管理单元（英语：paged memory management unit，缩写为PMMU）。
+/// 内存管理单元(英语: memory management unit,缩写为MMU),有时称作分页内存管理单元(英语:paged memory management unit,缩写为PMMU)
 typedef struct ArchMmu {//内存管理单元
 #ifndef LOSCFG_PAGE_TABLE_FINE_LOCK
     SPIN_LOCK_S         lock;           /**< arch mmu page table entry modification spin lock */
 #endif
+	/* virtTtb记录的是一个虚拟地址,也就是转换表的基址(虚拟地址), physTtb是转换表的基址(物理地址) */
     VADDR_T             *virtTtb;       /**< translation table base virtual addr | 注意:这里是个指针,内核操作都用这个地址*/
     PADDR_T             physTtb;        /**< translation table base phys addr | 注意:这里是个值,这个值是记录给MMU使用的,MMU只认它,内核是无法使用的*/
     UINT32              asid;           /**< TLB asid | 标识进程用的，由mmu初始化阶段申请分配，有了它在mmu层面才知道是哪个进程的虚拟地址*/

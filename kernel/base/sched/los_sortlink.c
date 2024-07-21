@@ -30,7 +30,9 @@
  */
 
 #include "los_sortlink_pri.h"
-/// 排序链表初始化
+/*!
+ * 排序链表初始化
+ */
 VOID OsSortLinkInit(SortLinkAttribute *sortLinkHeader)
 {
     LOS_ListInit(&sortLinkHeader->sortLink);
@@ -42,10 +44,7 @@ VOID OsSortLinkInit(SortLinkAttribute *sortLinkHeader)
  * @brief OsAddNode2SortLink 向链表中插入结点,并按时间顺序排列	
  *
  * @param sortLinkHeader 被插入的链表	
- * @param sortList	要插入的结点
- * @return	
- *
- * @see
+ * @param sortList	 要插入的结点
  */
 STATIC INLINE VOID AddNode2SortLink(SortLinkAttribute *sortLinkHeader, SortLinkList *sortList)
 {
@@ -59,8 +58,8 @@ STATIC INLINE VOID AddNode2SortLink(SortLinkAttribute *sortLinkHeader, SortLinkL
 	//链表不为空时,插入分三种情况, responseTime 大于,等于,小于的处理
     SortLinkList *listSorted = LOS_DL_LIST_ENTRY(head->pstNext, SortLinkList, sortLinkNode);
     if (listSorted->responseTime > sortList->responseTime) {//如果要插入的节点 responseTime 最小 
-        LOS_ListAdd(head, &sortList->sortLinkNode);//能跑进来说明是最小的,直接插入到第一的位置
-        sortLinkHeader->nodeNum++;//CPU的工作量增加了
+        LOS_ListAdd(head, &sortList->sortLinkNode);// 能跑进来说明是最小的,直接插入到第一的位置
+        sortLinkHeader->nodeNum++;// CPU的工作量增加了
         return;//直接返回了
     } else if (listSorted->responseTime == sortList->responseTime) {//相等的情况
         LOS_ListAdd(head->pstNext, &sortList->sortLinkNode);//插到第二的位置
@@ -81,6 +80,10 @@ STATIC INLINE VOID AddNode2SortLink(SortLinkAttribute *sortLinkHeader, SortLinkL
     } while (1);//死循环
 }
 
+/*!
+ * 添加到有序链表之中, 按照超时时间排序
+ *@param responseTime 超时时间
+ */
 VOID OsAdd2SortLink(SortLinkAttribute *head, SortLinkList *node, UINT64 responseTime, UINT16 idleCpu)
 {
     LOS_SpinLock(&head->spinLock);
@@ -92,6 +95,9 @@ VOID OsAdd2SortLink(SortLinkAttribute *head, SortLinkList *node, UINT64 response
     LOS_SpinUnlock(&head->spinLock);
 }
 
+/*!
+ * 将定时器任务从有序链表中移除
+ */
 VOID OsDeleteFromSortLink(SortLinkAttribute *head, SortLinkList *node)
 {
     LOS_SpinLock(&head->spinLock);
@@ -136,4 +142,3 @@ UINT64 OsSortLinkGetNextExpireTime(UINT64 currTime, const SortLinkAttribute *sor
     SortLinkList *listSorted = LOS_DL_LIST_ENTRY(head->pstNext, SortLinkList, sortLinkNode);
     return OsSortLinkGetTargetExpireTime(currTime, listSorted);
 }
-

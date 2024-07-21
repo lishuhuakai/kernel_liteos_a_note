@@ -101,7 +101,9 @@ typedef struct {
     HPFQueue queueList[OS_PRIORITY_QUEUE_NUM]; //
     UINT32   queueBitmap;
 } HPFRunqueue;
-//调度运行队列
+/*!
+ * 调度运行队列
+ */
 typedef struct {
     LOS_DL_LIST root;
     LOS_DL_LIST waitList;
@@ -119,10 +121,12 @@ typedef struct {
     UINT32            schedFlag;    /* pending scheduler flag */
 } SchedRunqueue;
 
-extern SchedRunqueue g_schedRunqueue[LOSCFG_KERNEL_CORE_NUM];//每个CPU核都有一个属于自己的调度队列
+extern SchedRunqueue g_schedRunqueue[LOSCFG_KERNEL_CORE_NUM]; //每个CPU核都有一个属于自己的调度队列
 
 VOID OsSchedExpireTimeUpdate(VOID);
-//获取当前CPU
+/*!
+ * 获取当前CPU的调度队列
+ */
 STATIC INLINE SchedRunqueue *OsSchedRunqueue(VOID)
 {
     return &g_schedRunqueue[ArchCurrCpuid()];
@@ -504,12 +508,16 @@ STATIC INLINE BOOL OsSchedPolicyIsEDF(const LosTaskCB *taskCB)
     const SchedEDF *sched = (const SchedEDF *)&taskCB->sp;
     return (sched->policy == LOS_SCHED_DEADLINE);
 }
-
+/*!
+ * 获取当前正在运行的任务
+ */
 STATIC INLINE LosTaskCB *OsCurrTaskGet(VOID)
 {
     return (LosTaskCB *)ArchCurrTaskGet();
 }
-/// 注意任务地址由硬件保存,见于 CP15 | TPIDRPRW
+/*!
+ * 注意任务地址由硬件保存,见于 CP15 | TPIDRPRW
+ */
 STATIC INLINE VOID OsCurrTaskSet(LosTaskCB *task)
 {
     ArchCurrTaskSet(task);

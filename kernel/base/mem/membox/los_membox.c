@@ -102,7 +102,11 @@ STATIC INLINE UINT32 OsCheckBoxMem(const LOS_MEMBOX_INFO *boxInfo, const VOID *n
 
     return OS_MEMBOX_CHECK_MAGIC(node);//检查魔法数字是否被修改过了
 }
-/// 初始化一个静态内存池，根据入参设定其起始地址、总大小及每个内存块大小
+/*!
+ * 初始化一个静态内存池，根据入参设定其起始地址、总大小及每个内存块大小
+ * @param poolSize 内存池大小
+ * @param blkSize 块大小
+ */
 LITE_OS_SEC_TEXT_INIT UINT32 LOS_MemboxInit(VOID *pool, UINT32 poolSize, UINT32 blkSize)
 {
     LOS_MEMBOX_INFO *boxInfo = (LOS_MEMBOX_INFO *)pool;//在内存起始处安置池头
@@ -139,14 +143,14 @@ LITE_OS_SEC_TEXT_INIT UINT32 LOS_MemboxInit(VOID *pool, UINT32 poolSize, UINT32 
         node->pstNext = OS_MEMBOX_NEXT(node, boxInfo->uwBlkSize);//按块大小切割好,统一由pstNext指向
         node = node->pstNext;//node存储了下一个节点的地址信息
     }
-
     node->pstNext = NULL;//最后一个为null
-
     MEMBOX_UNLOCK(intSave);
-
     return LOS_OK;
 }
-/// 从指定的静态内存池中申请一块静态内存块,整个内核源码只有 OsSwtmrScan中用到了静态内存.
+
+/*!
+ * 从指定的静态内存池中申请一块静态内存块,整个内核源码只有 OsSwtmrScan中用到了静态内存.
+ */
 LITE_OS_SEC_TEXT VOID *LOS_MemboxAlloc(VOID *pool)
 {
     LOS_MEMBOX_INFO *boxInfo = (LOS_MEMBOX_INFO *)pool;
@@ -167,10 +171,11 @@ LITE_OS_SEC_TEXT VOID *LOS_MemboxAlloc(VOID *pool)
         boxInfo->uwBlkCnt++;//已使用块数增加
     }
     MEMBOX_UNLOCK(intSave);
-
     return (nodeTmp == NULL) ? NULL : OS_MEMBOX_USER_ADDR(nodeTmp);//返回可用的虚拟地址
 }
-/// 释放指定的一块静态内存块
+/*! 
+ * 释放指定的一块静态内存块
+ */
 LITE_OS_SEC_TEXT UINT32 LOS_MemboxFree(VOID *pool, VOID *box)
 {
     LOS_MEMBOX_INFO *boxInfo = (LOS_MEMBOX_INFO *)pool;
@@ -187,7 +192,6 @@ LITE_OS_SEC_TEXT UINT32 LOS_MemboxFree(VOID *pool, VOID *box)
         if (OsCheckBoxMem(boxInfo, node) != LOS_OK) {
             break;
         }
-
         node->pstNext = boxInfo->stFreeList.pstNext;//节块指向空闲链表表头
         boxInfo->stFreeList.pstNext = node;//空闲链表表头反指向它,意味节块排到第一,下次申请将首个分配它
         boxInfo->uwBlkCnt--;//已经使用的内存块减一

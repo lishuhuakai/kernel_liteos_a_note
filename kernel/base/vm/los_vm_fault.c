@@ -53,7 +53,9 @@
 
 extern char __exc_table_start[];
 extern char __exc_table_end[];
-//线性区正确性检查
+/*!
+ * 线性区正确性检查
+ */
 STATIC STATUS_T OsVmRegionPermissionCheck(LosVmMapRegion *region, UINT32 flags)
 {
     if ((region->regionFlags & VM_MAP_REGION_FLAG_PERM_READ) != VM_MAP_REGION_FLAG_PERM_READ) {
@@ -96,7 +98,9 @@ STATIC VOID OsFaultTryFixup(ExcContext *frame, VADDR_T excVaddr, STATUS_T *statu
 }
 
 #ifdef LOSCFG_FS_VFS 
-//读页时发生缺页的处理
+/*!
+ * 读页时发生缺页的处理
+ */
 STATIC STATUS_T OsDoReadFault(LosVmMapRegion *region, LosVmPgFault *vmPgFault)//读缺页
 {
     status_t ret;
@@ -252,7 +256,9 @@ ERR_OUT:
 
     return ret;
 }
-///在共享线性区写文件操作发生缺页的情况处理,因为线性区是共享的
+/*!
+ * 在共享线性区写文件操作发生缺页的情况处理,因为线性区是共享的
+ */
 status_t OsDoSharedFault(LosVmMapRegion *region, LosVmPgFault *vmPgFault)
 {
     STATUS_T ret;
@@ -319,7 +325,10 @@ status_t OsDoSharedFault(LosVmMapRegion *region, LosVmPgFault *vmPgFault)
  * For COW fault, pagecache is copied to private anonyous pages and the changes on this page
  * won't write through to the underlying file. For SHARED fault, pagecache is mapping with
  * region->arch_mmu_flags and the changes on this page will write through to the underlying file
- */ //操作文件时产生缺页中断
+ */ 
+ /*!
+  * 操作文件时产生缺页中断
+  */
 STATIC STATUS_T OsDoFileFault(LosVmMapRegion *region, LosVmPgFault *vmPgFault, UINT32 flags)
 {
     STATUS_T ret;
@@ -342,9 +351,9 @@ STATIC STATUS_T OsDoFileFault(LosVmMapRegion *region, LosVmPgFault *vmPgFault, U
 第二种:属于进程的地址空间范围但还尚未分配物理页框引起的异常
 ***************************************************************/
 
-/**
- * @brief 
- * @param vaddr 
+/*!
+ * 缺页中断处理函数
+ * @param vaddr 待访问的虚拟地址
  * @param flags 
  * @param frame 
  * @return STATUS_T 
@@ -366,7 +375,6 @@ STATUS_T OsVmPageFaultHandler(VADDR_T vaddr, UINT32 flags, ExcContext *frame)
         OsFaultTryFixup(frame, excVaddr, &status);
         return status;
     }
-
     if (((flags & VM_MAP_PF_FLAG_USER) != 0) && (!LOS_IsUserAddress(vaddr))) {//地址保护,用户空间不允许跨界访问
         VM_ERR("user space not allowed to access invalid address: %#x", vaddr);
         return LOS_ERRNO_VM_ACCESS_DENIED;//拒绝访问
@@ -386,7 +394,7 @@ STATUS_T OsVmPageFaultHandler(VADDR_T vaddr, UINT32 flags, ExcContext *frame)
         goto CHECK_FAILED;
     }
 
-    status = OsVmRegionPermissionCheck(region, flags);
+    status = OsVmRegionPermissionCheck(region, flags); // 检查一下访问属性
     if (status != LOS_OK) {
         status = LOS_ERRNO_VM_ACCESS_DENIED;//拒绝访问
         goto CHECK_FAILED;
@@ -441,6 +449,7 @@ STATUS_T OsVmPageFaultHandler(VADDR_T vaddr, UINT32 flags, ExcContext *frame)
         }
 
         /* map all of the pages */
+		// newPaddr 新的物理地址,将虚拟地址vaddr映射到newPaddr对应的物理地址上
         status = LOS_ArchMmuMap(&space->archMmu, vaddr, newPaddr, 1, region->regionFlags);//重新映射新物理地址
         if (status < 0) {
             VM_ERR("failed to map replacement page, status:%d", status);

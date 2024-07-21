@@ -46,7 +46,9 @@ UINTPTR g_vmBootMemBase = (UINTPTR)&__bss_end; ///< 内核空间可用于分配�
 BOOL g_kHeapInited = FALSE; ///< 内核堆区初始化变量
 
 
-///< 开机引导分配器分配内存,只有开机时采用的分配方式
+/*!
+ * 开机引导分配器分配内存,只有开机时采用的分配方式
+ */
 VOID *OsVmBootMemAlloc(size_t len)
 {
     UINTPTR ptr;
@@ -61,7 +63,9 @@ VOID *OsVmBootMemAlloc(size_t len)
     //这样也行,g_vmBootMemBase 真是野蛮粗暴
     return (VOID *)ptr;
 }
-///整个系统内存初始化
+/*!
+ * 整个系统内存初始化
+ */
 UINT32 OsSysMemInit(VOID)
 {
     STATUS_T ret;

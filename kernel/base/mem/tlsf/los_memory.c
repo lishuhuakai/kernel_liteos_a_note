@@ -711,7 +711,11 @@ STATIC INLINE UINT32 OsMemNotEmptyIndexGet(struct OsMemPoolHead *poolHead, UINT3
 
     return OS_MEM_FREE_LIST_COUNT;
 }
-/// 找到下一个合适的块
+/*!
+ * 找到下一个合适的块
+ * @param pool 内存池
+ * @param size 要分配的内存的大小
+ */
 STATIC INLINE struct OsMemFreeNodeHead *OsMemFindNextSuitableBlock(VOID *pool, UINT32 size, UINT32 *outIndex)
 {
     struct OsMemPoolHead *poolHead = (struct OsMemPoolHead *)pool;
@@ -816,7 +820,9 @@ STATIC INLINE VOID OsMemFreeNodeDelete(VOID *pool, struct OsMemFreeNodeHead *nod
     }
     OsMemListDelete(pool, index, node);
 }
-//获取一个空闲的节点
+/*!
+ * 从内存池中获取一个空闲的节点
+ */
 STATIC INLINE struct OsMemNodeHead *OsMemFreeNodeGet(VOID *pool, UINT32 size)
 {
     struct OsMemPoolHead *poolHead = (struct OsMemPoolHead *)pool;
@@ -826,8 +832,7 @@ STATIC INLINE struct OsMemNodeHead *OsMemFreeNodeGet(VOID *pool, UINT32 size)
         return NULL;
     }
 
-    OsMemListDelete(poolHead, index, firstNode);
-
+    OsMemListDelete(poolHead, index, firstNode); //将节点从内存池中移除
     return &firstNode->header;
 }
 /// 合并节点,和前面的节点合并 node 消失
@@ -1068,7 +1073,10 @@ UINT32 LOS_MemDeInit(VOID *pool)
     OsHookCall(LOS_HOOK_TYPE_MEM_DEINIT, tmpPool);
     return LOS_OK;
 }
-/// 打印系统中已初始化的所有内存池，包括内存池的起始地址、内存池大小、空闲内存总大小、已使用内存总大小、最大的空闲内存块大小、空闲内存块数量、已使用的内存块数量。
+/*!
+ * 打印系统中已初始化的所有内存池，包括内存池的起始地址、内存池大小、空闲内存总大小、
+ * 已使用内存总大小、最大的空闲内存块大小、空闲内存块数量、已使用的内存块数量
+ */
 UINT32 LOS_MemPoolList(VOID)
 {
     VOID *nextPool = g_poolHead;
@@ -1082,7 +1090,9 @@ UINT32 LOS_MemPoolList(VOID)
     return index;
 }
 #endif
-/// 从指定动态内存池中申请size长度的内存
+/*!
+ * 从指定动态内存池中申请size长度的内存
+ */
 STATIC INLINE VOID *OsMemAlloc(struct OsMemPoolHead *pool, UINT32 size, UINT32 intSave)
 {
     struct OsMemNodeHead *allocNode = NULL;
@@ -1130,10 +1140,12 @@ retry: //这种写法也挺赞的 @note_good
 #endif
     return OsMemCreateUsedNode((VOID *)allocNode);//创建已使用节点
 }
-/// 从指定内存池中申请size长度的内存,注意这可不是从内核堆空间中申请内存
+/*!
+ * 从指定内存池中申请size长度的内存,注意这可不是从内核堆空间中申请内存
+ */
 VOID *LOS_MemAlloc(VOID *pool, UINT32 size)
 {
-    if ((pool == NULL) || (size == 0)) {//没提供内存池时
+    if ((pool == NULL) || (size == 0)) { //没提供内存池时
         return (size > 0) ? OsVmBootMemAlloc(size) : NULL;
     }
 
@@ -1157,7 +1169,9 @@ VOID *LOS_MemAlloc(VOID *pool, UINT32 size)
     OsHookCall(LOS_HOOK_TYPE_MEM_ALLOC, pool, ptr, size);//打印日志,到此一游
     return ptr;
 }
-/// 从指定内存池中申请size长度的内存且地址按boundary字节对齐的内存
+/*!
+ * 从指定内存池中申请size长度的内存且地址按boundary字节对齐的内存
+ */
 VOID *LOS_MemAllocAlign(VOID *pool, UINT32 size, UINT32 boundary)
 {
     UINT32 gapSize;
@@ -1217,7 +1231,9 @@ VOID *LOS_MemAllocAlign(VOID *pool, UINT32 size, UINT32 boundary)
     OsHookCall(LOS_HOOK_TYPE_MEM_ALLOCALIGN, pool, ptr, size, boundary);//打印对齐日志,表示程序曾临幸过此处
     return ptr;
 }
-/// 内存池有效性检查
+/*!
+ * 内存池有效性检查
+ */
 STATIC INLINE BOOL OsMemAddrValidCheck(const struct OsMemPoolHead *pool, const VOID *addr)
 {
     UINT32 size;
@@ -2102,7 +2118,9 @@ UINT32 LOS_MemFreeNodeShow(VOID *pool)
 
     return LOS_OK;
 }
-///内核空间动态内存(堆内存)初始化 , 争取系统动态内存池
+/*!
+ * 内核空间动态内存(堆内存)初始化,争取系统动态内存池
+ */
 STATUS_T OsKHeapInit(size_t size)
 {
     STATUS_T ret;
@@ -2115,7 +2133,7 @@ STATUS_T OsKHeapInit(size_t size)
     UINTPTR end = ROUNDUP(g_vmBootMemBase + size, MB);
     size = end - g_vmBootMemBase;
 
-    ptr = OsVmBootMemAlloc(size);
+    ptr = OsVmBootMemAlloc(size); //分配出一片内存,用作堆
     if (!ptr) {
         PRINT_ERR("vmm_kheap_init boot_alloc_mem failed! %d\n", size);
         return -1;

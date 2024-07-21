@@ -86,12 +86,16 @@ STATIC struct VmPhysArea g_physArea[] = {///< 这里只有一个区域,即只生
 
 struct VmPhysSeg g_vmPhysSeg[VM_PHYS_SEG_MAX]; ///< 最大32段
 INT32 g_vmPhysSegNum = 0;	///< 段数
-/// 获取段数组,全局变量,变量放在 .bbs 区
+/*!
+ * 获取段数组,全局变量,变量放在 .bbs 区
+ */
 LosVmPhysSeg *OsGVmPhysSegGet(void)
 {
     return g_vmPhysSeg;
 }
-/// 初始化Lru置换链表
+/*!
+ * 初始化Lru置换链表
+ */
 STATIC VOID OsVmPhysLruInit(struct VmPhysSeg *seg)
 {
     INT32 i;
@@ -105,7 +109,11 @@ STATIC VOID OsVmPhysLruInit(struct VmPhysSeg *seg)
     }
     LOS_SpinUnlockRestore(&seg->lruLock, intSave);
 }
-/// 创建物理段,由区划分转成段管理
+/*!
+ * 创建物理段,由区划分转成段管理
+ * @param start 起始地址
+ * @param size 大小
+ */
 STATIC INT32 OsVmPhysSegCreate(paddr_t start, size_t size)
 {
     struct VmPhysSeg *seg = NULL;
@@ -123,13 +131,15 @@ STATIC INT32 OsVmPhysSegCreate(paddr_t start, size_t size)
 
     return 0;
 }
-/// 添加物理段
+/*!
+ * 添加物理段
+ */
 VOID OsVmPhysSegAdd(VOID)
 {
     INT32 i, ret;
 
     LOS_ASSERT(g_vmPhysSegNum < VM_PHYS_SEG_MAX);
-	
+	//默认只有一个段
     for (i = 0; i < (sizeof(g_physArea) / sizeof(g_physArea[0])); i++) {//遍历g_physArea数组
         ret = OsVmPhysSegCreate(g_physArea[i].start, g_physArea[i].size);//由区划分转成段管理
         if (ret != 0) {
@@ -137,7 +147,9 @@ VOID OsVmPhysSegAdd(VOID)
         }
     }
 }
-/// 段区域大小调整
+/*!
+ * 段区域大小调整
+ */
 VOID OsVmPhysAreaSizeAdjust(size_t size)
 {
     /*
@@ -148,7 +160,9 @@ VOID OsVmPhysAreaSizeAdjust(size_t size)
     g_physArea[0].size -= size;
 }
 
-/// 获得物理内存的总页数
+/*!
+ * 获得物理内存的总页数
+ */
 UINT32 OsVmPhysPageNumGet(VOID)
 {
     UINT32 nPages = 0;
@@ -160,7 +174,9 @@ UINT32 OsVmPhysPageNumGet(VOID)
 
     return nPages;//返回所有物理内存总页数
 }
-/// 初始化空闲链表,分配物理页框使用伙伴算法
+/*!
+ * 初始化空闲链表,分配物理页框使用伙伴算法
+ */
 STATIC INLINE VOID OsVmPhysFreeListInit(struct VmPhysSeg *seg)
 {
     int i;
@@ -177,7 +193,9 @@ STATIC INLINE VOID OsVmPhysFreeListInit(struct VmPhysSeg *seg)
     }
     LOS_SpinUnlockRestore(&seg->freeListLock, intSave);
 }
-/// 物理段初始化
+/*!
+ * 物理段初始化
+ */
 VOID OsVmPhysInit(VOID)
 {
     struct VmPhysSeg *seg = NULL;
@@ -192,7 +210,9 @@ VOID OsVmPhysInit(VOID)
         OsVmPhysLruInit(seg);		//初始化LRU置换链表
     }
 }
-/// 将页框挂入空闲链表,分配物理页框从空闲链表里拿
+/*!
+ * 将页框挂入空闲链表,分配物理页框从空闲链表里拿
+ */
 STATIC VOID OsVmPhysFreeListAddUnsafe(LosVmPage *page, UINT8 order)
 {
     struct VmPhysSeg *seg = NULL;
@@ -209,7 +229,9 @@ STATIC VOID OsVmPhysFreeListAddUnsafe(LosVmPage *page, UINT8 order)
     LOS_ListTailInsert(&list->node, &page->node);
     list->listCnt++;
 }
-///将物理页框从空闲链表上摘除,见于物理页框被分配的情况
+/*!
+ * 将物理页框从空闲链表上摘除,见于物理页框被分配的情况
+ */
 STATIC VOID OsVmPhysFreeListDelUnsafe(LosVmPage *page)
 {
     struct VmPhysSeg *seg = NULL;
@@ -246,7 +268,9 @@ STATIC VOID OsVmPhysPagesSpiltUnsafe(LosVmPage *page, UINT8 oldOrder, UINT8 newO
         OsVmPhysFreeListAddUnsafe(buddyPage, order);//将劈开的节点挂到对应序号的链表上,buddyPage->order = order
     }
 }
-///通过物理地址获取所属参数段的物理页框
+/*!
+ * 通过物理地址获取所属参数段的物理页框
+ */
 LosVmPage *OsVmPhysToPage(paddr_t pa, UINT8 segID)
 {
     struct VmPhysSeg *seg = NULL;
@@ -285,13 +309,17 @@ LosVmPage *OsVmPaddrToPage(paddr_t paddr)
  * @param page 
  * @return VOID* 
  */
-VOID *OsVmPageToVaddr(LosVmPage *page)//
+VOID *OsVmPageToVaddr(LosVmPage *page)
 {
     VADDR_T vaddr;
-    vaddr = KERNEL_ASPACE_BASE + page->physAddr - SYS_MEM_BASE;//表示申请的物理地址在物理空间的偏移量等于映射的虚拟地址在内核空间的偏移量
+	//表示申请的物理地址在物理空间的偏移量等于映射的虚拟地址在内核空间的偏移量
+	// page->physAddr - SYS_MEM_BASE可以得到物理地址的偏移量
+    vaddr = KERNEL_ASPACE_BASE + page->physAddr - SYS_MEM_BASE;
     return (VOID *)(UINTPTR)vaddr;//不需要存储映射关系，这简直就是神来之笔，拍案叫绝。@note_good 详见 鸿蒙内核源码分析(页表管理篇)
 }
-///通过虚拟地址找映射的物理页框
+/*!
+ * 通过虚拟地址找映射的物理页框
+ */
 LosVmPage *OsVmVaddrToPage(VOID *ptr)
 {
     struct VmPhysSeg *seg = NULL;
@@ -307,7 +335,9 @@ LosVmPage *OsVmVaddrToPage(VOID *ptr)
 
     return NULL;
 }
-/// 回收一定范围内的页框
+/*!
+ * 回收一定范围内的页框
+ */
 STATIC INLINE VOID OsVmRecycleExtraPages(LosVmPage *page, size_t startPage, size_t endPage)
 {
     if (startPage >= endPage) {
@@ -316,7 +346,9 @@ STATIC INLINE VOID OsVmRecycleExtraPages(LosVmPage *page, size_t startPage, size
 
     OsVmPhysPagesFreeContiguous(page, endPage - startPage);
 }
-/// 大块的物理内存分配
+/*!
+ * 大块的物理内存分配
+ */
 STATIC LosVmPage *OsVmPhysLargeAlloc(struct VmPhysSeg *seg, size_t nPages)
 {
     struct VmFreeList *list = NULL;
@@ -352,7 +384,10 @@ STATIC LosVmPage *OsVmPhysLargeAlloc(struct VmPhysSeg *seg, size_t nPages)
 
     return NULL;
 }
-/// 申请物理页并挂在对应的链表上
+/*!
+ * 申请物理页并挂在对应的链表上
+ * @param seg 物理段
+ */
 STATIC LosVmPage *OsVmPhysPagesAlloc(struct VmPhysSeg *seg, size_t nPages)
 {
     struct VmFreeList *list = NULL;
@@ -389,7 +424,9 @@ DONE:
 
     return page;
 }
-/// 释放物理页框,所谓释放物理页就是把页挂到空闲链表中
+/*!
+ * 释放物理页框,所谓释放物理页就是把页挂到空闲链表中
+ */
 VOID OsVmPhysPagesFree(LosVmPage *page, UINT8 order)
 {
     paddr_t pa;
@@ -416,7 +453,9 @@ VOID OsVmPhysPagesFree(LosVmPage *page, UINT8 order)
 
     OsVmPhysFreeListAddUnsafe(page, order);//伙伴算法 空闲节点增加
 }
-///连续的释放物理页框, 如果8页连在一块是一起释放的
+/*!
+ * 连续的释放物理页框, 如果8页连在一块是一起释放的
+ */
 VOID OsVmPhysPagesFreeContiguous(LosVmPage *page, size_t nPages)
 {
     paddr_t pa;
@@ -449,8 +488,6 @@ VOID OsVmPhysPagesFreeContiguous(LosVmPage *page, size_t nPages)
  *           LosVmPage->nPages 标记了分配页数	
  * @param nPages	
  * @return	
- *
- * @see
  */
 STATIC LosVmPage *OsVmPhysPagesGet(size_t nPages)
 {
@@ -462,9 +499,9 @@ STATIC LosVmPage *OsVmPhysPagesGet(size_t nPages)
     for (segID = 0; segID < g_vmPhysSegNum; segID++) {
         seg = &g_vmPhysSeg[segID];
         LOS_SpinLockSave(&seg->freeListLock, &intSave);
+		//通过伙伴算法分配页面
         page = OsVmPhysPagesAlloc(seg, nPages);//分配指定页数的物理页,nPages需小于伙伴算法一次能分配的最大页数
         if (page != NULL) {//分配成功
-            /*  */
             LOS_AtomicSet(&page->refCounts, 0);//设置引用次数为0
             page->nPages = nPages;//页数
             LOS_SpinUnlockRestore(&seg->freeListLock, intSave);
@@ -474,7 +511,10 @@ STATIC LosVmPage *OsVmPhysPagesGet(size_t nPages)
     }
     return NULL;
 }
-///分配连续的物理页
+/*!
+ * 分配连续的物理页(通过伙伴算法进行分配)
+ *@param nPages 要分配的物理页的数量
+ */
 VOID *LOS_PhysPagesAllocContiguous(size_t nPages)
 {
     LosVmPage *page = NULL;
@@ -490,7 +530,9 @@ VOID *LOS_PhysPagesAllocContiguous(size_t nPages)
 
     return OsVmPageToVaddr(page);//通过物理页找虚拟地址
 }
-/// 释放指定页数地址连续的物理内存
+/*!
+ * 释放指定页数地址连续的物理内存
+ */
 VOID LOS_PhysPagesFreeContiguous(VOID *ptr, size_t nPages)
 {
     UINT32 intSave;
@@ -526,7 +568,10 @@ PADDR_T OsKVaddrToPaddr(VADDR_T kvaddr)
     }
     return (kvaddr - KERNEL_ASPACE_BASE + SYS_MEM_BASE);
 }
-/// 通过物理地址获取内核虚拟地址
+/*!
+ * 通过物理地址获取内核虚拟地址
+ * @param paddr 物理地址
+ */
 VADDR_T *LOS_PaddrToKVaddr(PADDR_T paddr)
 {
     struct VmPhysSeg *seg = NULL;
@@ -545,7 +590,9 @@ VADDR_T *LOS_PaddrToKVaddr(PADDR_T paddr)
 	//内核
     return (VADDR_T *)(UINTPTR)(paddr - SYS_MEM_BASE + KERNEL_ASPACE_BASE);//
 }
-///释放一个物理页框
+/*!
+ * 释放一个物理页框
+ */
 VOID LOS_PhysPageFree(LosVmPage *page)
 {
     UINT32 intSave;
@@ -568,7 +615,9 @@ VOID LOS_PhysPageFree(LosVmPage *page)
     OsMemLimitMemFree(PAGE_SIZE);
 #endif
 }
-/// 申请一个物理页
+/*!
+ * 申请一个物理页
+ */
 LosVmPage *LOS_PhysPageAlloc(VOID)
 {
     return OsVmPhysPagesGet(ONE_PAGE);//分配一页物理页
@@ -604,7 +653,11 @@ size_t LOS_PhysPagesAlloc(size_t nPages, LOS_DL_LIST *list)
 
     return count;
 }
-///拷贝共享页面
+/*!
+ * 拷贝共享页面
+ * @param oldPaddr 旧地址
+ * @param newPaddr 新地址
+ */
 VOID OsPhysSharePageCopy(PADDR_T oldPaddr, PADDR_T *newPaddr, LosVmPage *newPage)
 {
     UINT32 intSave;
@@ -645,7 +698,9 @@ VOID OsPhysSharePageCopy(PADDR_T oldPaddr, PADDR_T *newPaddr, LosVmPage *newPage
     LOS_SpinUnlockRestore(&seg->freeListLock, intSave);
     return;
 }
-///获取物理页框所在段
+/*!
+ * 获取物理页框所在段
+ */
 struct VmPhysSeg *OsVmPhysSegGet(LosVmPage *page)
 {
     if ((page == NULL) || (page->segID >= VM_PHYS_SEG_MAX)) {
@@ -654,7 +709,9 @@ struct VmPhysSeg *OsVmPhysSegGet(LosVmPage *page)
 
     return (OsGVmPhysSegGet() + page->segID);//等用于OsGVmPhysSegGet()[page->segID]
 }
-///获取参数nPages对应的块组,例如 7 -> 2^3 返回 3
+/*!
+ * 获取参数nPages对应的块组,例如 7 -> 2^3 返回 3
+ */
 UINT32 OsVmPagesToOrder(size_t nPages)
 {
     UINT32 order;
@@ -663,7 +720,9 @@ UINT32 OsVmPagesToOrder(size_t nPages)
 
     return order;
 }
-///释放双链表中的所有节点内存,本质是回归到伙伴orderlist中
+/*!
+ * 释放双链表中的所有节点内存,本质是回归到伙伴orderlist中
+ */
 size_t LOS_PhysPagesFree(LOS_DL_LIST *list)
 {
     UINT32 intSave;

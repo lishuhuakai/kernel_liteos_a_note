@@ -119,7 +119,9 @@ int VnodesInit(void)
 #endif
     return LOS_OK;
 }
-///获取空闲节点链表,分配的节点从空闲链表里出
+/*!
+ * 获取空闲节点链表,分配的节点从空闲链表里出
+ */
 static struct Vnode *GetFromFreeList(void)
 {
     if (g_freeVnodeSize <= 0) {
@@ -138,7 +140,9 @@ static struct Vnode *GetFromFreeList(void)
     g_freeVnodeSize--;
     return vnode;
 }
-///节点批量回收, LRU是Least Recently Used的缩写，即最近最少使用，
+/*!
+ * 节点批量回收, LRU是Least Recently Used的缩写，即最近最少使用，
+ */
 struct Vnode *VnodeReclaimLru(void)
 {
     struct Vnode *item = NULL;
@@ -171,7 +175,9 @@ struct Vnode *VnodeReclaimLru(void)
     }
     return item;
 }
-///申请分配一个 vnode 节点,vop为操作节点的驱动程序
+/*!
+ * 申请分配一个 vnode 节点,vop为操作节点的驱动程序
+ */
 int VnodeAlloc(struct VnodeOps *vop, struct Vnode **newVnode)
 {
     struct Vnode* vnode = NULL;
@@ -217,7 +223,9 @@ int VnodeAlloc(struct VnodeOps *vop, struct Vnode **newVnode)
 
     return LOS_OK;
 }
-///是否 vnode 节点
+/*!
+ * 是否 vnode 节点
+ */
 int VnodeFree(struct Vnode *vnode)
 {
     if (vnode == NULL) {
@@ -256,7 +264,9 @@ int VnodeFree(struct Vnode *vnode)
 
     return LOS_OK;
 }
-///释放mount下所有的索引节点
+/*!
+ * 释放挂载点下所有的vnode(索引节点)
+ */
 int VnodeFreeAll(const struct Mount *mount)
 {
     struct Vnode *vnode = NULL;
@@ -274,7 +284,9 @@ int VnodeFreeAll(const struct Mount *mount)
 
     return LOS_OK;
 }
-///mount是否正在被某个索引节点使用
+/*!
+ * mount是否正在被某个索引节点使用
+ */
 BOOL VnodeInUseIter(const struct Mount *mount)
 {
     struct Vnode *vnode = NULL;
@@ -288,7 +300,9 @@ BOOL VnodeInUseIter(const struct Mount *mount)
     }
     return FALSE;
 }
-///拿锁,封装互斥量
+/*!
+ * 拿锁,封装互斥量
+ */
 int VnodeHold(void)
 {
     int ret = LOS_MuxLock(&g_vnodeMux, LOS_WAIT_FOREVER);
@@ -297,7 +311,9 @@ int VnodeHold(void)
     }
     return ret;
 }
-///归还锁
+/*!
+ * 归还锁
+ */
 int VnodeDrop(void)
 {
     int ret = LOS_MuxUnlock(&g_vnodeMux);
@@ -306,7 +322,7 @@ int VnodeDrop(void)
     }
     return ret;
 }
-///
+
 static char *NextName(char *pos, uint8_t *len)
 {
     char *name = NULL;
@@ -323,7 +339,9 @@ static char *NextName(char *pos, uint8_t *len)
     *len = pos - name;
     return name;
 }
-///处理前的准备
+/*!
+ * 处理前的准备
+ */
 static int PreProcess(const char *originPath, struct Vnode **startVnode, char **path)
 {
     int ret;
@@ -359,7 +377,9 @@ static struct Vnode *ConvertVnodeIfMounted(struct Vnode *vnode)
     return vnode->newMount->vnodeCovered;
 #endif
 }
-///刷新虚拟节点
+/*!
+ * 刷新虚拟节点
+ */
 static void RefreshLRU(struct Vnode *vnode)
 {
     if (vnode == NULL || (vnode->type != VNODE_TYPE_REG && vnode->type != VNODE_TYPE_DIR) ||
@@ -382,7 +402,11 @@ static int ProcessVirtualVnode(struct Vnode *parent, uint32_t flags, struct Vnod
     }
     return ret;
 }
-///一级一级向下找
+/*!
+ * 一级一级向下找
+ *@param currentDir 当前目录
+ *@param currentVnode 当前vnode
+ */
 static int Step(char **currentDir, struct Vnode **currentVnode, uint32_t flags)
 {
     int ret;
@@ -393,7 +417,7 @@ static int Step(char **currentDir, struct Vnode **currentVnode, uint32_t flags)
     if ((*currentVnode)->type != VNODE_TYPE_DIR) {//必须是目录节点
         return -ENOTDIR;
     }
-    nextDir = NextName(*currentDir, &len);//
+    nextDir = NextName(*currentDir, &len);// 查找下层文件名称
     if (nextDir == NULL) {
         *currentDir = NULL;
         return LOS_OK;
@@ -409,7 +433,7 @@ static int Step(char **currentDir, struct Vnode **currentVnode, uint32_t flags)
         ret = ProcessVirtualVnode(*currentVnode, flags, &nextVnode);
     } else {
         if ((*currentVnode)->vop != NULL && (*currentVnode)->vop->Lookup != NULL) {
-            ret = (*currentVnode)->vop->Lookup(*currentVnode, nextDir, len, &nextVnode);
+            ret = (*currentVnode)->vop->Lookup(*currentVnode, nextDir, len, &nextVnode); // 使用目录的Lookup查找函数
         } else {
             ret = -ENOSYS;
         }
@@ -431,7 +455,10 @@ STEP_FINISH:
 
     return ret;
 }
-///通过路径 查找索引节点.路径和节点是 N:1的关系, 硬链接 
+
+/*!
+ * 通过路径 查找索引节点.路径和节点是 N:1的关系, 硬链接
+ */
 int VnodeLookupAt(const char *path, struct Vnode **result, uint32_t flags, struct Vnode *orgVnode)
 {
     int ret;
@@ -476,7 +503,7 @@ int VnodeLookupAt(const char *path, struct Vnode **result, uint32_t flags, struc
                 free(normalizedPath);
             }
             return ret;
-        } else if (VfsVnodePermissionCheck(currentVnode, EXEC_OP)) {
+        } else if (VfsVnodePermissionCheck(currentVnode, EXEC_OP)) { // 校验权限
             ret = -EACCES;
             goto OUT_FREE_PATH;
         }
@@ -498,7 +525,7 @@ int VnodeLookupAt(const char *path, struct Vnode **result, uint32_t flags, struc
                 free(vnodePath);
                 goto OUT_FREE_PATH;
             }
-            currentVnode->filePath = vnodePath;
+            currentVnode->filePath = vnodePath; // 记录下路径名称
             currentVnode->filePath[vnodePathLen] = 0;
         }
     }
@@ -510,12 +537,16 @@ OUT_FREE_PATH:
 
     return ret;
 }
-///通过路径查询vnode节点
+/*!
+ * 通过路径查询vnode节点
+ */
 int VnodeLookup(const char *path, struct Vnode **vnode, uint32_t flags)
 {
     return VnodeLookupAt(path, vnode, flags, NULL);
 }
-///根节点内部改变
+/*!
+ * 根节点内部改变
+ */
 int VnodeLookupFullpath(const char *fullpath, struct Vnode **vnode, uint32_t flags)
 {
     return VnodeLookupAt(fullpath, vnode, flags, GetCurrRootVnode());

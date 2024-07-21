@@ -129,7 +129,9 @@ UINT64 HalClockGetCycles(VOID)
     cntpct = READ_TIMER_REG64(TIMER_REG_CT);
     return cntpct;
 }
-//硬时钟初始化
+/*!
+ * 硬时钟初始化
+ */
 LITE_OS_SEC_TEXT_INIT VOID HalClockInit(VOID)
 {
     UINT32 ret;

@@ -79,12 +79,16 @@ VOID LOS_MpSchedule(UINT32 target)//target每位对应CPU core
     target &= ~(1U << cpuid);//获取除了自身之外的其他CPU
     HalIrqSendIpi(target, LOS_MP_IPI_SCHEDULE);//向目标CPU发送调度信号,核间中断(Inter-Processor Interrupts),IPI
 }
-///硬中断唤醒处理函数
+/*!
+ * 硬中断唤醒处理函数
+ */
 VOID OsMpWakeHandler(VOID)
 {
     /* generic wakeup ipi, do nothing */
 }
-///硬中断调度处理函数
+/*!
+ * 硬中断调度处理函数
+ */
 VOID OsMpScheduleHandler(VOID)
 {//将调度标志设置为与唤醒功能不同，这样就可以在硬中断结束时触发调度程序。
     /*
@@ -93,15 +97,18 @@ VOID OsMpScheduleHandler(VOID)
      */
     OsSchedRunqueuePendingSet();
 }
-///硬中断暂停处理函数
+/*!
+ * 硬中断暂停处理函数
+ */
 VOID OsMpHaltHandler(VOID)
 {
     (VOID)LOS_IntLock();
     OsPercpuGet()->excFlag = CPU_HALT;//让当前Cpu停止工作
-
     while (1) {}//陷入空循环,也就是空闲状态
 }
-///MP定时器处理函数, 递归检查所有可用任务
+/*!
+ * MP定时器处理函数, 递归检查所有可用任务
+ */
 VOID OsMpCollectTasks(VOID)
 {
     LosTaskCB *taskCB = NULL;
@@ -137,9 +144,6 @@ VOID OsMpCollectTasks(VOID)
  * @param args	
  * @param func	
  * @param target	
- * @return	
- *
- * @see
  */
 VOID OsMpFuncCall(UINT32 target, SMP_FUNC_CALL func, VOID *args)
 {
@@ -175,9 +179,6 @@ VOID OsMpFuncCall(UINT32 target, SMP_FUNC_CALL func, VOID *args)
 /*!
  * @brief OsMpFuncCallHandler	
  * 回调向当前CPU注册过的函数
- * @return	
- *
- * @see
  */
 VOID OsMpFuncCallHandler(VOID)
 {
@@ -200,7 +201,9 @@ VOID OsMpFuncCallHandler(VOID)
     }
     MP_CALL_UNLOCK(intSave);
 }
-/// CPU层级的回调模块初始化
+/*!
+ * CPU层级的回调模块初始化
+ */
 VOID OsMpFuncCallInit(VOID)
 {
     UINT32 index;
@@ -225,6 +228,4 @@ UINT32 OsMpInit(VOID)
 }
 
 LOS_MODULE_INIT(OsMpInit, LOS_INIT_LEVEL_KMOD_TASK);//多处理器模块初始化
-
 #endif
-

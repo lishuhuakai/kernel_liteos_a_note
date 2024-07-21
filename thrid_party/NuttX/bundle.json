@@ -1,0 +1,36 @@
+{
+    "name": "@ohos/NuttX",
+    "description": "Apache NuttX is a mature, real-time embedded operating system (RTOS).",
+    "version": "3.1",
+    "license": "BSD 3-Clause",
+    "publishAs": "code-segment",
+    "segment": {
+        "destPath": "third_party/NuttX"
+    },
+    "dirs": {},
+    "scripts": {},
+    "licensePath": "COPYING",
+    "readmePath": {
+        "en": "README.txt"
+    },
+    "component": {
+        "name": "NuttX",
+        "subsystem": "thirdparty",
+        "syscap": [],
+        "features": [],
+        "adapted_system_type": [
+            "small"
+        ],
+        "rom": "700KB",
+        "ram": "1400KB",
+        "deps": {
+            "components": [],
+            "third_party": []
+        },
+        "build": {
+            "sub_component": [],
+            "inner_kits": [],
+            "test": []
+        }
+    }
+}

@@ -141,7 +141,7 @@ extern "C" {
 #endif
 #define KERNEL_VADDR_SIZE       DDR_MEM_SIZE	///< 真实主存的大小
 
-#define SYS_MEM_BASE            DDR_MEM_ADDR	///< 物理内存基地址
+#define SYS_MEM_BASE            DDR_MEM_ADDR	///< 物理内存基地址 | 物理内存的起始地址
 #define SYS_MEM_END             (SYS_MEM_BASE + SYS_MEM_SIZE_DEFAULT)	///< 物理内存结束地址
 
 
@@ -151,7 +151,7 @@ extern "C" {
 #define KERNEL_VMM_BASE         U32_C(KERNEL_VADDR_BASE) ///< 内核内存管理层面的宏配置 | 基地址
 #define KERNEL_VMM_SIZE         U32_C(KERNEL_VADDR_SIZE) ///< 内核大小
 
-#define KERNEL_ASPACE_BASE      KERNEL_VMM_BASE ///< 内核运行空间层面的宏配置 | 基地址
+#define KERNEL_ASPACE_BASE      KERNEL_VMM_BASE ///< 内核运行空间层面的宏配置 | 基地址 | 内核空间的起始地址
 #define KERNEL_ASPACE_SIZE      KERNEL_VMM_SIZE ///< 内核空间大小
 
 /* Uncached vmm aspace */

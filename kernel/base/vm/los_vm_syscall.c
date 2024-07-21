@@ -207,7 +207,10 @@ MMAP_DONE:
     (VOID)LOS_MuxRelease(&vmSpace->regionMux);
     return resultVaddr;
 }
-///解除映射关系
+/*!
+ * 解除映射关系
+ * @param addr 从虚拟地址addr开始,长度为size的空间解除映射关系
+ */
 STATUS_T LOS_UnMMap(VADDR_T addr, size_t size)
 {
     if ((addr <= 0) || (size == 0)) {
@@ -229,7 +232,9 @@ STATIC INLINE BOOL OsProtMprotectPermCheck(unsigned long prot, LosVmMapRegion *r
 
     return ((protFlags & permFlags) == protFlags);
 }
-/// 收缩堆区
+/*!
+ * 收缩堆区
+ */
 VOID *OsShrinkHeap(VOID *addr, LosVmSpace *space)
 {
     VADDR_T newBrk, oldBrk;
@@ -245,14 +250,14 @@ VOID *OsShrinkHeap(VOID *addr, LosVmSpace *space)
 
 /**
  * @brief 
-	@verbatim
-    用户进程向内核申请空间，进一步说用于扩展用户堆栈空间，或者回收用户堆栈空间
-    扩展当前进程的堆空间
-    一个进程所有的线性区都在进程指定的线性地址范围内，
-    线性区之间是不会有地址的重叠的，开始都是连续的，随着进程的运行出现了释放再分配的情况
-    由此出现了断断续续的线性区，内核回收线性区时会检测是否和周边的线性区可合并成一个更大
-    的线性区用于分配。
-	@endverbatim
+ * @verbatim
+ *   用户进程向内核申请空间，进一步说用于扩展用户堆栈空间，或者回收用户堆栈空间
+ *   扩展当前进程的堆空间
+ *   一个进程所有的线性区都在进程指定的线性地址范围内，
+ *   线性区之间是不会有地址的重叠的，开始都是连续的，随着进程的运行出现了释放再分配的情况
+ *   由此出现了断断续续的线性区，内核回收线性区时会检测是否和周边的线性区可合并成一个更大
+ *   的线性区用于分配。
+ * @endverbatim
  * @param addr 
  * @return VOID* 
  */
@@ -272,9 +277,9 @@ VOID *LOS_DoBrk(VOID *addr)
     if ((UINTPTR)addr < (UINTPTR)space->heapBase) {//heapBase是堆区的开始地址，所以参数地址不能低于它
         return (VOID *)-ENOMEM;
     }
-
+	//堆向低地址扩展
     size = (UINTPTR)addr - (UINTPTR)space->heapBase;//算出大小
-    size = ROUNDUP(size, PAGE_SIZE);	//圆整size
+    size = ROUNDUP(size, PAGE_SIZE);//圆整size
     alignAddr = (CHAR *)(UINTPTR)(space->heapBase) + size;//得到新的线性区的结束地址
     PRINT_INFO("brk addr %p , size 0x%x, alignAddr %p, align %d\n", addr, size, alignAddr, PAGE_SIZE);
 
@@ -312,7 +317,9 @@ REGION_ALLOC_FAILED:
     (VOID)LOS_MuxRelease(&space->regionMux);
     return ret;
 }
-/// 继承老线性区的标签
+/*!
+ * 继承老线性区的标签
+ */
 STATIC UINT32 OsInheritOldRegionName(UINT32 oldRegionFlags)
 {
     UINT32 vmFlags = 0;
@@ -333,7 +340,9 @@ STATIC UINT32 OsInheritOldRegionName(UINT32 oldRegionFlags)
 
     return vmFlags;
 }
-///修改内存段的访问权限
+/*!
+ * 修改内存段的访问权限
+ */
 INT32 LOS_DoMprotect(VADDR_T vaddr, size_t len, unsigned long prot)
 {
     LosVmSpace *space = OsCurrProcessGet()->vmSpace;
@@ -456,7 +465,9 @@ STATUS_T OsMremapCheck(VADDR_T addr, size_t oldLen, VADDR_T newAddr, size_t newL
 
     return LOS_OK;
 }
-///重新映射虚拟内存地址。
+/*!
+ * 重新映射虚拟内存地址
+ */
 VADDR_T LOS_DoMremap(VADDR_T oldAddress, size_t oldSize, size_t newSize, int flags, VADDR_T newAddr)
 {
     LosVmMapRegion *regionOld = NULL;
@@ -551,7 +562,9 @@ OUT_MREMAP:
     (VOID)LOS_MuxRelease(&space->regionMux);
     return ret;
 }
-///输出内存线性区
+/*!
+ * 输出内存线性区
+ */
 VOID LOS_DumpMemRegion(VADDR_T vaddr)
 {
     LosVmSpace *space = NULL;
@@ -569,4 +582,3 @@ VOID LOS_DumpMemRegion(VADDR_T vaddr)
     OsDumpAspace(space);//dump 空间
 }
 #endif
-

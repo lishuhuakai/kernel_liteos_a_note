@@ -43,7 +43,9 @@
 STATIC CHAR *g_cmdLine = NULL;
 STATIC UINT64 g_alignSize = 0;
 STATIC struct BootArgs g_bootArgs[MAX_ARGS_NUM] = {0};
-/// 读取环境变量bootcmd 来启动内核
+/*!
+ * 读取环境变量bootcmd 来启动内核
+ */
 INT32 LOS_GetCmdLine(VOID)
 {
     int ret;
@@ -108,7 +110,9 @@ VOID LOS_FreeCmdLine(VOID)
         g_cmdLine = NULL;
     }
 }
-///获取boot参数
+/*!
+ * 获取boot参数
+ */
 STATIC INT32 GetBootargs(CHAR **args)
 {
 #ifdef LOSCFG_BOOTENV_RAM
@@ -137,7 +141,9 @@ STATIC INT32 GetBootargs(CHAR **args)
     return LOS_NOK;
 #endif
 }
-///解析boot参数
+/*!
+ * 解析boot参数
+ */
 INT32 LOS_ParseBootargs(VOID)
 {
     INT32 idx = 0;

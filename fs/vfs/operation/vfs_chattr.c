@@ -54,7 +54,9 @@
  *   Zero on success; -1 on failure with errno set:
  *
  ****************************************************************************/
-
+/*!
+ * 更改节点的属性
+ */
 int chattr(const char *pathname, struct IATTR *attr)
 {
     struct Vnode *vnode = NULL;

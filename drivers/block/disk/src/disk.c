@@ -259,7 +259,9 @@ static BOOL GetDiskUsbStatus(UINT32 diskID)
     return (g_usbMode & (1u << diskID)) ? TRUE : FALSE;
 }
 #endif
-//获取某个磁盘的描述符
+/*!
+ * 获取某个磁盘的描述符
+ */
 los_disk *get_disk(INT32 id)
 {
     if ((id >= 0) && (id < SYS_MAX_DISK)) {
@@ -268,7 +270,9 @@ los_disk *get_disk(INT32 id)
 
     return NULL;
 }
-///获取某个分区的描述符
+/*!
+ * 获取某个分区的描述符
+ */
 los_part *get_part(INT32 id)
 {
     if ((id >= 0) && (id < SYS_MAX_PART)) {
@@ -285,7 +289,9 @@ static UINT64 GetFirstPartStart(const los_part *part)
     firstPart = (disk == NULL) ? NULL : LOS_DL_LIST_ENTRY(disk->head.pstNext, los_part, list);
     return (firstPart == NULL) ? 0 : firstPart->sector_start;
 }
-///磁盘增加一个分区
+/*!
+ * 磁盘增加一个分区
+ */
 static VOID DiskPartAddToDisk(los_disk *disk, los_part *part)
 {
     part->disk_id = disk->disk_id;
@@ -293,7 +299,9 @@ static VOID DiskPartAddToDisk(los_disk *disk, los_part *part)
     LOS_ListTailInsert(&disk->head, &part->list);
     disk->part_count++;
 }
-///从磁盘上删除分区
+/*!
+ * 从磁盘上删除分区
+ */
 static VOID DiskPartDelFromDisk(los_disk *disk, los_part *part)
 {
     LOS_ListDelete(&part->list);//从分区链表上摘掉
@@ -1722,7 +1730,10 @@ INT32 los_part_access(const CHAR *dev, mode_t mode)
 
     return ENOERR;
 }
-///设置分区名称
+/*!
+ * 设置分区名称
+ *@param src 分区名称
+ */
 INT32 SetDiskPartName(los_part *part, const CHAR *src)
 {
     size_t len;

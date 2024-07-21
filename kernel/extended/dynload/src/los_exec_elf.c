@@ -74,7 +74,9 @@
 #include "los_vm_phys.h"
 #include "los_vm_map.h"
 #include "los_vm_dump.h"
-/// 运行ELF
+/*!
+ * 运行ELF
+ */
 STATIC INT32 OsExecve(const ELFLoadInfo *loadInfo)
 {
     if ((loadInfo == NULL) || (loadInfo->elfEntry == 0)) {
@@ -123,7 +125,9 @@ ERR_FILE:
     return -ENOENT;
 }
 #endif
-//拷贝用户参数至内核空间
+/*!
+ * 拷贝用户参数至内核空间
+ */
 STATIC INT32 OsCopyUserParam(ELFLoadInfo *loadInfo, const CHAR *fileName, CHAR *kfileName, UINT32 maxSize)
 {
     UINT32 strLen;

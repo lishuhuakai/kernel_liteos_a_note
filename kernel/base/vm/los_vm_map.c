@@ -193,13 +193,11 @@ ULONG_T OsRegionRbCmpKeyFn(const VOID *pNodeKeyA, const VOID *pNodeKeyB)
  * @param virtTtb L1表的地址，TTB表地址	
  * @param vmSpace	
  * @return	
- *
- * @see
  */
 STATIC BOOL OsVmSpaceInitCommon(LosVmSpace *vmSpace, VADDR_T *virtTtb)
 {
-    LOS_RbInitTree(&vmSpace->regionRbTree, OsRegionRbCmpKeyFn, OsRegionRbFreeFn, OsRegionRbGetKeyFn);//初始化虚拟存储空间-以红黑树组织方式
-
+	//初始化虚拟存储空间-以红黑树组织方式
+    LOS_RbInitTree(&vmSpace->regionRbTree, OsRegionRbCmpKeyFn, OsRegionRbFreeFn, OsRegionRbGetKeyFn);
     status_t retval = LOS_MuxInit(&vmSpace->regionMux, NULL);//初始化互斥量
     if (retval != LOS_OK) {
         VM_ERR("Create mutex for vm space failed, status: %d", retval);
@@ -220,7 +218,9 @@ VOID OsVmMapInit(VOID)
         VM_ERR("Create mutex for g_vmSpaceList failed, status: %d", retval);
     }
 }
-///初始化内核虚拟空间
+/*!
+ * 初始化内核虚拟空间
+ */
 BOOL OsKernVmSpaceInit(LosVmSpace *vmSpace, VADDR_T *virtTtb)//内核空间页表是编译时放在bbs段指定的,共用 L1表
 {
     vmSpace->base = KERNEL_ASPACE_BASE;//内核空间基地址, 线性区将分配在此范围
@@ -233,7 +233,9 @@ BOOL OsKernVmSpaceInit(LosVmSpace *vmSpace, VADDR_T *virtTtb)//内核空间页�
 #endif
     return OsVmSpaceInitCommon(vmSpace, virtTtb);//virtTtb 用于初始化 mmu
 }
-///初始化内核堆空间
+/*!
+ * 初始化内核堆空间
+ */
 BOOL OsVMallocSpaceInit(LosVmSpace *vmSpace, VADDR_T *virtTtb)//内核动态空间的页表是动态申请得来，共用 L1表
 {
     vmSpace->base = VMALLOC_START;		//内核堆空间基地址
@@ -246,7 +248,9 @@ BOOL OsVMallocSpaceInit(LosVmSpace *vmSpace, VADDR_T *virtTtb)//内核动态空�
 #endif
     return OsVmSpaceInitCommon(vmSpace, virtTtb);//创建MMU,为后续的虚实映射做好初始化的工作
 }
-///内核虚拟空间初始化
+/*!
+ * 内核虚拟空间初始化
+ */
 VOID OsKSpaceInit(VOID)
 {
     OsVmMapInit();//初始化后续操作 g_vmSpaceList 的互斥锁 
@@ -259,8 +263,6 @@ VOID OsKSpaceInit(VOID)
  * @param virtTtb	
  * @param vmSpace	
  * @return	
- *
- * @see
  */
 BOOL OsUserVmSpaceInit(LosVmSpace *vmSpace, VADDR_T *virtTtb)
 {
@@ -277,7 +279,9 @@ BOOL OsUserVmSpaceInit(LosVmSpace *vmSpace, VADDR_T *virtTtb)
 #endif
     return OsVmSpaceInitCommon(vmSpace, virtTtb);//创建MMU,为后续的虚实映射做好初始化的工作
 }
-/// 创建用户进程空间
+/*!
+ * 创建用户进程空间
+ */
 LosVmSpace *OsCreateUserVmSpace(VOID)
 {
     BOOL retVal = FALSE;
@@ -287,8 +291,8 @@ LosVmSpace *OsCreateUserVmSpace(VOID)
         return NULL;
     }
 	//此处为何直接申请物理页帧存放用户进程的页表,大概是因为所有页表都被存放在内核空间(g_kVmSpace)而非内核分配空间(g_vMallocSpace)
-    VADDR_T *ttb = LOS_PhysPagesAllocContiguous(1);//分配一个物理页用于存放虚实映射关系表, 即:L1表
-    if (ttb == NULL) {//若连页表都没有,剩下的也别玩了.
+    VADDR_T *ttb = LOS_PhysPagesAllocContiguous(1);//分配一个物理页用于存放虚实映射关系表, 即L1表
+    if (ttb == NULL) {//若连页表都没有,剩下的也别玩了
         (VOID)LOS_MemFree(m_aucSysMem0, space);
         return NULL;
     }
@@ -302,7 +306,6 @@ LosVmSpace *OsCreateUserVmSpace(VOID)
         return NULL;
     }
     LOS_ListAdd(&space->archMmu.ptList, &(vmPage->node));//页表链表,先挂上L1,后续还会挂上 N个L2表
-
     return space;
 }
 
@@ -314,7 +317,9 @@ STATIC BOOL OsVmSpaceParamCheck(const LosVmSpace *vmSpace)//这么简单也要�
     return TRUE;
 }
 
-//虚拟内存空间克隆，被用于fork进程
+/*!
+ * 虚拟内存空间克隆，被用于fork进程
+ */
 STATUS_T LOS_VmSpaceClone(UINT32 cloneFlags, LosVmSpace *oldVmSpace, LosVmSpace *newVmSpace)
 {
     LosRbNode *pstRbNode = NULL;
@@ -396,7 +401,9 @@ STATUS_T LOS_VmSpaceClone(UINT32 cloneFlags, LosVmSpace *oldVmSpace, LosVmSpace 
     (VOID)LOS_MuxRelease(&oldVmSpace->regionMux);
     return ret;
 }
-///通过虚拟(线性)地址查找所属线性区,红黑树
+/*!
+ * 通过虚拟(线性)地址查找所属线性区,红黑树
+ */
 LosVmMapRegion *OsFindRegion(LosRbTree *regionRbTree, VADDR_T vaddr, size_t len)
 {
     LosVmMapRegion *regionRst = NULL;
@@ -410,7 +417,9 @@ LosVmMapRegion *OsFindRegion(LosRbTree *regionRbTree, VADDR_T vaddr, size_t len)
     }
     return regionRst;
 }
-/// 查找线性区 根据起始地址在进程空间内查找是否存在
+/*!
+ * 查找线性区 根据起始地址在进程空间内查找是否存在
+ */
 LosVmMapRegion *LOS_RegionFind(LosVmSpace *vmSpace, VADDR_T addr)
 {
     LosVmMapRegion *region = NULL;
@@ -421,7 +430,9 @@ LosVmMapRegion *LOS_RegionFind(LosVmSpace *vmSpace, VADDR_T addr)
 
     return region;
 }
-/// 查找线性区 根据地址区间在进程空间内查找是否存在
+/*!
+ * 查找线性区 根据地址区间在进程空间内查找是否存在
+ */
 LosVmMapRegion *LOS_RegionRangeFind(LosVmSpace *vmSpace, VADDR_T addr, size_t len)
 {
     LosVmMapRegion *region = NULL;
@@ -432,14 +443,17 @@ LosVmMapRegion *LOS_RegionRangeFind(LosVmSpace *vmSpace, VADDR_T addr, size_t le
 
     return region;
 }
-/// 分配指定长度的线性区
+/*!
+ * 分配指定长度的线性区
+ * @param len 要分配的长度
+ */
 VADDR_T OsAllocRange(LosVmSpace *vmSpace, size_t len)
 {
     LosVmMapRegion *curRegion = NULL;
     LosRbNode *pstRbNode = NULL;
     LosRbNode *pstRbNodeTmp = NULL;
     LosRbTree *regionRbTree = &vmSpace->regionRbTree;
-    VADDR_T curEnd = vmSpace->mapBase;//获取映射区基地址
+    VADDR_T curEnd = vmSpace->mapBase;//获取映射区基地址(虚拟地址)
     VADDR_T nextStart;
 
     curRegion = LOS_RegionFind(vmSpace, vmSpace->mapBase);
@@ -481,7 +495,9 @@ VADDR_T OsAllocRange(LosVmSpace *vmSpace, size_t len)
 
     return 0;
 }
-/// 分配指定开始地址和长度的线性区
+/*!
+ * 分配指定开始地址和长度的线性区
+ */
 VADDR_T OsAllocSpecificRange(LosVmSpace *vmSpace, VADDR_T vaddr, size_t len, UINT32 regionFlags)
 {
     STATUS_T status;
@@ -508,7 +524,9 @@ VADDR_T OsAllocSpecificRange(LosVmSpace *vmSpace, VADDR_T vaddr, size_t len, UIN
 
     return vaddr;
 }
-///映射类型为文件的线性区是否有效
+/*!
+ * 映射类型为文件的线性区是否有效
+ */
 BOOL LOS_IsRegionFileValid(LosVmMapRegion *region)
 {
     if ((region != NULL) && (LOS_IsRegionTypeFile(region)) &&
@@ -517,7 +535,9 @@ BOOL LOS_IsRegionFileValid(LosVmMapRegion *region)
     }
     return FALSE;
 }
-///向红黑树中插入线性区
+/*!
+ * 向红黑树中插入线性区
+ */
 BOOL OsInsertRegion(LosRbTree *regionRbTree, LosVmMapRegion *region)
 {
     if (LOS_RbAddNode(regionRbTree, (LosRbNode *)region) == FALSE) {
@@ -527,7 +547,11 @@ BOOL OsInsertRegion(LosRbTree *regionRbTree, LosVmMapRegion *region)
     }
     return TRUE;
 }
-///创建一个线性区
+/*!
+ * 创建一个线性区
+ * @param vaddr 首地址(虚拟地址)
+ * @param len 长度
+ */
 LosVmMapRegion *OsCreateRegion(VADDR_T vaddr, size_t len, UINT32 regionFlags, unsigned long offset)
 {
     LosVmMapRegion *region = LOS_MemAlloc(m_aucSysMem0, sizeof(LosVmMapRegion));//只是分配一个线性区结构体
@@ -546,7 +570,9 @@ LosVmMapRegion *OsCreateRegion(VADDR_T vaddr, size_t len, UINT32 regionFlags, un
     region->shmid = -1;			//默认线性区为不共享,无共享资源ID
     return region;
 }
-///通过虚拟地址查询映射的物理地址
+/*!
+ * 通过虚拟地址查询映射的物理地址
+ */
 PADDR_T LOS_PaddrQuery(VOID *vaddr)
 {
     PADDR_T paddr = 0;
@@ -576,8 +602,8 @@ PADDR_T LOS_PaddrQuery(VOID *vaddr)
 
 /*!
  * 这里不是真的分配物理内存，而是逻辑上画一个连续的区域，标记这个区域可以拿用，表示内存已经归你了。
-   但真正的物理内存的占用会延迟到使用的时候才由缺页中断调入内存
-*/
+ * 但真正的物理内存的占用会延迟到使用的时候才由缺页中断调入内存
+ */
 LosVmMapRegion *LOS_RegionAlloc(LosVmSpace *vmSpace, VADDR_T vaddr, size_t len, UINT32 regionFlags, VM_OFFSET_T pgoff)
 {
     VADDR_T rstVaddr;
@@ -589,7 +615,7 @@ LosVmMapRegion *LOS_RegionAlloc(LosVmSpace *vmSpace, VADDR_T vaddr, size_t len, 
      * then the kernel takes it as where to place the mapping;
      */
     (VOID)LOS_MuxAcquire(&vmSpace->regionMux);//获得互斥锁
-    if (vaddr == 0) {//如果地址是0，根据线性区管理的实际情况,自动创建虚拟地址，    这是创建新映射的最便捷的方法。
+    if (vaddr == 0) {//如果地址是0，根据线性区管理的实际情况,自动创建虚拟地址,    这是创建新映射的最便捷的方法。
         rstVaddr = OsAllocRange(vmSpace, len);
     } else {
         /* if it is already mmapped here, we unmmap it | 如果已经被映射了, 则解除映射关系*/
@@ -621,7 +647,7 @@ OUT:
 /*!
  * 删除匿名页,匿名页就是内存映射页
  * 1.解除映射关系 2.释放物理内存
-*/
+ */
 STATIC VOID OsAnonPagesRemove(LosArchMmu *archMmu, VADDR_T vaddr, UINT32 count)
 {
     status_t status;
@@ -690,7 +716,9 @@ STATIC VOID OsFilePagesRemove(LosVmSpace *space, LosVmMapRegion *region)
     }
 }
 #endif
-/// 释放进程空间指定线性区
+/*!
+ * 释放进程空间指定线性区
+ */
 STATUS_T LOS_RegionFree(LosVmSpace *space, LosVmMapRegion *region)
 {
     if ((space == NULL) || (region == NULL)) {
@@ -727,7 +755,9 @@ STATUS_T LOS_RegionFree(LosVmSpace *space, LosVmMapRegion *region)
     (VOID)LOS_MuxRelease(&space->regionMux);
     return LOS_OK;
 }
-/// 复制线性区
+/*!
+ * 复制线性区
+ */
 LosVmMapRegion *OsVmRegionDup(LosVmSpace *space, LosVmMapRegion *oldRegion, VADDR_T vaddr, size_t size)
 {
     LosVmMapRegion *newRegion = NULL;
@@ -768,13 +798,18 @@ REGIONDUPOUT:
     (VOID)LOS_MuxRelease(&space->regionMux);
     return newRegion;
 }
-/// 劈开线性区
+/*!
+ * 切分线性区
+ * @param oldRegion 待切分的Region
+ */
 STATIC LosVmMapRegion *OsVmRegionSplit(LosVmMapRegion *oldRegion, VADDR_T newRegionStart)
 {
     LosVmMapRegion *newRegion = NULL;
     LosVmSpace *space = oldRegion->space;
     size_t size = LOS_RegionSize(newRegionStart, LOS_RegionEndAddr(oldRegion));//获取线性区大小
-
+	// 切分为两段:
+	// oldRegion->range.base ~ newRegionStart - 1
+	// newRegionStart ~ (oldRegion->range.base + oldRegion->range.size - 1)
     oldRegion->range.size = LOS_RegionSize(oldRegion->range.base, newRegionStart - 1);//获取旧线性区大小
     if (oldRegion->range.size == 0) {
         LOS_RbDelNode(&space->regionRbTree, &oldRegion->rbNode);
@@ -790,14 +825,16 @@ STATIC LosVmMapRegion *OsVmRegionSplit(LosVmMapRegion *oldRegion, VADDR_T newReg
 #endif
     return newRegion;
 }
-///对线性区进行调整
+/*!
+ * 对线性区进行调整
+ */
 STATUS_T OsVmRegionAdjust(LosVmSpace *space, VADDR_T newRegionStart, size_t size)
 {
     LosVmMapRegion *region = NULL;
     VADDR_T nextRegionBase = newRegionStart + size;
     LosVmMapRegion *newRegion = NULL;
 
-    region = LOS_RegionFind(space, newRegionStart);//先找到线性区
+    region = LOS_RegionFind(space, newRegionStart);//先找到newRegionStart所在的线性区
     if ((region != NULL) && (newRegionStart > region->range.base)) {
         newRegion = OsVmRegionSplit(region, newRegionStart);
         if (newRegion == NULL) {
@@ -817,11 +854,13 @@ STATUS_T OsVmRegionAdjust(LosVmSpace *space, VADDR_T newRegionStart, size_t size
 
     return LOS_OK;
 }
-///删除线性区
+/*!
+ * 删除线性区
+ */
 STATUS_T OsRegionsRemove(LosVmSpace *space, VADDR_T regionBase, size_t size)
 {
     STATUS_T status;
-    VADDR_T regionEnd = regionBase + size - 1;
+    VADDR_T regionEnd = regionBase + size - 1; //结束的线性地址
     LosVmMapRegion *regionTemp = NULL;
     LosRbNode *pstRbNodeTemp = NULL;
     LosRbNode *pstRbNodeNext = NULL;
@@ -852,7 +891,9 @@ ERR_REGION_SPLIT:
     (VOID)LOS_MuxRelease(&space->regionMux);
     return status;
 }
-///根据指定参数范围[addr,addr+len] 释放用户空间中堆区所占用的物理内存
+/*!
+ * 根据指定参数范围[addr,addr+len] 释放用户空间中堆区所占用的物理内存
+ */
 INT32 OsUserHeapFree(LosVmSpace *vmSpace, VADDR_T addr, size_t len)
 {
     LosVmMapRegion *vmRegion = NULL;
@@ -889,7 +930,9 @@ INT32 OsUserHeapFree(LosVmSpace *vmSpace, VADDR_T addr, size_t len)
 
     return -1;
 }
-///线性区是否支持扩展
+/*!
+ * 线性区是否支持扩展
+ */
 STATUS_T OsIsRegionCanExpand(LosVmSpace *space, LosVmMapRegion *region, size_t size)
 {
     LosVmMapRegion *nextRegion = NULL;
@@ -906,7 +949,9 @@ STATUS_T OsIsRegionCanExpand(LosVmSpace *space, LosVmMapRegion *region, size_t s
 
     return LOS_NOK;
 }
-///解除一定范围的虚拟地址的映射关系
+/*!
+ * 解除一定范围的虚拟地址的映射关系
+ */
 STATUS_T OsUnMMap(LosVmSpace *space, VADDR_T addr, size_t size)
 {
     size = LOS_Align(size, PAGE_SIZE);
@@ -923,7 +968,9 @@ ERR_REGION_SPLIT:
     (VOID)LOS_MuxRelease(&space->regionMux);
     return status;
 }
-/// 释放所有线性区
+/*!
+ * 释放所有线性区
+ */
 STATIC VOID OsVmSpaceAllRegionFree(LosVmSpace *space)
 {
     LosRbNode *pstRbNode = NULL;
@@ -944,7 +991,9 @@ STATIC VOID OsVmSpaceAllRegionFree(LosVmSpace *space)
 
     return;
 }
-/// 释放虚拟空间
+/*!
+ * 释放虚拟空间
+ */
 STATUS_T OsVmSpaceRegionFree(LosVmSpace *space)
 {
     if (space == NULL) {
@@ -962,7 +1011,9 @@ STATUS_T OsVmSpaceRegionFree(LosVmSpace *space)
 
     return LOS_OK;
 }
-///释放虚拟空间,注意内核空间不能被释放掉,永驻内存
+/*!
+ * 释放虚拟空间,注意内核空间不能被释放掉,永驻内存
+ */
 STATUS_T LOS_VmSpaceFree(LosVmSpace *space)
 {
     if (space == NULL) {
@@ -999,7 +1050,9 @@ STATUS_T LOS_VmSpaceFree(LosVmSpace *space)
     LOS_MemFree(m_aucSysMem0, space);
     return LOS_OK;
 }
-///虚拟地址和size是否在空间
+/*!
+ * 虚拟地址和size是否在空间
+ */
 BOOL LOS_IsRangeInSpace(const LosVmSpace *space, VADDR_T vaddr, size_t size)
 {
     /* is the starting address within the address space */
@@ -1019,7 +1072,9 @@ BOOL LOS_IsRangeInSpace(const LosVmSpace *space, VADDR_T vaddr, size_t size)
     }
     return TRUE;
 }
-/// 在进程空间中预留一块内存空间
+/*!
+ * 在进程空间中预留一块内存空间
+ */
 STATUS_T LOS_VmSpaceReserve(LosVmSpace *space, size_t size, VADDR_T vaddr)
 {
     UINT32 regionFlags = 0;
@@ -1040,7 +1095,9 @@ STATUS_T LOS_VmSpaceReserve(LosVmSpace *space, size_t size, VADDR_T vaddr)
 
     return region ? LOS_OK : LOS_ERRNO_VM_NO_MEMORY;
 }
-///实现从虚拟地址到物理地址的映射,将指定长度的物理地址区间与虚拟地址区间做映射，需提前申请物理地址区间
+/*!
+ * 实现从虚拟地址到物理地址的映射,将指定长度的物理地址区间与虚拟地址区间做映射，需提前申请物理地址区间
+ */
 STATUS_T LOS_VaddrToPaddrMmap(LosVmSpace *space, VADDR_T vaddr, PADDR_T paddr, size_t len, UINT32 flags)
 {
     STATUS_T ret;
@@ -1093,7 +1150,9 @@ STATUS_T LOS_VaddrToPaddrMmap(LosVmSpace *space, VADDR_T vaddr, PADDR_T paddr, s
     return LOS_OK;
 }
 
-//对外接口|申请内核堆空间内存
+/*!
+ * 对外接口|申请内核堆空间内存
+ */
 VOID *LOS_VMalloc(size_t size)
 {
     LosVmSpace *space = &g_vMallocSpace;//从内核动态空间申请
@@ -1146,7 +1205,9 @@ ERROR:
     (VOID)LOS_MuxRelease(&space->regionMux);//释放互斥锁
     return NULL;
 }
-///对外接口|释放内核堆空间内存
+/*!
+ * 对外接口|释放内核堆空间内存
+ */
 VOID LOS_VFree(const VOID *addr)
 {
     LosVmSpace *space = &g_vMallocSpace;
@@ -1201,7 +1262,9 @@ PADDR_T LOS_PaddrQuery(VOID *vaddr)
     return (PADDR_T)VMM_TO_DMA_ADDR((VADDR_T)vaddr);
 }
 #endif
-///内核空间内存分配,申请小于16KiB的内存则通过堆内存池获取，否则申请多个连续物理页
+/*!
+ * 内核空间内存分配,申请小于16KiB的内存则通过堆内存池获取，否则申请多个连续物理页
+ */
 VOID *LOS_KernelMalloc(UINT32 size)
 {
     VOID *ptr = NULL;
@@ -1217,7 +1280,9 @@ VOID *LOS_KernelMalloc(UINT32 size)
 
     return ptr;
 }
-/// 申请具有对齐属性的内存，申请规则：申请小于16KiB的内存则通过堆内存池获取，否则申请多个连续物理页
+/*!
+ * 申请具有对齐属性的内存，申请规则：申请小于16KiB的内存则通过堆内存池获取，否则申请多个连续物理页
+ */
 VOID *LOS_KernelMallocAlign(UINT32 size, UINT32 boundary)
 {
     VOID *ptr = NULL;
@@ -1233,7 +1298,9 @@ VOID *LOS_KernelMallocAlign(UINT32 size, UINT32 boundary)
 
     return ptr;
 }
-/// 重新分配内核内存空间
+/*!
+ * 重新分配内核内存空间
+ */
 VOID *LOS_KernelRealloc(VOID *ptr, UINT32 size)
 {
     VOID *tmpPtr = NULL;
@@ -1290,5 +1357,3 @@ VOID LOS_KernelFree(VOID *ptr)
         (VOID)LOS_MemFree(OS_SYS_MEM_ADDR, ptr);//从内存池中释放
     }
 }
-
-

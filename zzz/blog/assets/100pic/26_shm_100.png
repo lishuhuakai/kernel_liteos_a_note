@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>NoSuchKey</Code>
+  <Message>The specified key does not exist.</Message>
+  <RequestId>66A24BB4FE87B7303845B2CA</RequestId>
+  <HostId>weharmonyos.oss-cn-hangzhou.aliyuncs.com</HostId>
+  <Key>resources/100pic/26_shm_100.png</Key>
+  <EC>0026-00000001</EC>
+  <RecommendDoc>https://api.aliyun.com/troubleshoot?q=0026-00000001</RecommendDoc>
+</Error>

@@ -121,7 +121,9 @@ STATIC INT32 AddEmmcParts(INT32 rootAddr, INT32 rootSize, INT32 userAddr, INT32 
 }
 #endif
 
-//增加一个分
+/*!
+ * 增加一个分区
+ */
 STATIC INT32 AddPartitions(CHAR *dev, UINT64 rootAddr, UINT64 rootSize, UINT64 userAddr, UINT64 userSize)
 {
 #if defined(LOSCFG_STORAGE_SPINOR) || defined(LOSCFG_STORAGE_SPINAND)
@@ -155,7 +157,9 @@ STATIC INT32 AddPartitions(CHAR *dev, UINT64 rootAddr, UINT64 rootSize, UINT64 u
     return LOS_NOK;
 }
 
-//获取根文件系统参
+/*!
+ * 获取根文件系统参数
+ */
 STATIC INT32 ParseRootArgs(CHAR **dev, CHAR **fstype, UINT64 *rootAddr, UINT64 *rootSize, UINT32 *mountFlags)
 {
     INT32 ret;
@@ -221,14 +225,14 @@ STATIC INT32 ParseUserArgs(UINT64 rootAddr, UINT64 rootSize, UINT64 *userAddr, U
 
     return LOS_OK;
 }
-///挂载分区,即挂�?"/","/storage"
+///挂载分区,即挂载"/","/storage"
 STATIC INT32 MountPartitions(CHAR *fsType, UINT32 mountFlags)
 {
     INT32 ret;
     INT32 err;
 
     /* Mount rootfs */
-    ret = mount(ROOT_DEV_NAME, ROOT_DIR_NAME, fsType, mountFlags, NULL);//挂载根文件系�?
+    ret = mount(ROOT_DEV_NAME, ROOT_DIR_NAME, fsType, mountFlags, NULL);//挂载根文件系统
     if (ret != LOS_OK) {
         err = get_errno();
         PRINT_ERR("Failed to mount %s, rootDev %s, errno %d: %s\n", ROOT_DIR_NAME, ROOT_DEV_NAME, err, strerror(err));
@@ -323,7 +327,9 @@ STATIC INT32 CheckValidation(UINT64 rootAddr, UINT64 rootSize, UINT64 userAddr, 
 
     return LOS_OK;
 }
-///挂载根文件系�?�?SystemInit 调用
+/*!
+ * 挂载根文件系统, 由SystemInit 调用
+ */
 INT32 OsMountRootfs()
 {
     INT32 ret;
@@ -334,7 +340,7 @@ INT32 OsMountRootfs()
     UINT64 userAddr;
     UINT64 userSize;
     UINT32 mountFlags;
-	//获取根文件系统参�?
+	//获取根文件系统参数
     ret = ParseRootArgs(&dev, &fstype, &rootAddr, &rootSize, &mountFlags);
     if (ret != LOS_OK) {
         return ret;
@@ -344,7 +350,7 @@ INT32 OsMountRootfs()
     if (ret != LOS_OK) {
         return ret;
     }
-	//检查内核和用户空间的有效�?
+	//检查内核和用户空间的有效性
     ret = CheckValidation(rootAddr, rootSize, userAddr, userSize);
     if (ret != LOS_OK) {
         return ret;
@@ -354,7 +360,7 @@ INT32 OsMountRootfs()
     if (ret != LOS_OK) {
         return ret;
     }
-	//挂载分区,即挂�?`/`
+	//挂载分区,即挂载/
     ret = MountPartitions(fstype, mountFlags);
     if (ret != LOS_OK) {
         return ret;

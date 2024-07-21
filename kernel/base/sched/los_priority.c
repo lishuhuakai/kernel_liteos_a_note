@@ -539,7 +539,9 @@ VOID HPFProcessDefaultSchedParamGet(SchedParam *param)
 {
     param->basePrio = OS_USER_PROCESS_PRIORITY_HIGHEST;
 }
-//HPF 调度策略初始化
+/*!
+ * HPF 调度策略初始化
+ */
 VOID HPFSchedPolicyInit(SchedRunqueue *rq)
 {
     if (ArchCurrCpuid() > 0) {

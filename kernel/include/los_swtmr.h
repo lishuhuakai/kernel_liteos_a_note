@@ -282,7 +282,7 @@ typedef struct tagSwTmrCtrl {
 
 /**
  * @ingroup los_swtmr
- * @brief Start a software timer.
+ * @brief Start a software timer. | 启动一个软件定时器
  *
  * @par Description:
  * This API is used to start a software timer that has a specified ID.

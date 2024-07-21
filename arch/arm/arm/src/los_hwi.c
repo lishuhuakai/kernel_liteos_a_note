@@ -153,31 +153,39 @@ LITE_OS_SEC_BSS  SPIN_LOCK_INIT(g_hwiSpin); ///< 注意全局变量 g_hwiSpin �
 size_t g_intCount[LOSCFG_KERNEL_CORE_NUM] = {0};///< 记录每个CPUcore的中断数量 
 HwiHandleForm g_hwiForm[OS_HWI_MAX_NUM];		///< 中断注册表        @note_why 用 form 来表示？有种写 HTML的感觉
 STATIC CHAR *g_hwiFormName[OS_HWI_MAX_NUM] = {0};///< 记录每个硬中断的名称
-STATIC UINT32 g_hwiFormCnt[LOSCFG_KERNEL_CORE_NUM][OS_HWI_MAX_NUM] = {0};
+STATIC UINT32 g_hwiFormCnt[LOSCFG_KERNEL_CORE_NUM][OS_HWI_MAX_NUM] = {0}; ///<记录每个硬中断的总数量
 
 /**
  * @brief 获取某个中断的中断次数
  * 
- * @param index 
+ * @param index 中断号
  * @return UINT32 
  */
 UINT32 OsGetHwiFormCnt(UINT16 cpuid, UINT32 index)
 {
     return g_hwiFormCnt[cpuid][index];
 }
-
-CHAR *OsGetHwiFormName(UINT32 index)//获取某个中断的名称
+/*!
+ * 获取某个中断的名称
+ */
+CHAR *OsGetHwiFormName(UINT32 index)
 {
     return g_hwiFormName[index];
 }
-/// 获取系统支持的最大中断数
+/*!
+ * 获取系统支持的最大中断数
+ */
 UINT32 LOS_GetSystemHwiMaximum(VOID)
 {
     return OS_HWI_MAX_NUM;
 }
 typedef VOID (*HWI_PROC_FUNC0)(VOID);
 typedef VOID (*HWI_PROC_FUNC2)(INT32, VOID *);
-VOID OsInterrupt(UINT32 intNum)//中断实际处理函数
+/*!
+ * 中断实际处理函数
+ *@param intNum 中断号
+ */
+VOID OsInterrupt(UINT32 intNum)
 {
     HwiHandleForm *hwiForm = NULL;
     UINT32 *intCnt = NULL;
@@ -188,7 +196,7 @@ VOID OsInterrupt(UINT32 intNum)//中断实际处理函数
     *intCnt = *intCnt + 1;//@note_why 这里没看明白为什么要 +1
 
 #ifdef LOSCFG_CPUP_INCLUDE_IRQ //开启查询系统CPU的占用率的中断
-    OsCpupIrqStart(cpuid);
+    OsCpupIrqStart(cpuid); //记录本次中断处理开始的时间
 #endif
     OsSchedIrqStartTime();
     OsHookCall(LOS_HOOK_TYPE_ISR_ENTER, intNum);
@@ -223,7 +231,9 @@ VOID OsInterrupt(UINT32 intNum)//中断实际处理函数
     /* Must keep the operation at the end of the interface */
     *intCnt = *intCnt - 1;
 }
-///申请内核空间拷贝硬中断参数
+/*!
+ * 申请内核空间拷贝硬中断参数
+ */
 STATIC HWI_ARG_T OsHwiCpIrqParam(const HwiIrqParam *irqParam)
 {
     HwiIrqParam *paramByAlloc = NULL;
@@ -254,7 +264,12 @@ STATIC UINT32 OsHwiDelNoShared(HWI_HANDLE_T hwiNum)
     HWI_UNLOCK(intSave);//释放硬中断自旋锁
     return LOS_OK;
 }
-///创建一个不支持共享的中断
+/*!
+ * 创建一个不支持共享的中断
+ *@param hwiHandler 中断处理函数
+ *@param hwiNum 中断硬件中断号
+ *@param hwiMode 中断模式
+ */
 STATIC UINT32 OsHwiCreateNoShared(HWI_HANDLE_T hwiNum, HWI_MODE_T hwiMode,
                                   HWI_PROC_FUNC hwiHandler, const HwiIrqParam *irqParam)
 {
@@ -278,7 +293,10 @@ STATIC UINT32 OsHwiCreateNoShared(HWI_HANDLE_T hwiNum, HWI_MODE_T hwiMode,
     HWI_UNLOCK(intSave);
     return LOS_OK;
 }
-#else	//删除一个共享中断
+#else	
+/*!
+ * 删除一个共享中断
+ */
 STATIC UINT32 OsHwiDelShared(HWI_HANDLE_T hwiNum, const HwiIrqParam *irqParam)
 {
     HwiHandleForm *hwiForm = NULL;
@@ -336,7 +354,13 @@ STATIC UINT32 OsHwiDelShared(HWI_HANDLE_T hwiNum, const HwiIrqParam *irqParam)
     HWI_UNLOCK(intSave);
     return LOS_OK;
 }
-///创建一个共享硬件中断,共享中断就是一个中断能触发多个响应函数
+/*!
+ * 创建一个共享硬件中断,共享中断就是一个中断能触发多个响应函数
+ *@param hwiNum 中断号
+ *@param hwiMode 中断模式
+ *@param hwiHandler 中断处理函数
+ *@param irqParam 中断处理函数参数
+ */
 STATIC UINT32 OsHwiCreateShared(HWI_HANDLE_T hwiNum, HWI_MODE_T hwiMode,
                                 HWI_PROC_FUNC hwiHandler, const HwiIrqParam *irqParam)
 {
@@ -396,9 +420,9 @@ STATIC UINT32 OsHwiCreateShared(HWI_HANDLE_T hwiNum, HWI_MODE_T hwiMode,
 #endif
 
 /*
- * Description : initialization of the hardware interrupt
+ * Description : initialization of the hardware interrupt | 硬件中断初始化
  */
-LITE_OS_SEC_TEXT_INIT VOID OsHwiInit(VOID)//硬件中断初始化
+LITE_OS_SEC_TEXT_INIT VOID OsHwiInit(VOID)
 {
     UINT32 hwiNum;
 
@@ -417,8 +441,8 @@ LITE_OS_SEC_TEXT_INIT VOID OsHwiInit(VOID)//硬件中断初始化
 
 /**
  * @brief  创建一个硬中断
-    \n 中断创建，注册中断号、中断触发模式、中断优先级、中断处理程序。中断被触发时，
-    \n handleIrq会调用该中断处理程序
+ *   \n 中断创建，注册中断号、中断触发模式、中断优先级、中断处理程序。中断被触发时，
+ *   \n handleIrq会调用该中断处理程序
  * @param hwiNum 硬中断句柄编号 默认范围[0-127]
  * @param hwiPrio 硬中断优先级	
  * @param hwiMode 硬中断模式 共享和非共享
@@ -449,7 +473,9 @@ LITE_OS_SEC_TEXT_INIT UINT32 LOS_HwiCreate(HWI_HANDLE_T hwiNum,
 #endif
     return ret;
 }
-///删除一个硬中断
+/*!
+ * 删除一个硬中断
+ */
 LITE_OS_SEC_TEXT_INIT UINT32 LOS_HwiDelete(HWI_HANDLE_T hwiNum, HwiIrqParam *irqParam)
 {
     UINT32 ret;
@@ -465,4 +491,3 @@ LITE_OS_SEC_TEXT_INIT UINT32 LOS_HwiDelete(HWI_HANDLE_T hwiNum, HwiIrqParam *irq
 #endif
     return ret;
 }
-

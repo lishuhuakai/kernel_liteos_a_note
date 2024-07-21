@@ -37,7 +37,9 @@
 
 #include "fs/mount.h"
 #include "internal.h"
-//显示文件系统类型,将被作为回调函数回调           cat /proc/mounts 显示的每项内容
+/*!
+ * 显示文件系统类型,将被作为回调函数回调           cat /proc/mounts 显示的每项内容
+ */
 static int ShowType(const char *devPoint, const char *mountPoint, struct statfs *statBuf, void *arg)
 {
     struct SeqBuf *seqBuf = (struct SeqBuf *)arg;
@@ -74,7 +76,9 @@ static int ShowType(const char *devPoint, const char *mountPoint, struct statfs 
 
     return 0;
 }
-/// 读取 mount 接口实现
+/*!
+ * 读取 mount 接口实现
+ */
 static int MountsProcFill(struct SeqBuf *m, void *v)
 {
     foreach_mountpoint_t handler = ShowType;
@@ -82,7 +86,9 @@ static int MountsProcFill(struct SeqBuf *m, void *v)
 
     return 0;
 }
-///实现 操作proc file 接口,也可理解为驱动程序不同
+/*!
+ * 实现 操作proc file 接口,也可理解为驱动程序不同
+ */
 static const struct ProcFileOperations MOUNTS_PROC_FOPS = {
     .read = MountsProcFill,// /proc/mounts 只能被读取
 };

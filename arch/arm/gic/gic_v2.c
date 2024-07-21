@@ -68,12 +68,17 @@ VOID HalIrqSetAffinity(UINT32 vector, UINT32 cpuMask)
     GIC_REG_8(GICD_ITARGETSR(offset) + index) = cpuMask;
 }
 #endif
-/// 获取当前中断号
+/*!
+ * 获取当前中断号
+ */
 UINT32 HalCurIrqGet(VOID)
 {
     return g_curIrqNum;
 }
-/// 屏蔽中断
+/*!
+ * 屏蔽中断
+ *@param vector 中断向量号
+ */
 VOID HalIrqMask(UINT32 vector)
 {
     if ((vector > OS_USER_HWI_MAX) || (vector < OS_USER_HWI_MIN)) {
@@ -82,13 +87,16 @@ VOID HalIrqMask(UINT32 vector)
 
     GIC_REG_32(GICD_ICENABLER(vector / 32)) = 1U << (vector % 32);
 }
-/// 撤销中断屏蔽
+/*!
+ * 撤销中断屏蔽
+ *@param vector 中断向量号
+ */
 VOID HalIrqUnmask(UINT32 vector)
 {
     if ((vector > OS_USER_HWI_MAX) || (vector < OS_USER_HWI_MIN)) {
         return;
     }
-
+	// 这里设置中断使能寄存器
     GIC_REG_32(GICD_ISENABLER(vector >> 5)) = 1U << (vector % 32);
 }
 
@@ -105,7 +113,9 @@ VOID HalIrqClear(UINT32 vector)
 {
     GIC_REG_32(GICC_EOIR) = vector;
 }
-/// 中断控制器与CPU之间的关系初始化
+/*!
+ * 中断控制器与CPU之间的关系初始化
+ */
 VOID HalIrqInitPercpu(VOID)
 {
     /* unmask interrupts */
@@ -114,14 +124,16 @@ VOID HalIrqInitPercpu(VOID)
     /* enable gic cpu interface */
     GIC_REG_32(GICC_CTLR) = 1;//使能GICC_CTLR寄存器,意思是打通控制器和CPU之间的链路
 }
-/// 中断控制器本身初始化
+/*!
+ * 中断控制器本身初始化
+ */
 VOID HalIrqInit(VOID)
 {
     UINT32 i;
 
     /* set externel interrupts to be level triggered, active low. | 设置外部中断为电平触发，低电平有效。*/
     for (i = 32; i < OS_HWI_MAX_NUM; i += 16) {
-        GIC_REG_32(GICD_ICFGR(i / 16)) = 0;
+        GIC_REG_32(GICD_ICFGR(i / 16)) = 0; // 设置中断配置寄存器
     }
 
     /* set externel interrupts to CPU 0 | 将外部中断设置为 CPU 0*/
@@ -157,8 +169,8 @@ VOID HalIrqInit(VOID)
 
 VOID HalIrqHandler(VOID)
 {
-    UINT32 iar = GIC_REG_32(GICC_IAR);
-    UINT32 vector = iar & 0x3FFU;
+    UINT32 iar = GIC_REG_32(GICC_IAR); // 从中断确认寄存器中获取中断ID号
+    UINT32 vector = iar & 0x3FFU; // 计算中断向量号
 
     /*
      * invalid irq number, mainly the spurious interrupts 0x3ff,
@@ -173,7 +185,7 @@ VOID HalIrqHandler(VOID)
     OsInterrupt(vector);
 
     /* use orignal iar to do the EOI */
-    GIC_REG_32(GICC_EOIR) = iar;
+    GIC_REG_32(GICC_EOIR) = iar; // 告知中断已经处理完成
 }
 
 CHAR *HalIrqVersion(VOID)

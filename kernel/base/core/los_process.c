@@ -506,7 +506,9 @@ LITE_OS_SEC_TEXT VOID OsProcessResourcesToFree(LosProcessCB *processCB)
     }
 }
 
-/*! 回收僵死状态进程的资源 */
+/*!
+ * 回收僵死状态进程的资源
+ */
 STATIC VOID OsRecycleZombiesProcess(LosProcessCB *childCB, ProcessGroup **pgroup)
 {
     ExitProcessGroup(childCB, pgroup);//退出进程组
@@ -564,12 +566,13 @@ STATIC VOID OsDealAliveChildProcess(LosProcessCB *processCB)
     return;
 }
 
-/*! 回收指定进程的已经退出(死亡)的孩子进程所占资源 */
+/*!
+ * 回收指定进程的已经退出(死亡)的孩子进程所占资源
+ */
 STATIC VOID OsChildProcessResourcesFree(const LosProcessCB *processCB)
 {
     LosProcessCB *childCB = NULL;
     ProcessGroup *pgroup = NULL;
-
     while (!LOS_ListEmpty(&((LosProcessCB *)processCB)->exitChildList)) {//遍历直到没有了退出(死亡)的孩子进程
         childCB = LOS_DL_LIST_ENTRY(processCB->exitChildList.pstNext, LosProcessCB, siblingList);//获取孩子进程,
         OsRecycleZombiesProcess(childCB, &pgroup);//其中会将childCB从exitChildList链表上摘出去
@@ -577,12 +580,12 @@ STATIC VOID OsChildProcessResourcesFree(const LosProcessCB *processCB)
     }
 }
 
-/*! 一个进程的自然消亡过程,参数是当前运行的任务*/
+/*!
+ * 一个进程的自然消亡过程,参数是当前运行的任务
+ */
 VOID OsProcessNaturalExit(LosProcessCB *processCB, UINT32 status)
 {
     OsChildProcessResourcesFree(processCB);//释放孩子进程的资源
-
-
     /* is a child process */
     if (processCB->parentProcess != NULL) {
         LosProcessCB *parentCB = processCB->parentProcess;
@@ -621,7 +624,9 @@ STATIC VOID SystemProcessEarlyInit(LosProcessCB *processCB)
         OsSetMainTaskProcess((UINTPTR)processCB);//将内核根进程设为主任务所属进程
     }
 }
-/*! 进程模块初始化,被编译放在代码段 .init 中*/
+/*! 
+ * 进程模块初始化,被编译放在代码段 .init 中
+ */
 UINT32 OsProcessInit(VOID)
 {
     UINT32 index;
@@ -631,7 +636,7 @@ UINT32 OsProcessInit(VOID)
     g_processMaxNum = LOSCFG_BASE_CORE_PROCESS_LIMIT;//默认支持64个进程
     size = (g_processMaxNum + 1) * sizeof(LosProcessCB);
 
-    g_processCBArray = (LosProcessCB *)LOS_MemAlloc(m_aucSysMem1, size);// 进程池，占用内核堆,内存池分配 
+    g_processCBArray = (LosProcessCB *)LOS_MemAlloc(m_aucSysMem1, size);// 进程池,占用内核堆,内存池分配 
     if (g_processCBArray == NULL) {
         return LOS_NOK;
     }
@@ -668,7 +673,9 @@ UINT32 OsProcessInit(VOID)
     return LOS_OK;
 }
 
-/*! 进程回收再利用过程*/
+/*! 
+ * 进程回收再利用过程
+ */
 LITE_OS_SEC_TEXT VOID OsProcessCBRecycleToFree(VOID)
 {
     UINT32 intSave;
@@ -714,7 +721,9 @@ LITE_OS_SEC_TEXT VOID OsProcessCBRecycleToFree(VOID)
     SCHEDULER_UNLOCK(intSave);
 }
 
-/*! 删除PCB块 其实是 PCB块回归进程池,先进入回收链表*/
+/*!
+ * 删除PCB块 其实是 PCB块回归进程池,先进入回收链表
+ */
 STATIC VOID OsDeInitPCB(LosProcessCB *processCB)
 {
     UINT32 intSave;
@@ -784,7 +793,9 @@ UINT32 OsSetProcessName(LosProcessCB *processCB, const CHAR *name)
     return LOS_OK;
 }
 
-/*! 初始化PCB(进程控制块)*/
+/*! 
+ * 初始化PCB(进程控制块)
+ */
 STATIC UINT32 OsInitPCB(LosProcessCB *processCB, UINT32 mode, const CHAR *name)
 {
     processCB->processMode = mode;						//用户态进程还是内核态进程
@@ -1814,7 +1825,9 @@ LITE_OS_SEC_TEXT UINT32 OsExecRecycleAndInit(LosProcessCB *processCB, const CHAR
 
     return LOS_OK;
 }
-/// 执行用户态任务, entry为入口函数 ,其中 创建好task,task上下文 等待调度真正执行, sp:栈指针 mapBase:栈底 mapSize:栈大小
+/*!
+ * 执行用户态任务, entry为入口函数 ,其中 创建好task,task上下文 等待调度真正执行, sp:栈指针 mapBase:栈底 mapSize:栈大小
+ */
 LITE_OS_SEC_TEXT UINT32 OsExecStart(const TSK_ENTRY_FUNC entry, UINTPTR sp, UINTPTR mapBase, UINT32 mapSize)
 {
     UINT32 intSave;
@@ -1846,7 +1859,9 @@ LITE_OS_SEC_TEXT UINT32 OsExecStart(const TSK_ENTRY_FUNC entry, UINTPTR sp, UINT
     return LOS_OK;
 }
 #endif
-/// 用户进程开始初始化
+/*!
+ * 用户进程开始初始化
+ */
 STATIC UINT32 OsUserInitProcessStart(LosProcessCB *processCB, TSK_INIT_PARAM_S *param)
 {
     UINT32 intSave;
@@ -2225,7 +2240,9 @@ STATIC UINT32 OsCopyProcessResources(UINT32 flags, LosProcessCB *child, LosProce
 
     return LOS_OK;
 }
-/// 拷贝进程
+/*!
+ * 拷贝进程
+ */
 STATIC INT32 OsCopyProcess(UINT32 flags, const CHAR *name, UINTPTR sp, UINT32 size)
 {
     UINT32 ret, processID;

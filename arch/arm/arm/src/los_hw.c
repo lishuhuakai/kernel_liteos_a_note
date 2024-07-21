@@ -69,12 +69,17 @@ VOID OsTaskEntrySetupLoopFrame(UINT32 arg0)
                  "\tpop {fp, pc}\n");
 }
 #endif
-/// 内核态任务运行栈初始化
+/*!
+ * 内核态任务运行栈初始化
+ *@param stackSize 堆栈大小
+ *@param topStack 栈顶的指针
+ */
 LITE_OS_SEC_TEXT_INIT VOID *OsTaskStackInit(UINT32 taskID, UINT32 stackSize, VOID *topStack, BOOL initFlag)
 {
     if (initFlag == TRUE) {
         OsStackInit(topStack, stackSize);
     }
+	// TaskContext放在栈的底部
     TaskContext *taskContext = (TaskContext *)(((UINTPTR)topStack + stackSize) - sizeof(TaskContext));//上下文存放在栈的底部
 
     /* initialize the task context */ //初始化任务上下文
@@ -83,6 +88,7 @@ LITE_OS_SEC_TEXT_INIT VOID *OsTaskStackInit(UINT32 taskID, UINT32 stackSize, VOI
 #else
     taskContext->PC = (UINTPTR)OsTaskEntry;//内核态任务有统一的入口地址.
 #endif
+	// LR记录的一般是返回地址
     taskContext->LR = (UINTPTR)OsTaskExit;  /* LR should be kept, to distinguish it's THUMB or ARM instruction */
     taskContext->R0 = taskID;               /* R0 */
 
@@ -100,10 +106,11 @@ LITE_OS_SEC_TEXT_INIT VOID *OsTaskStackInit(UINT32 taskID, UINT32 stackSize, VOI
     taskContext->regFPSCR = 0;
     taskContext->regFPEXC = FP_EN;
 #endif
-
     return (VOID *)taskContext;
 }
-///把父任务上下文克隆给子任务
+/*!
+ * 把父任务上下文克隆给子任务
+ */
 VOID OsUserCloneParentStack(VOID *childStack, UINTPTR sp, UINTPTR parentTopOfStack, UINT32 parentStackSize)
 {
     LosTaskCB *task = OsCurrTaskGet();
@@ -122,7 +129,9 @@ VOID OsUserCloneParentStack(VOID *childStack, UINTPTR sp, UINTPTR parentTopOfSta
         ((TaskContext *)childStack)->ULR = 0;
     }
 }
-/// 用户态运行栈初始化,此时上下文还在内核区
+/*!
+ * 用户态运行栈初始化,此时上下文还在内核区
+ */
 LITE_OS_SEC_TEXT_INIT VOID OsUserTaskStackInit(TaskContext *context, UINTPTR taskEntry, UINTPTR stack)
 {
     LOS_ASSERT(context != NULL);
@@ -137,7 +146,9 @@ LITE_OS_SEC_TEXT_INIT VOID OsUserTaskStackInit(TaskContext *context, UINTPTR tas
     context->ULR = 0;//保存子程序返回地址 例如 a call b ,在b中保存 a地址
     context->PC = (UINTPTR)taskEntry;//入口函数,由外部传入,由上层应用指定,固然每个都不一样.
 }
-///初始化信号上下文
+/*!
+ * 初始化信号上下文
+ */
 VOID OsInitSignalContext(const VOID *sp, VOID *signalContext, UINTPTR sigHandler, UINT32 signo, UINT32 param)
 {
     IrqContext *newSp = (IrqContext *)signalContext;
@@ -179,4 +190,3 @@ VOID DCacheInvRange(UINT32 start, UINT32 end)
 {
     arm_inv_cache_range(start, end);
 }
-

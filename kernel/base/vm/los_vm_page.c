@@ -56,7 +56,9 @@ STATIC VOID OsVmPageInit(LosVmPage *page, paddr_t pa, UINT8 segID)
     LOS_SpinInit(&page->lock);
 #endif
 }
-///伙伴算法初始化
+/*!
+ * 伙伴算法初始化
+ */
 STATIC INLINE VOID OsVmPageOrderListInit(LosVmPage *page, size_t nPages)
 {//@note_why 此时所有页面 page->order = VM_LIST_ORDER_MAX,能挂入伙伴算法的链表吗?
     OsVmPhysPagesFreeContiguous(page, nPages);//释放连续的物理页框
@@ -68,9 +70,9 @@ STATIC INLINE VOID OsVmPageOrderListInit(LosVmPage *page, size_t nPages)
 } while (0)
 
 /*!
- 完成对物理内存整体初始化,本函数一定运行在实模式下
- 1.申请大块内存g_vmPageArray存放LosVmPage,按4K一页划分物理内存存放在数组中.
-*/
+ * 完成对物理内存整体初始化,本函数一定运行在实模式下
+ * 1.申请大块内存g_vmPageArray存放LosVmPage,按4K一页划分物理内存存放在数组中.
+ */
 VOID OsVmPageStartup(VOID)
 {
     struct VmPhysSeg *seg = NULL;
@@ -88,10 +90,9 @@ VOID OsVmPageStartup(VOID)
      */
     UINT32 pageNum = OsVmPhysPageNumGet();
     nPage = pageNum * PAGE_SIZE / (sizeof(LosVmPage) + PAGE_SIZE);
-    g_vmPageArraySize = nPage * sizeof(LosVmPage);//页表总大小
+    g_vmPageArraySize = nPage * sizeof(LosVmPage);//页表总大小,每一页都对应一个LosVmPage结构体
     g_vmPageArray = (LosVmPage *)OsVmBootMemAlloc(g_vmPageArraySize);//实模式下申请内存,此时还没有初始化MMU
-
-    OsVmPhysAreaSizeAdjust(ROUNDUP(g_vmPageArraySize, PAGE_SIZE));//
+    OsVmPhysAreaSizeAdjust(ROUNDUP(g_vmPageArraySize, PAGE_SIZE));
 
     OsVmPhysSegAdd();// 完成对段的初始化
     OsVmPhysInit();// 加入空闲链表和设置置换算法,LRU(最近最久未使用)算法
@@ -104,7 +105,7 @@ VOID OsVmPageStartup(VOID)
         nPage = seg->size >> PAGE_SHIFT;//本段总页数
         UINT32 count = nPage >> 3; /* 3: 2 ^ 3, nPage / 8, cycle count */
         UINT32 left = nPage & 0x7; /* 0x7: nPage % 8, left page */
-
+		/* 初始化LosVmPage结构体 */
         for (page = seg->pageBase, pa = seg->start; count > 0; count--) {
             /* note: process large amount of data, optimize performance */
             VMPAGEINIT(page, pa, segID);
@@ -122,7 +123,10 @@ VOID OsVmPageStartup(VOID)
         OsVmPageOrderListInit(seg->pageBase, nPage);//伙伴算法初始化,将所有页加入空闲链表供分配
     }
 }
-///通过物理地址获取页框
+/*!
+ * 通过物理地址获取页框
+ * @param paddr 物理地址
+ */
 LosVmPage *LOS_VmPageGet(PADDR_T paddr)
 {
     INT32 segID;
@@ -138,4 +142,3 @@ LosVmPage *LOS_VmPageGet(PADDR_T paddr)
     return page;
 }
 #endif
-

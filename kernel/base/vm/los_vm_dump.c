@@ -53,7 +53,9 @@
 
 #define     FLAG_SIZE               4
 #define     FLAG_START              2
-//获取线性区的名称或文件路径
+/*!
+ * 获取线性区的名称或文件路径
+ */
 const CHAR *OsGetRegionNameOrFilePath(LosVmMapRegion *region)
 {
     struct Vnode *vnode = NULL;
@@ -134,7 +136,9 @@ UINT32 OsShellCmdProcessVmUsage(LosVmSpace *space)
     (VOID)LOS_MuxRelease(&space->regionMux);
     return used;
 }
-///内核空间物理内存使用情况统计
+/*!
+ * 内核空间物理内存使用情况统计
+ */
 UINT32 OsKProcessPmUsage(LosVmSpace *kSpace, UINT32 *actualPm)
 {
     UINT32 memUsed;
@@ -177,7 +181,9 @@ UINT32 OsKProcessPmUsage(LosVmSpace *kSpace, UINT32 *actualPm)
     *actualPm = memUsed;
     return memUsed;
 }
-///shell task 物理内存的使用情况
+/*!
+ * shell task 物理内存的使用情况
+ */
 UINT32 OsShellCmdProcessPmUsage(LosVmSpace *space, UINT32 *sharePm, UINT32 *actualPm)
 {
     if (space == NULL) {
@@ -193,7 +199,9 @@ UINT32 OsShellCmdProcessPmUsage(LosVmSpace *space, UINT32 *sharePm, UINT32 *actu
     }
     return OsUProcessPmUsage(space, sharePm, actualPm);
 }
-///虚拟空间物理内存的使用情况,参数同时带走共享物理内存 sharePm和actualPm 单位是字节
+/*!
+ * 虚拟空间物理内存的使用情况,参数同时带走共享物理内存 sharePm和actualPm 单位是字节
+ */
 UINT32 OsUProcessPmUsage(LosVmSpace *space, UINT32 *sharePm, UINT32 *actualPm)
 {
     LosVmMapRegion *region = NULL;
@@ -249,7 +257,9 @@ UINT32 OsUProcessPmUsage(LosVmSpace *space, UINT32 *sharePm, UINT32 *actualPm)
 
     return pmSize;
 }
-///通过虚拟空间获取进程实体
+/*!
+ * 通过虚拟空间获取进程实体
+ */
 LosProcessCB *OsGetPIDByAspace(const LosVmSpace *space)
 {
     UINT32 pid;
@@ -271,7 +281,9 @@ LosProcessCB *OsGetPIDByAspace(const LosVmSpace *space)
     SCHEDULER_UNLOCK(intSave);
     return NULL;
 }
-///统计虚拟空间中某个线性区的页数
+/*!
+ * 统计虚拟空间中某个线性区的页数
+ */
 UINT32 OsCountRegionPages(LosVmSpace *space, LosVmMapRegion *region, UINT32 *pssPages)
 {
     UINT32 regionPages = 0;
@@ -305,7 +317,9 @@ UINT32 OsCountRegionPages(LosVmSpace *space, LosVmMapRegion *region, UINT32 *pss
 
     return regionPages;
 }
-///统计虚拟空间的总页数
+/*!
+ * 统计虚拟空间的总页数
+ */
 UINT32 OsCountAspacePages(LosVmSpace *space)
 {
     UINT32 spacePages = 0;
@@ -389,7 +403,9 @@ VOID OsDumpRegion2(LosVmSpace *space, LosVmMapRegion *region)
         region->range.size, flagsStr, regionPages, pssPages);
     (VOID)LOS_MemFree(m_aucSysMem0, flagsStr);
 }
-///dump 指定虚拟空间的信息
+/*!
+ * dump 指定虚拟空间的信息
+ */
 VOID OsDumpAspace(LosVmSpace *space)
 {
     LosVmMapRegion *region = NULL;
@@ -423,7 +439,9 @@ VOID OsDumpAspace(LosVmSpace *space)
     RB_SCAN_SAFE_END(&space->regionRbTree, pstRbNode, pstRbNodeNext)
     return;
 }
-///查看所有进程使用虚拟内存的情况
+/*!
+ * 查看所有进程使用虚拟内存的情况
+ */
 VOID OsDumpAllAspace(VOID)
 {
     LosVmSpace *space = NULL;
@@ -449,7 +467,9 @@ STATUS_T OsRegionOverlapCheck(LosVmSpace *space, LosVmMapRegion *region)
     (VOID)LOS_MuxRelease(&space->regionMux);
     return ret;
 }
-///dump 页表项
+/*!
+ * dump 页表项
+ */
 VOID OsDumpPte(VADDR_T vaddr)
 {
     UINT32 l1Index = vaddr >> MMU_DESCRIPTOR_L1_SMALL_SHIFT;
@@ -483,7 +503,9 @@ VOID OsDumpPte(VADDR_T vaddr)
 ERR:
     PRINTK("%s, error vaddr: %#x, l2Table: %#x, l2Index: %#x\n", __FUNCTION__, vaddr, l2Table, l2Index);
 }
-///获取段剩余页框数
+/*!
+ * 获取段剩余页框数
+ */
 UINT32 OsVmPhySegPagesGet(LosVmPhysSeg *seg)
 {
     UINT32 intSave;
@@ -551,7 +573,9 @@ VOID OsVmPhysDump(VOID)
     PRINTK("\n\rpmm pages: total = %u, used = %u, free = %u\n",
            totalPages, (totalPages - totalFreePages), totalFreePages);
 }
-///获取物理内存的使用信息，两个参数接走数据
+/*!
+ * 获取物理内存的使用信息，两个参数接走数据
+ */
 VOID OsVmPhysUsedInfoGet(UINT32 *usedCount, UINT32 *totalCount)
 {
     UINT32 index;
@@ -574,4 +598,3 @@ VOID OsVmPhysUsedInfoGet(UINT32 *usedCount, UINT32 *totalCount)
     }
 }
 #endif
-

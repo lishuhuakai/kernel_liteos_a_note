@@ -44,13 +44,16 @@ static LIST_HEAD *g_mountCache = NULL;
 static LIST_HEAD *g_mountList = NULL;//挂载点链表,上面挂的是系统所有挂载点
 #endif
 
-/*	在内核MountAlloc只被VnodeDevInit调用,但真实情况下它还将被系统调用 mount()调用
-* int mount(const char *source, const char *target,
-          const char *filesystemtype, unsigned long mountflags,
-          const void *data)
-  mount见于..\code-2.0-canary\third_party\NuttX\fs\mount\fs_mount.c
-  vnodeBeCovered: /dev/mmcblk0 
-*/
+/*!
+ * 分配一个挂载点
+ * 在内核MountAlloc只被VnodeDevInit调用,但真实情况下它还将被系统调用 mount()调用
+ * int mount(const char *source, const char *target,
+ *          const char *filesystemtype, unsigned long mountflags,
+ *          const void *data)
+ *  mount见于..\code-2.0-canary\third_party\NuttX\fs\mount\fs_mount.c
+ *  vnodeBeCovered: /dev/mmcblk0 
+ *@param vnodeBeCovered 要被挂载的节点,比如某个设备
+ */
 struct Mount *MountAlloc(struct Vnode *vnodeBeCovered, struct MountOps *fsop)
 {
     struct Mount *mnt = (struct Mount*)zalloc(sizeof(struct Mount));//申请一个mount结构体内存,小内存分配用 zalloc
@@ -93,7 +96,9 @@ LIST_HEAD *GetMountCache(void)
     return g_mountCache;
 }
 #else
-///获取装载链表,并初始化
+/*!
+ * 获取装载链表,并初始化
+ */
 LIST_HEAD* GetMountList(void)
 {
     if (g_mountList == NULL) {

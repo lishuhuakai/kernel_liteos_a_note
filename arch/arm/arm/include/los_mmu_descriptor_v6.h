@@ -68,17 +68,19 @@ extern "C" {
 #define MMU_DESCRIPTOR_DOMAIN_NA                                2
 
 /* L1 descriptor type */
-#define MMU_DESCRIPTOR_L1_TYPE_INVALID                          (0x0 << 0)
-#define MMU_DESCRIPTOR_L1_TYPE_PAGE_TABLE                       (0x1 << 0) ///< 一级条目类型按页分
-#define MMU_DESCRIPTOR_L1_TYPE_SECTION                          (0x2 << 0) ///< 1MB 一级条目类型按段分
-#define MMU_DESCRIPTOR_L1_TYPE_MASK                             (0x3 << 0)
+#define MMU_DESCRIPTOR_L1_TYPE_INVALID      (0x0 << 0) ///< fault页表项,表示对应虚拟地址未被映射,访问将产生一个数据中止异常
+#define MMU_DESCRIPTOR_L1_TYPE_PAGE_TABLE   (0x1 << 0) ///< 一级条目类型按页分 | PAGE_TABLE页表项,指向L2页表的页表项,意思就是将1M分成更多的页(256*4K)
+// section页表项,指向1M节的页表项的最低二位[1:0], 用于定义页表项的类型, section页表项对应1M的节
+// 直接使用页表项的最高12位替代虚拟地址的高12位即可得到物理地址
+#define MMU_DESCRIPTOR_L1_TYPE_SECTION      (0x2 << 0) ///< 1MB 一级条目类型按段分
+#define MMU_DESCRIPTOR_L1_TYPE_MASK         (0x3 << 0)
 
 /* L2 descriptor type */
-#define MMU_DESCRIPTOR_L2_TYPE_INVALID                          (0x0 << 0)
-#define MMU_DESCRIPTOR_L2_TYPE_LARGE_PAGE                       (0x1 << 0) ///< 64KB 二级条目类型按大页分
-#define MMU_DESCRIPTOR_L2_TYPE_SMALL_PAGE                       (0x2 << 0) ///< 4KB 二级条目类型按小页分
-#define MMU_DESCRIPTOR_L2_TYPE_SMALL_PAGE_XN                    (0x3 << 0) ///< 1KB 二级条目类型按极小页分
-#define MMU_DESCRIPTOR_L2_TYPE_MASK                             (0x3 << 0)
+#define MMU_DESCRIPTOR_L2_TYPE_INVALID        (0x0 << 0) ///< Fault（INVALID)页表项,表示对应虚拟地址未被映射,访问将产生一个数据中止异常
+#define MMU_DESCRIPTOR_L2_TYPE_LARGE_PAGE     (0x1 << 0) ///< 64KB 二级条目类型按大页分
+#define MMU_DESCRIPTOR_L2_TYPE_SMALL_PAGE     (0x2 << 0) ///< 4KB 二级条目类型按小页分
+#define MMU_DESCRIPTOR_L2_TYPE_SMALL_PAGE_XN  (0x3 << 0) ///< 1KB 二级条目类型按极小页分
+#define MMU_DESCRIPTOR_L2_TYPE_MASK           (0x3 << 0)
 
 #define MMU_DESCRIPTOR_IS_L1_SIZE_ALIGNED(x)                    IS_ALIGNED(x, MMU_DESCRIPTOR_L1_SMALL_SIZE)
 #define MMU_DESCRIPTOR_L1_SMALL_SIZE                            0x100000 // 1M 页表L1大小

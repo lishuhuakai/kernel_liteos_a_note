@@ -352,7 +352,9 @@ static struct file_operations_vfs g_errorFileOps = {
     .readpage = ErrorFopReadpage,
     .unlink = ErrorFopUnlink,
 };
-
+/*!
+ * 获取设备的挂载点
+ */
 static struct Mount* GetDevMountPoint(const struct Vnode *dev)
 {
     struct Mount *mnt = NULL;

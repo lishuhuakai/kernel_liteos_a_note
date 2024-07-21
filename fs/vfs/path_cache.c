@@ -54,7 +54,9 @@ void ResetPathCacheHitInfo(int *hit, int *try)
 #define TRACE_TRY_CACHE()
 #define TRACE_HIT_CACHE(pc)
 #endif
-//路径缓存初始化
+/*!
+ * 路径缓存初始化
+ */
 int PathCacheInit(void)
 {
     for (int i = 0; i < LOSCFG_MAX_PATH_CACHE_SIZE; i++) {
@@ -62,7 +64,9 @@ int PathCacheInit(void)
     }
     return LOS_OK;
 }
-
+/*!
+ * 打印Cache信息
+ */
 void PathCacheDump(void)
 {
     PRINTK("-------->pathCache dump in\n");
@@ -95,6 +99,11 @@ void PathCacheMemoryDump(void)
     PRINTK("pathCache memory size = %d(B)\n", pathCacheNum * sizeof(struct PathCache) + nameSum);
 }
 
+/*!
+ * 对名称做hash
+ *@param name 名称
+ *@param len 名称长度
+ */
 static uint32_t NameHash(const char *name, int len, struct Vnode *dvp)
 {
     uint32_t hash;
@@ -109,6 +118,9 @@ static void PathCacheInsert(struct Vnode *parent, struct PathCache *cache, const
     LOS_ListAdd(&g_pathCacheHashEntrys[hash], &cache->hashEntry);
 }
 
+/*!
+ * 分配一个PathCache
+ */
 struct PathCache *PathCacheAlloc(struct Vnode *parent, struct Vnode *vnode, const char *name, uint8_t len)
 {
     struct PathCache *pc = NULL;
@@ -159,6 +171,9 @@ int PathCacheFree(struct PathCache *pc)
     return LOS_OK;
 }
 
+/*!
+ * 查找pathcache
+ */
 int PathCacheLookup(struct Vnode *parent, const char *name, int len, struct Vnode **vnode)
 {
     struct PathCache *pc = NULL;
@@ -166,9 +181,9 @@ int PathCacheLookup(struct Vnode *parent, const char *name, int len, struct Vnod
     LIST_HEAD *dhead = &g_pathCacheHashEntrys[hash];
 
     TRACE_TRY_CACHE();
-    LOS_DL_LIST_FOR_EACH_ENTRY(pc, dhead, struct PathCache, hashEntry) {
+    LOS_DL_LIST_FOR_EACH_ENTRY(pc, dhead, struct PathCache, hashEntry) { // 遍历hash链表上的每一个节点
         if (pc->parentVnode == parent && pc->nameLen == len && !strncmp(pc->name, name, len)) {
-            *vnode = pc->childVnode;
+            *vnode = pc->childVnode; // 获得子节点的vnode
             TRACE_HIT_CACHE(pc);
             return LOS_OK;
         }
@@ -195,7 +210,9 @@ static void FreeParentPathCache(struct Vnode *vnode)
         PathCacheFree(item);
     }
 }
-///和长辈,晚辈告别,从此不再是父亲和孩子.
+/*!
+ * 和长辈,晚辈告别,从此不再是父亲和孩子.
+ */
 void VnodePathCacheFree(struct Vnode *vnode)
 {
     if (vnode == NULL) {

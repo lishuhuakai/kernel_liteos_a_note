@@ -61,20 +61,20 @@
 /**
  * @brief 
  * @verbatim
-FAT文件系统是File Allocation Table（文件配置表）的简称，主要包括DBR区、FAT区、DATA区三个区域。
-其中，FAT区各个表项记录存储设备中对应簇的信息，包括簇是否被使用、文件下一个簇的编号、是否文件结尾等。
-FAT文件系统有FAT12、FAT16、FAT32等多种格式，其中，12、16、32表示对应格式中FAT表项的字节数。
-FAT文件系统支持多种介质，特别在可移动存储介质（U盘、SD卡、移动硬盘等）上广泛使用，
-使嵌入式设备和Windows、Linux等桌面系统保持很好的兼容性，方便用户管理操作文件。
+ * FAT文件系统是File Allocation Table（文件配置表）的简称，主要包括DBR区、FAT区、DATA区三个区域。
+ * 其中，FAT区各个表项记录存储设备中对应簇的信息，包括簇是否被使用、文件下一个簇的编号、是否文件结尾等。
+ * FAT文件系统有FAT12、FAT16、FAT32等多种格式，其中，12、16、32表示对应格式中FAT表项的字节数。
+ * FAT文件系统支持多种介质，特别在可移动存储介质（U盘、SD卡、移动硬盘等）上广泛使用，
+ * 使嵌入式设备和Windows、Linux等桌面系统保持很好的兼容性，方便用户管理操作文件。
 
-OpenHarmony内核支持FAT12、FAT16与FAT32三种格式的FAT文件系统，
-具有代码量小、资源占用小、可裁切、支持多种物理介质等特性，并且与Windows、Linux等系统保持兼容，
-支持多设备、多分区识别等功能。OpenHarmony内核支持硬盘多分区，可以在主分区以及逻辑分区上创建FAT文件系统。
+ * OpenHarmony内核支持FAT12、FAT16与FAT32三种格式的FAT文件系统，
+ * 具有代码量小、资源占用小、可裁切、支持多种物理介质等特性，并且与Windows、Linux等系统保持兼容，
+ * 支持多设备、多分区识别等功能。OpenHarmony内核支持硬盘多分区，可以在主分区以及逻辑分区上创建FAT文件系统。
 
-驱动适配
-	FAT文件系统的使用需要底层MMC相关驱动的支持。在一个带MMC存储设备的板子上运行FATFS，需要：
-	1、适配板端EMMC驱动，实现disk_status、disk_initialize、disk_read、disk_write、disk_ioctl接口；
-	2、新增fs_config.h文件，配置FS_MAX_SS（存储设备最大sector大小）、FF_VOLUME_STRS（分区名）等信息，
+ * 驱动适配
+ *	FAT文件系统的使用需要底层MMC相关驱动的支持。在一个带MMC存储设备的板子上运行FATFS，需要：
+ *	1、适配板端EMMC驱动，实现disk_status、disk_initialize、disk_read、disk_write、disk_ioctl接口；
+ *	2、新增fs_config.h文件，配置FS_MAX_SS（存储设备最大sector大小）、FF_VOLUME_STRS（分区名）等信息，
  * @endverbatim
  */
 
@@ -1100,7 +1100,9 @@ static int fat_bind_check(struct Vnode *blk_driver, los_part **partition)
     *partition = part;
     return 0;
 }
-///fat将分区文件系统挂载 举例: mount /dev/mmcblk0p0 /bin1/vs/sd vfat
+/*!
+ * fat将分区文件系统挂载 举例: mount /dev/mmcblk0p0 /bin1/vs/sd vfat
+ */
 int fatfs_mount(struct Mount *mnt, struct Vnode *blk_device, const void *data)
 {
     struct Vnode *vp = NULL;

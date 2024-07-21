@@ -146,17 +146,23 @@ extern "C" {
 #define TPIDRPRW            CP15_REG(c13, 0, c0, 4)    /*! PL1 only Thread ID Register | 仅PL1线程ID寄存器*/	
 
 #define MPIDR_CPUID_MASK    (0xffU)
-/// 获取当前task的地址
+/*!
+ * 获取当前task的地址
+ */
 STATIC INLINE VOID *ArchCurrTaskGet(VOID)
 {
     return (VOID *)(UINTPTR)ARM_SYSREG_READ(TPIDRPRW);//读c13寄存器
 }
-/// 向CP15 - > C13 保存当前任务的地址
+/*!
+ * 向CP15 - > C13 保存当前任务的地址
+ */
 STATIC INLINE VOID ArchCurrTaskSet(VOID *val)
 {
     ARM_SYSREG_WRITE(TPIDRPRW, (UINT32)(UINTPTR)val);
 }
-/// 向协处理器写入用户态任务ID TPIDRURO 仅用于用户态
+/*!
+ * 向协处理器写入用户态任务ID TPIDRURO 仅用于用户态
+ */
 STATIC INLINE VOID ArchCurrUserTaskSet(UINTPTR val)
 {
     ARM_SYSREG_WRITE(TPIDRURO, (UINT32)val);
@@ -173,12 +179,16 @@ STATIC INLINE UINT32 ArchCurrCpuid(VOID)
     return 0;
 #endif
 }
-/// 获取CPU硬件ID,每个CPU都有自己的唯一标识
+/*!
+ * 获取CPU硬件ID,每个CPU都有自己的唯一标识
+ */
 STATIC INLINE UINT64 OsHwIDGet(VOID)
 {
     return ARM_SYSREG_READ(MPIDR);
 }
-///获取CPU型号,包含CPU各种信息,例如:[15:4]表示 arm 7或arm 9
+/*!
+ * 获取CPU型号,包含CPU各种信息,例如:[15:4]表示 arm 7或arm 9
+ */
 STATIC INLINE UINT32 OsMainIDGet(VOID)
 {
     return ARM_SYSREG_READ(MIDR);
@@ -186,7 +196,9 @@ STATIC INLINE UINT32 OsMainIDGet(VOID)
 
 /* CPU interrupt mask handle implementation | CPU中断掩码句柄实现*/
 #if LOSCFG_ARM_ARCH >= 6
-///禁止中断
+/*!
+ * 禁止中断
+ */
 STATIC INLINE UINT32 ArchIntLock(VOID)
 {
     UINT32 intSave;
@@ -198,7 +210,9 @@ STATIC INLINE UINT32 ArchIntLock(VOID)
         : "memory");
     return intSave;
 }
-//恢复中断
+/*!
+ * 恢复中断
+ */
 STATIC INLINE UINT32 ArchIntUnlock(VOID)
 {
     UINT32 intSave;
@@ -242,7 +256,9 @@ STATIC INLINE UINT32 ArchIntLock(VOID)
         : :"memory");
     return intSave;
 }
-/// 打开当前处理器所有中断响应
+/*!
+ * 打开当前处理器所有中断响应
+ */
 STATIC INLINE UINT32 ArchIntUnlock(VOID)
 {
     UINT32 intSave;
@@ -256,7 +272,9 @@ STATIC INLINE UINT32 ArchIntUnlock(VOID)
 }
 
 #endif
-/// 恢复到使用LOS_IntLock关闭所有中断之前的状态
+/*!
+ * 恢复到使用LOS_IntLock关闭所有中断之前的状态
+ */
 STATIC INLINE VOID ArchIntRestore(UINT32 intSave)
 {
     __asm__ __volatile__(
@@ -267,7 +285,9 @@ STATIC INLINE VOID ArchIntRestore(UINT32 intSave)
 }
 
 #define PSR_I_BIT   0x00000080U
-/// 关闭当前处理器所有中断响应
+/*!
+ * 关闭当前处理器所有中断响应
+ */
 STATIC INLINE UINT32 OsIntLocked(VOID)
 {
     UINT32 intSave;

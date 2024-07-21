@@ -60,7 +60,5 @@ LITE_OS_SEC_TEXT VOID OsTickHandler(VOID)
 #ifdef LOSCFG_BASE_CORE_TICK_HW_TIME
     HalClockIrqClear(); /* diff from every platform */
 #endif
-
     OsSchedTick();//由时钟发起的调度
 }
-

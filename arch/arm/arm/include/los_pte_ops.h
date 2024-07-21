@@ -58,7 +58,10 @@ STATIC INLINE ADDR_T OsTruncPte1(ADDR_T addr)
 {
     return MMU_DESCRIPTOR_L1_SECTION_ADDR(addr);
 }
-///获取L1 页表项索引
+/*!
+ * 获取L1 页表项索引
+ * @param va 虚拟地址
+ */
 STATIC INLINE UINT32 OsGetPte1Index(vaddr_t va)
 {
     return va >> MMU_DESCRIPTOR_L1_SMALL_SHIFT;//右移20位，得到一级页表
@@ -120,7 +123,11 @@ STATIC INLINE VOID OsSavePte2(PTE_T *pte2Ptr, PTE_T pte2)
     *pte2Ptr = pte2;
     DSB;
 }
-
+/*!
+ * 构建L2页面项的映射表
+ * @param count 待映射的页的数目
+ * @param pte2BasePtr L2页面项基址
+ */
 STATIC INLINE UINT32 OsSavePte2Continuous(PTE_T *pte2BasePtr, UINT32 index, PTE_T pte2, UINT32 count)
 {
     UINT32 saveCounts = 0;
