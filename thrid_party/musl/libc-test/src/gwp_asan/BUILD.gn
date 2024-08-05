@@ -1,0 +1,157 @@
+import("//build/test.gni")
+import("../../../musl_config.gni")
+import("../../test_template.gni")
+
+if (musl_use_gwp_asan) {
+  config("gwp_asan_test_config") {
+    cflags = [
+      "-fno-omit-frame-pointer",
+      "-g",
+      "-Wno-incompatible-pointer-types",
+    ]
+    include_dirs = [
+      "//third_party/musl/porting/linux/user/src/gwp_asan",
+      "${musl_src_base}/src/gwp_asan",
+      "//third_party/musl/libc-test/src/common",
+    ]
+    defines = [ "USE_GWP_ASAN" ]
+  }
+
+  ohos_executable("gwp_asan_double_free_test") {
+    testonly = true
+    sources = [ "double_free.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_invalid_free_left_test") {
+    testonly = true
+    sources = [ "invalid_free_left.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_invalid_free_right_test") {
+    testonly = true
+    sources = [ "invalid_free_right.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_buffer_overflow_test") {
+    testonly = true
+    sources = [ "buffer_overflow.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_buffer_underflow_test") {
+    testonly = true
+    sources = [ "buffer_underflow.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_use_after_free_test") {
+    testonly = true
+    sources = [ "use_after_free.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_unwind_test") {
+    testonly = true
+    sources = [ "unwind_test.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_smoke_test") {
+    testonly = true
+    sources = [ "gwp_asan_smoke_test.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_random_sample_test") {
+    testonly = true
+    sources = [ "random_sample_test.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_fork_simple_test") {
+    testonly = true
+    sources = [ "fork_simple_test.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  ohos_executable("gwp_asan_thread_fork_test") {
+    testonly = true
+    sources = [ "thread_fork_test.c" ]
+    configs = [
+      ":gwp_asan_test_config",
+      "//third_party/musl/libc-test/src/common:config_runtest",
+    ]
+    subsystem_name = "musl"
+    part_name = "libc-test"
+  }
+
+  group("gwp_asan_test") {
+    testonly = true
+    deps = [
+      ":gwp_asan_buffer_overflow_test",
+      ":gwp_asan_buffer_underflow_test",
+      ":gwp_asan_double_free_test",
+      ":gwp_asan_fork_simple_test",
+      ":gwp_asan_invalid_free_left_test",
+      ":gwp_asan_invalid_free_right_test",
+      ":gwp_asan_random_sample_test",
+      ":gwp_asan_smoke_test",
+      ":gwp_asan_thread_fork_test",
+      ":gwp_asan_unwind_test",
+      ":gwp_asan_use_after_free_test",
+    ]
+  }
+}

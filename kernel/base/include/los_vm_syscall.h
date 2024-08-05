@@ -45,12 +45,17 @@
 extern "C" {
 #endif /* __cplusplus */
 #endif /* __cplusplus */
-//是否非匿名映射 文件映射：映射和实际文件相关联，通常是把文件的内容映射到进程地址空间，这样应用程序就可以像操作进程地址空间一样读写文件。
+/*!
+ * 是否非匿名映射 文件映射：映射和实际文件相关联，通常是把文件的内容映射到进程地址空间，
+ * 这样应用程序就可以像操作进程地址空间一样读写文件。
+ */
 STATIC INLINE BOOL LOS_IsNamedMapping(unsigned long flags)
 {
     return ((flags & MAP_ANONYMOUS) == 0);
 }
-///是否匿名映射 匿名映射：没有映射对应的相关文件，这种映射的内存区域的内容会被初始化为0
+/*!
+ * 是否匿名映射 匿名映射：没有映射对应的相关文件，这种映射的内存区域的内容会被初始化为0
+ */
 STATIC INLINE BOOL LOS_IsAnonymousMapping(unsigned long flags)
 {
     return ((flags & MAP_ANONYMOUS) == MAP_ANONYMOUS);

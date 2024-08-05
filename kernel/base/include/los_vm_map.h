@@ -91,7 +91,9 @@ struct VmFileOps;
 typedef struct VmFileOps LosVmFileOps;
 struct VmSpace;
 typedef struct VmSpace LosVmSpace;
-/// 缺页结构信息体 
+/*!
+ * 缺页结构信息体
+ */
 typedef struct VmFault {
     UINT32          flags;              /*! FAULT_FLAG_xxx flags | 缺页标识*/
     unsigned long   pgoff;              /*! Logical page offset based on region | 基于线性区的逻辑页偏移量*/
@@ -142,7 +144,9 @@ struct VmMapRegion {
         } rd;
     } unTypeData;
 };
-/// 虚拟空间,每个进程都有一个属于自己的虚拟内存地址空间
+/*!
+ * 虚拟空间,每个进程都有一个属于自己的虚拟内存地址空间
+ */
 typedef struct VmSpace {
     LOS_DL_LIST         node;           /**< vm space dl list | 节点,通过它挂到全局虚拟空间 g_vmSpaceList 链表上*/
     LosRbTree           regionRbTree;   /**< region red-black tree root | 采用红黑树方式管理本空间各个线性区*/

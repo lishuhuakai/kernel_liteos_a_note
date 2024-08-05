@@ -1,0 +1,2 @@
+#define GLOBAL_VALUE 1
+#define LOCAL_VALUE 0

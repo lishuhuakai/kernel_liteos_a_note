@@ -45,9 +45,8 @@ extern "C" {
 
 /**
  * @brief 什么是句柄?
-
-从形象意义的理解,跟门的把柄一样,握住门柄就控制了整个大门.句柄是给用户程序使用的一个数字凭证,
-能以小博大,通过句柄能牵动内核模块工作.
+ * 从形象意义的理解,跟门的把柄一样,握住门柄就控制了整个大门.句柄是给用户程序使用的一个数字凭证,
+ * 能以小博大,通过句柄能牵动内核模块工作.
  */
 #define LITEIPC_DRIVER "/dev/lite_ipc"	///< 虚拟设备,文件访问读取
 #define LITEIPC_DRIVER_MODE 0644 ///< 对虚拟设备的访问权限 110100100 表示只有所属用户才有读写权限,其余都只能读
@@ -74,7 +73,7 @@ typedef struct {
     UINTPTR      maxMsgSize; ///< 最大消息大小
 } HandleInfo;
  
-/**
+/*!
  * @struct IpcPool | ipc池
  * @brief  LiteIPC的核心思想就是在内核态为每个Service任务维护一个IPC消息队列，该消息队列通过LiteIPC设备文件向上层
  * 用户态程序分别提供代表收取IPC消息的读操作和代表发送IPC消息的写操作。
@@ -85,7 +84,7 @@ typedef struct {//用户空间和内核空间的消息传递通过偏移量计�
     UINT32 poolSize; ///< ipc池大小
 } IpcPool;
 
-/**
+/*!
  * @struct ProcIpcInfo 
  * @brief 进程IPC信息,见于进程结构体:	LosProcessCB.ipcInfo
  */
@@ -111,19 +110,25 @@ typedef struct {
     UINT32         buffSz;  ///< 大小
     VOID           *buff;	///< 内容 内核需要将内容从用户空间拷贝到内核空间的动作 
 } BuffPtr;
-/// SVC(service)服务身份证 
+/*!
+ * SVC(service)服务身份证
+ */
 typedef struct {
     UINT32         handle;  //service 服务ID, 范围[0,最大任务ID]
     UINT32         token;	//
     UINT32         cookie;	//由应用层带入
 } SvcIdentity;
-/// 对象内容体,注意是个联合体
+/*!
+ * 对象内容体,注意是个联合体
+ */
 typedef union {
     UINT32      fd; 	///< 文件描述符
     BuffPtr     ptr;	///< 缓存的开始地址,即:指针,消息从用户空间来时,要将内容拷贝到内核空间
     SvcIdentity  svc;	///< 服务,用于设置访问权限
 } ObjContent;
-/// 指定对象
+/*!
+ * 指定对象
+ */
 typedef struct { // IpcMsg->data 包含三种子消息,也要将它们读到内核空间
     ObjType     type; ///< 类型
     ObjContent  content;///< 内容

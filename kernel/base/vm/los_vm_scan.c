@@ -38,8 +38,8 @@
 
 /* unmap a lru page by map record info caller need lru lock */
 /**************************************************************************************************
- 解除文件页和进程(mmu)的映射关系
- 参数info记录了进程的MMU
+* 解除文件页和进程(mmu)的映射关系
+* 参数info记录了进程的MMU
 **************************************************************************************************/
 VOID OsUnmapPageLocked(LosFilePage *page, LosMapInfo *info)
 {
@@ -53,7 +53,9 @@ VOID OsUnmapPageLocked(LosFilePage *page, LosMapInfo *info)
     LOS_ArchMmuUnmap(info->archMmu, info->vaddr, 1);
     LOS_MemFree(m_aucSysMem0, info);//释放虚拟
 }
-///解除文件页在所有进程的映射
+/*!
+ * 解除文件页在所有进程的映射
+ */
 VOID OsUnmapAllLocked(LosFilePage *page)
 {
     LosMapInfo *info = NULL;
@@ -66,7 +68,10 @@ VOID OsUnmapAllLocked(LosFilePage *page)
 }
 
 /* add a new lru node to lru list, lruType can be file or anon */
-VOID OsLruCacheAdd(LosFilePage *fpage, enum OsLruList lruType)//在lru列表中添加一个新的lru节点，lruType可以是文件或匿名
+/*!
+ * 在lru列表中添加一个新的lru节点，lruType可以是文件或匿名
+ */
+VOID OsLruCacheAdd(LosFilePage *fpage, enum OsLruList lruType)
 {
     UINT32 intSave;
     LosVmPhysSeg *physSeg = fpage->physSeg;	//得到页面对应段
@@ -82,7 +87,10 @@ VOID OsLruCacheAdd(LosFilePage *fpage, enum OsLruList lruType)//在lru列表中�
 }
 
 /* dellete a lru node, caller need hold lru_lock */
-VOID OsLruCacheDel(LosFilePage *fpage)//删除lru节点，调用者需要拿到lru锁
+/*!
+ * 删除lru节点，调用者需要拿到lru锁
+ */
+VOID OsLruCacheDel(LosFilePage *fpage)
 {
     LosVmPhysSeg *physSeg = fpage->physSeg;	//得到页面对应段
     int type = OsIsPageActive(fpage->vmPage) ? VM_LRU_ACTIVE_FILE : VM_LRU_INACTIVE_FILE;//得到页面LRU类型
@@ -90,7 +98,9 @@ VOID OsLruCacheDel(LosFilePage *fpage)//删除lru节点，调用者需要拿到l
     physSeg->lruSize[type]--;	//type页总size--
     LOS_ListDelete(&fpage->lru);//将自己从lru链表中摘出来
 }
-///非活动文件页低于活动文件页吗
+/*!
+ * 非活动文件页低于活动文件页吗
+ */
 BOOL OsInactiveListIsLow(LosVmPhysSeg *physSeg)
 {
     return (physSeg->lruSize[VM_LRU_ACTIVE_FILE] >
@@ -98,7 +108,10 @@ BOOL OsInactiveListIsLow(LosVmPhysSeg *physSeg)
 }
 
 /* move a page from inactive list to active list  head */
-STATIC INLINE VOID OsMoveToActiveList(LosFilePage *fpage)//将页面从非活动列表移动到活动列表
+/*!
+ * 将页面从非活动列表移动到活动列表
+ */
+STATIC INLINE VOID OsMoveToActiveList(LosFilePage *fpage)
 {
     LosVmPhysSeg *physSeg = fpage->physSeg;		//得到页面对应段
 
@@ -109,7 +122,10 @@ STATIC INLINE VOID OsMoveToActiveList(LosFilePage *fpage)//将页面从非活动
 }
 
 /* move a page from active list to inactive list  head */
-STATIC INLINE VOID OsMoveToInactiveList(LosFilePage *fpage)//将页面从活动列表移动到非活动列表
+/*!
+ * 将页面从活动列表移动到非活动列表
+ */
+STATIC INLINE VOID OsMoveToInactiveList(LosFilePage *fpage)
 {
     LosVmPhysSeg *physSeg = fpage->physSeg;		//得到页面对应段
 
@@ -119,7 +135,10 @@ STATIC INLINE VOID OsMoveToInactiveList(LosFilePage *fpage)//将页面从活动�
     LOS_ListTailInsert(&physSeg->lruList[VM_LRU_INACTIVE_FILE], &fpage->lru);//加入不活动页双循环链表中
 }
 
-/* move a page to the most active pos in lru list(active head) *///将页面移至lru列表中最活跃的位置
+/* move a page to the most active pos in lru list(active head) */
+/*!
+ * 将页面移至lru列表中最活跃的位置
+ */
 STATIC INLINE VOID OsMoveToActiveHead(LosFilePage *fpage)
 {
     LosVmPhysSeg *physSeg = fpage->physSeg;	//得到页面对应段
@@ -128,7 +147,10 @@ STATIC INLINE VOID OsMoveToActiveHead(LosFilePage *fpage)
 }
 
 /* move a page to the most active pos in lru list(inactive head) */
-STATIC INLINE VOID OsMoveToInactiveHead(LosFilePage *fpage)//鸿蒙会从inactive链表的尾部开始进行回收,跟linux一样
+/*!
+ * 鸿蒙会从inactive链表的尾部开始进行回收,跟linux一样
+ */
+STATIC INLINE VOID OsMoveToInactiveHead(LosFilePage *fpage)
 {
     LosVmPhysSeg *physSeg = fpage->physSeg;	//得到页面对应段
     LOS_ListDelete(&fpage->lru);			//将自己从lru链表中摘出来
@@ -209,7 +231,9 @@ VOID OsPageRefDecNoLock(LosFilePage *fpage) // ref ,act 标签转换功能
         OsMoveToInactiveList(fpage);
     }
 }
-///缩小活动页链表
+/*!
+ * 缩小活动页链表
+ */
 VOID OsShrinkActiveList(LosVmPhysSeg *physSeg, int nScan)
 {
     LosFilePage *fpage = NULL;
@@ -241,7 +265,9 @@ VOID OsShrinkActiveList(LosVmPhysSeg *physSeg, int nScan)
         }
     }
 }
-///缩小未活动页链表
+/*!
+ * 缩小未活动页链表
+ */
 int OsShrinkInactiveList(LosVmPhysSeg *physSeg, int nScan, LOS_DL_LIST *list)
 {
     UINT32 nrReclaimed = 0;
@@ -290,7 +316,10 @@ int OsShrinkInactiveList(LosVmPhysSeg *physSeg, int nScan, LOS_DL_LIST *list)
 }
 
 #ifdef LOSCFG_FS_VFS
-int OsTryShrinkMemory(size_t nPage)//尝试收缩文件页
+/*!
+ * 尝试收缩文件页
+ */
+int OsTryShrinkMemory(size_t nPage)
 {
     UINT32 intSave;
     size_t totalPages;
@@ -302,7 +331,7 @@ int OsTryShrinkMemory(size_t nPage)//尝试收缩文件页
     LosFilePage *fnext = NULL;
 
     if (nPage == 0) {
-        nPage = VM_FILEMAP_MIN_SCAN;//
+        nPage = VM_FILEMAP_MIN_SCAN;
     }
 
     if (nPage > VM_FILEMAP_MAX_SCAN) {

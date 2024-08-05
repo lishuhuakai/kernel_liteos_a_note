@@ -49,70 +49,38 @@ root@5e3abe332c5a:/home/docker/case_code_100# readelf -S app
 There are 31 section headers， starting at offset 0x39c0:
 
 Section Headers:
-  [Nr] Name              Type             Address           Offset
-       Size              EntSize          Flags  Link  Info  Align
-  [ 0]                   NULL             0000000000000000  00000000
-       0000000000000000  0000000000000000           0     0     0
-  [ 1] .interp           PROGBITS         0000000000000318  00000318
-       000000000000001c  0000000000000000   A       0     0     1
-  [ 2] .note.gnu.propert NOTE             0000000000000338  00000338
-       0000000000000020  0000000000000000   A       0     0     8
-  [ 3] .note.gnu.build-i NOTE             0000000000000358  00000358
-       0000000000000024  0000000000000000   A       0     0     4
-  [ 4] .note.ABI-tag     NOTE             000000000000037c  0000037c
-       0000000000000020  0000000000000000   A       0     0     4
-  [ 5] .gnu.hash         GNU_HASH         00000000000003a0  000003a0
-       0000000000000024  0000000000000000   A       6     0     8
-  [ 6] .dynsym           DYNSYM           00000000000003c8  000003c8
-       00000000000000a8  0000000000000018   A       7     1     8
-  [ 7] .dynstr           STRTAB           0000000000000470  00000470
-       0000000000000084  0000000000000000   A       0     0     1
-  [ 8] .gnu.version      VERSYM           00000000000004f4  000004f4
-       000000000000000e  0000000000000002   A       6     0     2
-  [ 9] .gnu.version_r    VERNEED          0000000000000508  00000508
-       0000000000000020  0000000000000000   A       7     1     8
-  [10] .rela.dyn         RELA             0000000000000528  00000528
-       00000000000000d8  0000000000000018   A       6     0     8
-  [11] .rela.plt         RELA             0000000000000600  00000600
-       0000000000000018  0000000000000018  AI       6    24     8
-  [12] .init             PROGBITS         0000000000001000  00001000
-       000000000000001b  0000000000000000  AX       0     0     4
-  [13] .plt              PROGBITS         0000000000001020  00001020
-       0000000000000020  0000000000000010  AX       0     0     16
-  [14] .plt.got          PROGBITS         0000000000001040  00001040
-       0000000000000010  0000000000000010  AX       0     0     16
-  [15] .plt.sec          PROGBITS         0000000000001050  00001050
-       0000000000000010  0000000000000010  AX       0     0     16
-  [16] .text             PROGBITS         0000000000001060  00001060
-       00000000000001b5  0000000000000000  AX       0     0     16
-  [17] .fini             PROGBITS         0000000000001218  00001218
-       000000000000000d  0000000000000000  AX       0     0     4
-  [18] .rodata           PROGBITS         0000000000002000  00002000
-       000000000000001b  0000000000000000   A       0     0     4
-  [19] .eh_frame_hdr     PROGBITS         000000000000201c  0000201c
-       000000000000004c  0000000000000000   A       0     0     4
-  [20] .eh_frame         PROGBITS         0000000000002068  00002068
-       0000000000000128  0000000000000000   A       0     0     8
-  [21] .init_array       INIT_ARRAY       0000000000003db8  00002db8
-       0000000000000008  0000000000000008  WA       0     0     8
-  [22] .fini_array       FINI_ARRAY       0000000000003dc0  00002dc0
-       0000000000000008  0000000000000008  WA       0     0     8
-  [23] .dynamic          DYNAMIC          0000000000003dc8  00002dc8
-       00000000000001f0  0000000000000010  WA       7     0     8
-  [24] .got              PROGBITS         0000000000003fb8  00002fb8
-       0000000000000048  0000000000000008  WA       0     0     8
-  [25] .data             PROGBITS         0000000000004000  00003000
-       0000000000000018  0000000000000000  WA       0     0     8
-  [26] .bss              NOBITS           0000000000004018  00003018
-       0000000000000008  0000000000000000  WA       0     0     1
-  [27] .comment          PROGBITS         0000000000000000  00003018
-       000000000000002a  0000000000000001  MS       0     0     1
-  [28] .symtab           SYMTAB           0000000000000000  00003048
-       0000000000000648  0000000000000018          29    46     8
-  [29] .strtab           STRTAB           0000000000000000  00003690
-       0000000000000216  0000000000000000           0     0     1
-  [30] .shstrtab         STRTAB           0000000000000000  000038a6
-       000000000000011a  0000000000000000           0     0     1
+[Nr] Name              Type       Address   Offset   Size EntSize    Flags Link Info Align
+[ 0]                   NULL       00000000 00000000 00000 000000000         0    0    0
+[ 1] .interp           PROGBITS   00000318 00000318 0001c 000000000  A      0    0    1
+[ 2] .note.gnu.propert NOTE       00000338 00000338 00020 000000000  A      0    0    8
+[ 3] .note.gnu.build-i NOTE       00000358 00000358 00024 000000000  A      0    0    4
+[ 4] .note.ABI-tag     NOTE       0000037c 0000037c 00020 000000000  A      0    0    4
+[ 5] .gnu.hash         GNU_HASH   000003a0 000003a0 00024 000000000  A      6    0    8
+[ 6] .dynsym           DYNSYM     000003c8 000003c8 000a8 000000018  A      7    1    8
+[ 7] .dynstr           STRTAB     00000470 00000470 00084 000000000  A      0    0    1
+[ 8] .gnu.version      VERSYM     000004f4 000004f4 0000e 000000002  A      6    0    2
+[ 9] .gnu.version_r    VERNEED    00000508 00000508 00020 000000000  A      7    1    8
+[10] .rela.dyn         RELA       00000528 00000528 000d8 000000018  A      6    0    8
+[11] .rela.plt         RELA       00000600 00000600 00018 000000018 AI      6   24    8
+[12] .init             PROGBITS   00001000 00001000 0001b 000000000 AX      0    0    4
+[13] .plt              PROGBITS   00001020 00001020 00020 000000010 AX      0    0    16
+[14] .plt.got          PROGBITS   00001040 00001040 00010 000000010 AX      0    0    16
+[15] .plt.sec          PROGBITS   00001050 00001050 00010 000000010 AX      0    0    16
+[16] .text             PROGBITS   00001060 00001060 001b5 000000000 AX      0    0    16
+[17] .fini             PROGBITS   00001218 00001218 0000d 000000000 AX      0    0    4
+[18] .rodata           PROGBITS   00002000 00002000 0001b 000000000  A      0    0    4
+[19] .eh_frame_hdr     PROGBITS   0000201c 0000201c 0004c 000000000  A      0    0    4
+[20] .eh_frame         PROGBITS   00002068 00002068 00128 000000000  A      0    0    8
+[21] .init_array       INIT_ARRAY 00003db8 00002db8 00008 000000008 WA      0    0    8
+[22] .fini_array       FINI_ARRAY 00003dc0 00002dc0 00008 000000008 WA      0    0    8
+[23] .dynamic          DYNAMIC    00003dc8 00002dc8 001f0 000000010 WA      7    0    8
+[24] .got              PROGBITS   00003fb8 00002fb8 00048 000000008 WA      0    0    8
+[25] .data             PROGBITS   00004000 00003000 00018 000000000 WA      0    0    8
+[26] .bss              NOBITS     00004018 00003018 00008 000000000 WA      0    0    1
+[27] .comment          PROGBITS   00000000 00003018 0002a 000000001 MS      0    0    1
+[28] .symtab           SYMTAB     00000000 00003048 00648 000000018        29   46    8
+[29] .strtab           STRTAB     00000000 00003690 00216 000000000         0    0    1
+[30] .shstrtab         STRTAB     00000000 000038a6 0011a 000000000         0    0    1
 Key to Flags:
   W (write)， A (alloc)， X (execute)， M (merge)， S (strings)， I (info)，
   L (link order)， O (extra OS processing required)， G (group)， T (TLS)，
@@ -151,13 +119,13 @@ Key to Flags:
 
 根据区功能划分:
 
-* 有些区包含调试信息，比如.debug和.line区。
-* 有些区包含程序控制信息，比如.bss，.data，.data1，.rodata和.rodata1这些区。
-* 还有一些区含有程序或控制信息，这些区由系统使用，有指定的类型和属性。它们中的大多数都将用于链接过程。动态链接过程所需要的信息由.dynsym，.dynstr，.interp，.hash，.dynamic，.rel，.rela，.got，.plt等区提供。其中有些区(比如.plt和.got)的内容依处理器而不同，但它们都支持同样的链接模型。
+* 有些区包含调试信息，比如 `.debug` 和 `.line` 区。
+* 有些区包含程序控制信息，比如 `.bss` ， `.data` ， `.data1` ， `.rodata` 和 `.rodata1` 这些区。
+* 还有一些区含有程序或控制信息，这些区由系统使用，有指定的类型和属性。它们中的大多数都将用于链接过程。动态链接过程所需要的信息由 `.dynsym` ，`.dynstr`， `.interp` ， `.hash` ， `.dynamic` ， `.rel` ， `.rela` ， `.got` ， `.plt` 等区提供。其中有些区(比如 `.plt` 和 `.got` )的内容依处理器而不同，但它们都支持同样的链接模型。
 
 以点号"."为前缀的区名字是为系统保留的。应用程序也可以构造自己的区，但最好不要取与上述系统已定义的区相同的名字，也不要取以点号开头的名字，以避免潜在的冲突，注意，目标文件中区的名字并不具有唯一性，可以存在多个相同名字的区。具体如下:
 
-```
+```txt
 区名              描述说明
 .bss            本区中包含目标文件中未初始化的全局变量。一般情况下，可执行程序在开始运行的时候，系统会把这一区内容清零。但是，
                 在运行期间的bss区是由系统初始化而成的，在目标文件中.bss区并不包含任何内容，其长度为0，所以它的区类型为NOBITS。
@@ -209,7 +177,7 @@ Key to Flags:
     但是注意，并不是所有的常量都放在rodata区的，其特殊情况如下：
   * 有些立即数与指令编译在一起直接放在代码区。
   * 对于字符串常量，编译器会去掉重复的常量，让程序的每个字符串常量只有一份
-  * 有些系统中rodata区是多个进程共享的，目的是为了提高空间的利用率
+  * 有些系统中 `rodata` 区是多个进程共享的，目的是为了提高空间的利用率
 * `.bss`和`.data`是标签一样但类型有别，`.bss`区属于静态内存分配。通常是指用来存放程序中未初始化的全局变量和未初始化的局部静态变量。未初始化的全局变量和未初始化的局部静态变量默认值是0，本来这些变量也可以放到`data`区的，但是因为它们都是0，所以它们在`data`区分配空间并且存放数据0是没有必要的。在程序运行时，才会给BSS区里面的变量分配内存空间。在目标文件(*.o)和可执行文件中，`.bss`只是为未初始化的全局变量和未初始化的局部静态变量预留位置而已，它并没有内容，所以它不占据空间。
 * `.data` 通常是指用来存放程序中已初始化的全局变量和已初始化的静态变量的一块内存区域，属于静态内存分配。
   
@@ -217,7 +185,7 @@ Key to Flags:
 
 简称:`SHT`
 
-```
+```txt
 SHT_NULL        本区头是一个无效的（非活动的）区头，它也没有对应的区。本区头中的其它成员的值也都是没有意义的。
 SHT_PROGBITS    本区所含有的信息是由程序定义的，本区内容的格式和含义都由程序来决定。
 SHT_SYMTAB      同DYNSYM
@@ -251,7 +219,7 @@ SHT_HIUSER      为应用程序保留区类型索引值的下边界。LOUSER ~ H
 
 简称:`SHF`
 
-```
+```txt
 Key to Flags:
   W (write)， A (alloc)， X (execute)， M (merge)， S (strings)， I (info)，
   L (link order)， O (extra OS processing required)， G (group)， T (TLS)，
@@ -259,12 +227,12 @@ Key to Flags:
   l (large)， p (processor specific)
 ```
 
-```
+```txt
 名字         值       描述
-SHF_WRITE       0x01       如果此标志被设置，表示本区所包含的内容在进程运行过程中是可写的。
-SHF_ALLOC       0x02       如果此标志被设置，表示本区内容在进程运行过程中要占用内存单元。并不是所有区。
+SHF_WRITE   0x01       如果此标志被设置，表示本区所包含的内容在进程运行过程中是可写的。
+SHF_ALLOC   0x02       如果此标志被设置，表示本区内容在进程运行过程中要占用内存单元。并不是所有区。
                        都会占用实际的内存，有一些起控制作用的区，在目标文件映射到进程空间时，并不需要占用内存。
-SHF_EXECUTE     0x04        如果此标志被设置，表示本区内容是指令代码。
+SHF_EXECUTE 0x04       如果此标志被设置，表示本区内容是指令代码。
 
 ```
 
@@ -274,21 +242,17 @@ SHF_EXECUTE     0x04        如果此标志被设置，表示本区内容是指�
 
 ```shell
 Section Headers:
-  [Nr] Name              Type             Address           Offset
-       Size              EntSize          Flags  Link  Info  Align
-  [18] .rodata           PROGBITS         0000000000002000  00002000
-       000000000000001b  0000000000000000   A       0     0     4
-  [25] .data             PROGBITS         0000000000004000  00003000
-       0000000000000018  0000000000000000  WA       0     0     8
-  [26] .bss              NOBITS           0000000000004018  00003018
-       0000000000000008  0000000000000000  WA       0     0     1
+[Nr] Name      Type     Address           Offset     Size              EntSize          Flags  Link  Info  Align
+[18] .rodata   PROGBITS 0000000000002000  00002000  000000000000001b  0000000000000000   A       0     0     4
+[25] .data     PROGBITS 0000000000004000  00003000  0000000000000018  0000000000000000  WA       0     0     8
+[26] .bss      NOBITS   0000000000004018  00003018  0000000000000008  0000000000000000  WA       0     0     1
 ```
 
 ### readelf -s app
 
 说完大S再来说小S
 
-```
+```shell
 root@5e3abe332c5a:/home/docker/case_code_100# readelf -h
     ...
   -S --section-headers   Display the sections' header
@@ -299,7 +263,7 @@ root@5e3abe332c5a:/home/docker/case_code_100# readelf -h
 
 显示所有符号表 | Symbol Table。
 
-```
+```shell
 root@5e3abe332c5a:/home/docker/case_code_100# readelf -s app
 Symbol table '.dynsym' contains 7 entries:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
@@ -314,33 +278,7 @@ Symbol table '.dynsym' contains 7 entries:
 Symbol table '.symtab' contains 67 entries:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND
-     1: 0000000000000318     0 SECTION LOCAL  DEFAULT    1
-     2: 0000000000000338     0 SECTION LOCAL  DEFAULT    2
-     3: 0000000000000358     0 SECTION LOCAL  DEFAULT    3
-     4: 000000000000037c     0 SECTION LOCAL  DEFAULT    4
-     5: 00000000000003a0     0 SECTION LOCAL  DEFAULT    5
-     6: 00000000000003c8     0 SECTION LOCAL  DEFAULT    6
-     7: 0000000000000470     0 SECTION LOCAL  DEFAULT    7
-     8: 00000000000004f4     0 SECTION LOCAL  DEFAULT    8
-     9: 0000000000000508     0 SECTION LOCAL  DEFAULT    9
-    10: 0000000000000528     0 SECTION LOCAL  DEFAULT   10
-    11: 0000000000000600     0 SECTION LOCAL  DEFAULT   11
-    12: 0000000000001000     0 SECTION LOCAL  DEFAULT   12
-    13: 0000000000001020     0 SECTION LOCAL  DEFAULT   13
-    14: 0000000000001040     0 SECTION LOCAL  DEFAULT   14
-    15: 0000000000001050     0 SECTION LOCAL  DEFAULT   15
-    16: 0000000000001060     0 SECTION LOCAL  DEFAULT   16
-    17: 0000000000001218     0 SECTION LOCAL  DEFAULT   17
-    18: 0000000000002000     0 SECTION LOCAL  DEFAULT   18
-    19: 000000000000201c     0 SECTION LOCAL  DEFAULT   19
-    20: 0000000000002068     0 SECTION LOCAL  DEFAULT   20
-    21: 0000000000003db8     0 SECTION LOCAL  DEFAULT   21
-    22: 0000000000003dc0     0 SECTION LOCAL  DEFAULT   22
-    23: 0000000000003dc8     0 SECTION LOCAL  DEFAULT   23
-    24: 0000000000003fb8     0 SECTION LOCAL  DEFAULT   24
-    25: 0000000000004000     0 SECTION LOCAL  DEFAULT   25
-    26: 0000000000004018     0 SECTION LOCAL  DEFAULT   26
-    27: 0000000000000000     0 SECTION LOCAL  DEFAULT   27
+    # ...
     28: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
     29: 0000000000001090     0 FUNC    LOCAL  DEFAULT   16 deregister_tm_clones
     30: 00000000000010c0     0 FUNC    LOCAL  DEFAULT   16 register_tm_clones
@@ -386,7 +324,7 @@ Symbol table '.symtab' contains 67 entries:
 
 `.dynsym`，.`symtab`两区的类型如下，是一个含义。
 
-```
+```txt
 SHT_SYMTAB      同DYNSYM
 SHT_DYNSYM      这两类区都含有符号表。目前，目标文件中最多只能各包含一个这两种区，但这种限制以后可能会取消。
                 一般来说，SYMTAB提供的符号用于在创建目标文件的时候编辑链接，在运行期间也有可能会用于动态链接。
@@ -400,7 +338,7 @@ SHT_DYNSYM      这两类区都含有符号表。目前，目标文件中最多�
 
 简称 `STB`
 
-```
+```txt
 STB_LOCAL       表明本符号是一个本地符号。它只出现在本文件中，在本文件外该符号无效。
                 所以在不同的文件中可以定义相同的符号名，它们之间不会互相影响。
 STB_GLOBAL      表明本符号是一个全局符号。当有多个文件被链接在一起时，在所有文件中该符号都是可见的。
@@ -422,7 +360,7 @@ STB_LOPROC ~ STB_HIPROC 为特殊处理器保留的属性区间。
 
 简称 `STT`
 
-```
+```txt
 STT_NOTYPE      本符号类型未指定。
 STT_OBJECT      本符号是一个数据对象，比如变量，数组等。
 STT_FUNC        本符号是一个函数，或者其它的可执行代码。函数符号在共享目标文件中有特殊的意义。当另外一个目标文件引用一个共享目标文件中的函数符号时，链接编辑器为被引用符号自动创建一个链接表项。非STT_FUNC类型的共享目标符号不会通过这种链接表项被自动引用。
@@ -435,7 +373,7 @@ STT_LOPROC ~ STT_HIPROC 这一区间的符号类型为特殊处理器保留。
 
 简称 `STV`
 
-```
+```txt
 STV_DEFAULT     当符号的可见性是STV_DEFAULT时，那么该符号的可见性由符号的绑定属性决定。
                 这类情况下，（可执行文件和共享库中的）全局符号和弱符号默认是外部可访问的，
                 本地符号默认外部是无法被访问的。但是，可见性是STV_DEFAULT的全局符号和弱符号是可被覆盖的。

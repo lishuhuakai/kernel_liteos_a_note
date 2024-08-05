@@ -1,0 +1,207 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("../../../../test_template.gni")
+import("test_src_functionalext_supplement_thread.gni")
+
+default_include_dirs =
+    [ "//third_party/musl/libc-test/src/functionalext/common" ]
+
+default_configs = [ "//third_party/musl/libc-test/src/common:config_runtest" ]
+
+ohos_executable("pthread_attr_getstack_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_attr_getstack.c" ]
+}
+
+ohos_executable("pthread_attr_setdetachstate_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_attr_setdetachstate.c" ]
+}
+
+ohos_executable("pthread_attr_setstacksize_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_attr_setstacksize.c" ]
+}
+
+ohos_executable("pthread_condattr_destroy_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_condattr_destroy.c" ]
+}
+
+ohos_executable("pthread_condattr_init_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_condattr_init.c" ]
+}
+
+ohos_executable("pthread_create_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_create.c" ]
+}
+
+ohos_executable("pthread_exit_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_exit.c" ]
+}
+
+ohos_executable("pthread_getattr_np_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_getattr_np.c" ]
+}
+
+ohos_executable("pthread_getschedparam_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_getschedparam.c" ]
+}
+
+ohos_executable("pthread_getspecific_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_getspecific.c" ]
+}
+
+ohos_executable("pthread_key_create_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_key_create.c" ]
+}
+
+ohos_executable("pthread_mutex_init_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_mutex_init.c" ]
+}
+
+ohos_executable("pthread_mutex_lock_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_mutex_lock.c" ]
+}
+
+ohos_executable("pthread_mutex_unlock_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_mutex_unlock.c" ]
+}
+
+ohos_executable("pthread_once_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_once.c" ]
+}
+
+ohos_executable("pthread_rwlock_destroy_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_rwlock_destroy.c" ]
+}
+
+ohos_executable("pthread_setschedparam_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_setschedparam.c" ]
+}
+
+ohos_executable("pthread_setspecific_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_setspecific.c" ]
+}
+
+ohos_executable("pthread_sigmask_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = default_include_dirs
+  configs = default_configs
+  sources = [ "pthread_sigmask.c" ]
+}
+
+foreach(s, functionalext_supplement_thread_test) {
+  test_unittest(s) {
+    target_dir = "functionalext/supplement/thread"
+  }
+}
+
+group("functionalext_supplement_thread_test") {
+  testonly = true
+  deps = [
+    ":pthread_attr_getstack_test",
+    ":pthread_attr_setdetachstate_test",
+    ":pthread_attr_setstacksize_test",
+    ":pthread_condattr_destroy_test",
+    ":pthread_condattr_init_test",
+    ":pthread_create_test",
+    ":pthread_exit_test",
+    ":pthread_getattr_np_test",
+    ":pthread_getschedparam_test",
+    ":pthread_getspecific_test",
+    ":pthread_key_create_test",
+    ":pthread_mutex_init_test",
+    ":pthread_mutex_lock_test",
+    ":pthread_mutex_unlock_test",
+    ":pthread_once_test",
+    ":pthread_rwlock_destroy_test",
+    ":pthread_setschedparam_test",
+    ":pthread_setspecific_test",
+    ":pthread_sigmask_test",
+  ]
+  foreach(s, functionalext_supplement_thread_test) {
+    deps += [ ":${s}" ]
+  }
+}

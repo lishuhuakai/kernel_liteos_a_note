@@ -1,0 +1,30 @@
+[
+    {
+        "Name"                  : "musl",
+        "License"               : "MIT License",
+        "License File"          : "COPYRIGHT",
+        "Version Number"        : "1.2.5",
+        "Owner"                 : "zhaoxinyuan9@huawei.com",
+        "Upstream URL"          : "https://musl.libc.org",
+        "Description"           : "musl is an MIT-licensed implementation of the standard C library"
+    },
+    {
+        "Name"                  : "OpenBSD",
+        "License"               : "BSD License",
+        "License File"          : "LICENSE",
+        "Version Number"        : "7.4",
+        "Owner"                 : "fangting12@huawei.com",
+        "Upstream URL"          : "https://cvsweb.openbsd.org/src/lib/libc/string/",
+        "Description"           : "The OpenBSD project produces a FREE, multi-platform 4.4BSD-based UNIX-like operating system. We introduce some basic interface files to improve the interface performance of Musl"
+    },
+    {
+        "Name"                  : "NetBSD",
+        "License"               : "BSD License",
+        "License File"          : "LICEMSE",
+        "Version Number"        : "9.0",
+        "Owner"                 : "fangting12@huawei.com",
+        "Upstream URL"          : "https://github.com/NetBSD/src/tree/netbsd-9",
+        "Description"           : "NetBSD is a free, fast, secure, and highly portable Unix-like Open Source operating system. We introduce some basic interface files to improve the interface performance of Musl"
+    }
+]
+

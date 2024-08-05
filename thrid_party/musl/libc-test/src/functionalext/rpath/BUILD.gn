@@ -1,0 +1,91 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../test_template.gni")
+
+rpath_configs = [
+  "absolute",
+  "origin",
+]
+
+group("rpath_ns_test") {
+  testonly = true
+  deps = [
+    ":lib_primary_multiple",
+    ":lib_support_001",
+    ":lib_support_002",
+    ":rpath_test",
+  ]
+  foreach(rp, rpath_configs) {
+    deps += [ ":lib_primary_${rp}" ]
+  }
+}
+
+ohos_executable("rpath_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  sources = [ "rpath_test.c" ]
+  include_dirs = [
+    "../common",
+    "//third_party/musl/porting/linux/user/include",
+    "//third_party/musl/libc-test/src/common",
+  ]
+  ldflags = [ "-Wl,-rpath=/data/tests/libc-test/src/rpath_lib" ]
+  configs = [ "//third_party/musl/libc-test/src/common:config_runtest" ]
+}
+
+foreach(rp, rpath_configs) {
+  ohos_shared_library("lib_primary_${rp}") {
+    sources = [ "lib_primary.c" ]
+    output_name = "libprimary_${rp}"
+    output_extension = "so"
+    deps = [ ":lib_support_001" ]
+    if (rp == "absolute") {
+      ldflags =
+          [ "-Wl,-rpath=/data/tests/libc-test/src/rpath_lib/rpath_support_A" ]
+    } else if (rp == "origin") {
+      ldflags = [ "-Wl,-rpath=\$ORIGIN/rpath_support_B/../rpath_support_A" ]
+    }
+    subsystem_name = "musl"
+    part_name = "libc-test-lib"
+  }
+}
+
+ohos_shared_library("lib_primary_multiple") {
+  sources = [ "lib_primary_multiple.c" ]
+  output_name = "libprimary_multiple"
+  output_extension = "so"
+  deps = [
+    ":lib_support_001",
+    ":lib_support_002",
+  ]
+  ldflags = [ "-Wl,-rpath=/data/tests/libc-test/src/rpath_lib/rpath_support_A:\$ORIGIN/../rpath_support_C" ]
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_shared_library("lib_support_001") {
+  sources = [ "lib_support_001.c" ]
+  output_name = "libsupport_001"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_shared_library("lib_support_002") {
+  sources = [ "lib_support_002.c" ]
+  output_name = "libsupport_002"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}

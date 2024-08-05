@@ -1,0 +1,260 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("../../../test_template.gni")
+
+ohos_executable("unittest_ldso_ns_config") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+
+  sources = [ "unit_test_ldso_ns_config.c" ]
+
+  include_dirs = [
+    "${musl_src_base}/ldso",
+    "//${test_dir}/src/common",
+    "//${test_dir}/src/functionalext/common",
+    "${musl_src_base}/src/include",
+    "${musl_src_base}/include",
+    "${musl_src_base}/src/internal",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+
+  if (!musl_unit_test_flag) {
+    libs = [ "${musl_lib_dir}/libc.a" ]
+    libs += [ "${musl_lib_dir}/libc_ldso.a" ]
+  } else {
+    defines = [ "UNIT_TEST_STATIC" ]
+  }
+}
+
+ohos_executable("unittest_ldso_namesapce") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+
+  sources = [
+    "${musl_src_base}/ldso/namespace.c",
+    "unit_test_ldso_namespace.c",
+    "unit_test_mock_molloc.c",
+    "unit_test_mock_strops.c",
+  ]
+
+  include_dirs = [
+    "${musl_src_base}/ldso",
+    "//${test_dir}/src/common",
+    "//${test_dir}/src/functionalext/common",
+    "${musl_src_base}/src/include",
+    "${musl_src_base}/include",
+    "${musl_src_base}/src/internal",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+
+  if (musl_unit_test_flag) {
+    defines = [ "UNIT_TEST_STATIC" ]
+  }
+}
+
+ohos_executable("unittest_ldso_ld_log") {
+  subsystem_name = "thirdparty"
+  part_name = "musl"
+  sources = [
+    "${musl_src_base}/ldso/ld_log.c",
+    "unit_test_ldso_ld_log.c",
+    "unit_test_mock_hilog_adapter.c",
+  ]
+
+  include_dirs = [
+    "${musl_src_base}/ldso",
+    "//${test_dir}/src/common",
+    "//${test_dir}/src/functionalext/common",
+    "${musl_src_base}/src/include",
+    "${musl_src_base}/include",
+    "${musl_src_base}/src/internal",
+    "//${test_dir}/src/functionalext/unittest",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+  external_deps = [ "init:parameterbase" ]
+  defines = [ "OHOS_ENABLE_PARAMETER" ]
+}
+
+ohos_executable("unittest_ldso_dynlink") {
+  subsystem_name = "thirdparty"
+  part_name = "musl"
+  sources = [
+    "unit_test_ldso_dynlink.c",
+    "unit_test_mock_dynlink.c",
+  ]
+
+  include_dirs = [
+    "${musl_src_base}/ldso",
+    "//${test_dir}/src/common",
+    "//${test_dir}/src/functionalext/common",
+    "${musl_src_base}/src/include",
+    "${musl_src_base}/include",
+    "${musl_src_base}/src/internal",
+    "${musl_src_base}/arch/${musl_arch}",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+  external_deps = [ "init:parameterbase" ]
+
+  if (!musl_unit_test_flag) {
+    libs = [ "${musl_lib_dir}/libc.a" ]
+    libs += [ "${musl_lib_dir}/libc_ldso.a" ]
+  } else {
+    defines = [
+      "UNIT_TEST_STATIC",
+      "OHOS_ENABLE_PARAMETER",
+    ]
+  }
+}
+
+ohos_executable("unittest_hilog_adapter") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+
+  sources = [ "unit_test_hilog_adapter.c" ]
+
+  include_dirs = [
+    "//${test_dir}/src/functionalext/common",
+    "//${test_dir}/src/common",
+    "${musl_src_base}/src/internal",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+
+  libs = [ "${musl_lib_dir}/libc.a" ]
+}
+
+ohos_executable("unittest_ldso_strops") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+
+  sources = [
+    "${musl_src_base}/ldso/strops.c",
+    "unit_test_ldso_strops.c",
+    "unit_test_mock_molloc.c",
+  ]
+
+  include_dirs = [
+    "${musl_src_base}/ldso",
+    "//${test_dir}/src/common",
+    "//${test_dir}/src/functionalext/common",
+    "${musl_src_base}/src/include",
+    "${musl_src_base}/include",
+    "${musl_src_base}/src/internal",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+}
+
+ohos_executable("unittest_hilog_vsnprint") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+
+  sources = [ "unit_test_hilog_vsnprint_f_p.c" ]
+
+  include_dirs = [
+    "//${test_dir}/src/functionalext/common",
+    "//${test_dir}/src/common",
+    "${musl_src_base}/src/hilog",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+
+  libs = [ "${musl_lib_dir}/libc.a" ]
+}
+
+ohos_executable("unittest_fatal_message") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+
+  sources = [
+    "${musl_src_base}/src/info/fatal_message.c",
+    "unit_test_fatal_message.c",
+    "unit_test_mock_fatal_message.c",
+  ]
+
+  include_dirs = [
+    "${musl_src_base}/src/info",
+    "//${test_dir}/src/common",
+    "//${test_dir}/src/functionalext/common",
+    "${musl_src_base}/src/include",
+    "${musl_src_base}/include",
+    "${musl_src_base}/src/internal",
+  ]
+
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+}
+
+group("functionalext_unittest_test") {
+  testonly = true
+  deps = [
+    ":unittest_fatal_message",
+    ":unittest_fatal_message_assert_fail",
+    ":unittest_fatal_message_assert_fail_dialog",
+    ":unittest_hilog_adapter",
+    ":unittest_hilog_vsnprint",
+    ":unittest_ldso_dynlink",
+    ":unittest_ldso_ld_log",
+    ":unittest_ldso_namesapce",
+    ":unittest_ldso_ns_config",
+    ":unittest_ldso_strops",
+  ]
+}
+
+ohos_executable("unittest_fatal_message_assert_fail") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  sources = [
+    "${musl_src_base}/src/info/fatal_message.c",
+    "unit_test_assert_fail.c",
+  ]
+  include_dirs = [ "${musl_src_base}/include" ]
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+}
+
+ohos_executable("unittest_fatal_message_assert_fail_dialog") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  defines = [ "PC_MUSL_ASSERT" ]
+  sources = [
+    "${musl_src_base}/src/info/fatal_message.c",
+    "unit_test_assert_fail_dialog.c",
+  ]
+  include_dirs = [ "${musl_src_base}/include" ]
+  configs = [ "//third_party/musl/libc-test/src/common:config_unittest" ]
+
+  deps = [ "//third_party/musl:create_porting_src" ]
+}

@@ -82,7 +82,9 @@
 #include "los_vm_map.h"
 #include "los_memory.h"
 
-/// 分配DMA空间
+/*!
+ * 分配DMA空间
+ */
 VOID *LOS_DmaMemAlloc(DMA_ADDR_T *dmaAddr, size_t size, size_t align, enum DmaMemType type)
 {
     VOID *kVaddr = NULL;
@@ -116,7 +118,9 @@ VOID *LOS_DmaMemAlloc(DMA_ADDR_T *dmaAddr, size_t size, size_t align, enum DmaMe
 
     return kVaddr;
 }
-/// 释放 DMA指针
+/*!
+ * 释放 DMA指针
+ */
 VOID LOS_DmaMemFree(VOID *vaddr)
 {
     UINTPTR addr;
@@ -144,7 +148,9 @@ VOID LOS_DmaMemFree(VOID *vaddr)
     }
     return;
 }
-/// 将DMA虚拟地址转成物理地址
+/*!
+ * 将DMA虚拟地址转成物理地址
+ */
 DMA_ADDR_T LOS_DmaVaddrToPaddr(VOID *vaddr)
 {
     return (DMA_ADDR_T)LOS_PaddrQuery(vaddr);

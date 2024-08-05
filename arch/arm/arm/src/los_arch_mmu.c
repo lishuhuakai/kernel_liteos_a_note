@@ -615,10 +615,9 @@ STATUS_T LOS_ArchMmuQuery(const LosArchMmu *archMmu, VADDR_T vaddr, PADDR_T *pad
 /*!
  * @brief LOS_ArchMmuUnmap	解除进程空间虚拟地址区间与物理地址区间的映射关系
  *
- * @param archMmu	
+ * @param archMmu	MMU实例
  * @param count	
  * @param vaddr	
- * @return	
  */
 STATUS_T LOS_ArchMmuUnmap(LosArchMmu *archMmu, VADDR_T vaddr, size_t count)
 {

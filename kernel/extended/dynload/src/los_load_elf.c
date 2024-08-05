@@ -90,7 +90,9 @@ STATIC INT32 OsELFClose(INT32 procFd)
     FreeProcessFd(procFd);
     return ret;
 }
-
+/*!
+ * 获取文件长度信息
+ */
 STATIC INT32 OsGetFileLength(UINT32 *fileLen, const CHAR *fileName)
 {
     struct stat buf;
@@ -121,6 +123,10 @@ STATIC INT32 OsGetFileLength(UINT32 *fileLen, const CHAR *fileName)
     return LOS_OK;
 }
 
+/*!
+ * 读取文件中的数据,放入buffer之中
+ * @param offset 需要读取的数据的起始位置在文件内的偏移位置
+ */
 STATIC INT32 OsReadELFInfo(INT32 procfd, UINT8 *buffer, size_t readSize, off_t offset)
 {
     ssize_t byteNum;
@@ -207,6 +213,9 @@ STATIC VOID OsLoadInit(ELFLoadInfo *loadInfo)
     loadInfo->interpInfo.procfd = INVALID_FD;
 }
 
+/*!
+ * 读取ELF头部信息
+ */
 STATIC INT32 OsReadEhdr(const CHAR *fileName, ELFInfo *elfInfo, BOOL isExecFile)
 {
     INT32 ret;
@@ -250,13 +259,16 @@ STATIC INT32 OsReadEhdr(const CHAR *fileName, ELFInfo *elfInfo, BOOL isExecFile)
     return LOS_OK;
 }
 
+/*!
+ * 读取elf头部信息(Program Header table)
+ */
 STATIC INT32 OsReadPhdrs(ELFInfo *elfInfo, BOOL isExecFile)
 {
     LD_ELF_EHDR *elfEhdr = &elfInfo->elfEhdr;
     UINT32 size;
     INT32 ret;
 
-    if (elfEhdr->elfPhNum < 1) {
+    if (elfEhdr->elfPhNum < 1) { // program header table中元素个数不能为空
         goto OUT;
     }
 
@@ -289,6 +301,9 @@ OUT:
     return isExecFile ? -ENOEXEC : -ELIBBAD;
 }
 
+/*!
+ * 读取interp解析器信息
+ */
 STATIC INT32 OsReadInterpInfo(ELFLoadInfo *loadInfo)
 {
     LD_ELF_PHDR *elfPhdr = loadInfo->execInfo.elfPhdr;
@@ -300,7 +315,7 @@ STATIC INT32 OsReadInterpInfo(ELFLoadInfo *loadInfo)
             continue;
         }
 
-        if (OsVerifyELFPhdr(elfPhdr) != LOS_OK) {
+        if (OsVerifyELFPhdr(elfPhdr) != LOS_OK) { // 校验头部
             return -ENOEXEC;
         }
 
@@ -396,11 +411,20 @@ STATIC UINT32 OsGetAllocSize(const LD_ELF_PHDR *elfPhdr, INT32 phdrNum)
     return (size > UINT_MAX) ? 0 : (UINT32)size;
 }
 
+/*!
+ * 执行映射操作
+ * @param fd 文件对应的句柄
+ * @param addr 虚拟地址(要映射的区域的起始地址)
+ * @param mapSize 要映射的区域的大小
+ * @param prot 区域属性信息
+ */
 STATIC UINTPTR OsDoMmapFile(INT32 fd, UINTPTR addr, const LD_ELF_PHDR *elfPhdr, UINT32 prot, UINT32 flags,
                             UINT32 mapSize)
 {
     UINTPTR mapAddr;
     UINT32 size;
+	// offset是此数据成员在文件中的位置,即段内容的开始位置相对于文件开头的偏移量
+	// vAddr给出了段内容开始位置在进程空间中的虚拟地址
     UINT32 offset = elfPhdr->offset - ROUNDOFFSET(elfPhdr->vAddr, PAGE_SIZE);
     addr = ROUNDDOWN(addr, PAGE_SIZE);
 
@@ -479,6 +503,9 @@ STATIC INT32 OsSetBss(const LD_ELF_PHDR *elfPhdr, INT32 fd, UINTPTR bssStart, UI
     return LOS_OK;
 }
 
+/*!
+ * 映射elf文件
+ */
 STATIC INT32 OsMmapELFFile(INT32 procfd, const LD_ELF_PHDR *elfPhdr, const LD_ELF_EHDR *elfEhdr, UINTPTR *elfLoadAddr,
                            UINT32 mapSize, UINTPTR *loadBase)
 {
@@ -488,7 +515,7 @@ STATIC INT32 OsMmapELFFile(INT32 procfd, const LD_ELF_PHDR *elfPhdr, const LD_EL
     INT32 ret, i;
     INT32 fd = GetAssociatedSystemFd(procfd);
 
-    for (i = 0; i < elfEhdr->elfPhNum; ++i, ++elfPhdrTemp) {
+    for (i = 0; i < elfEhdr->elfPhNum; ++i, ++elfPhdrTemp) { // 遍历ELF头部
         if (elfPhdrTemp->type != LD_PT_LOAD) {
             continue;
         }
@@ -503,11 +530,11 @@ STATIC INT32 OsMmapELFFile(INT32 procfd, const LD_ELF_PHDR *elfPhdr, const LD_EL
             return -ENOEXEC;
         }
         elfFlags = MAP_PRIVATE | MAP_FIXED;
-        vAddr = elfPhdrTemp->vAddr;
+        vAddr = elfPhdrTemp->vAddr; //获取虚拟地址
         if ((vAddr == 0) && (*loadBase == 0)) {
             elfFlags &= ~MAP_FIXED;
         }
-
+		// 对加载的内存执行映射操作
         mapAddr = OsDoMmapFile(fd, (vAddr + *loadBase), elfPhdrTemp, elfProt, elfFlags, mapSize);
         if (!LOS_IsUserAddress((VADDR_T)mapAddr)) {
             return -ENOMEM;
@@ -732,7 +759,9 @@ UINT32 OsGetRndOffset(INT32 randomDevFD)
 
     return ROUNDDOWN(randomValue, PAGE_SIZE);
 }
-
+/*!
+ * 解析堆栈部分的属性信息(读/写/执行)
+ */
 STATIC VOID OsGetStackProt(ELFLoadInfo *loadInfo)
 {
     LD_ELF_PHDR *elfPhdrTemp = loadInfo->execInfo.elfPhdr;
@@ -744,7 +773,9 @@ STATIC VOID OsGetStackProt(ELFLoadInfo *loadInfo)
         }
     }
 }
-/// 分配栈区
+/*!
+ * 分配栈区
+ */
 STATIC UINT32 OsStackAlloc(LosVmSpace *space, VADDR_T vaddr, UINT32 vsize, UINT32 psize, UINT32 regionFlags)
 {
     LosVmPage *vmPage = NULL;
@@ -953,6 +984,9 @@ STATIC INT32 OsMakeArgsStack(ELFLoadInfo *loadInfo, UINTPTR interpMapBase)
     return LOS_OK;
 }
 
+/*!
+ * 加载segment(段)
+ */
 STATIC INT32 OsLoadELFSegment(ELFLoadInfo *loadInfo)
 {
     LD_ELF_PHDR *elfPhdrTemp = loadInfo->execInfo.elfPhdr;
@@ -971,7 +1005,7 @@ STATIC INT32 OsLoadELFSegment(ELFLoadInfo *loadInfo)
             return -EINVAL;
         }
     }
-
+	// 映射elf文件
     ret = OsMmapELFFile(loadInfo->execInfo.procfd, loadInfo->execInfo.elfPhdr, &loadInfo->execInfo.elfEhdr,
                         &loadInfo->loadAddr, mapSize, &loadBase);
     OsELFClose(loadInfo->execInfo.procfd);
@@ -1039,6 +1073,9 @@ STATIC VOID OsDeInitFiles(ELFLoadInfo *loadInfo)
 #endif
 }
 
+/*!
+ * 加载ELF文件
+ */
 INT32 OsLoadELFFile(ELFLoadInfo *loadInfo)
 {
     INT32 ret;

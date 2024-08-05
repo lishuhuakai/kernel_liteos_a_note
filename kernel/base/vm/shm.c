@@ -166,7 +166,9 @@ STATIC struct shmIDSource *g_shmSegs = NULL;
 STATIC UINT32 g_shmUsedPageCount;
 #endif
 
-//共享内存初始化
+/*!
+ * 共享内存初始化
+ */
 struct shmIDSource *OsShmCBInit(LosMux *sysvShmMux, struct shminfo *shmInfo, UINT32 *shmUsedPageCount)
 {
     UINT32 ret;
@@ -219,7 +221,9 @@ UINT32 ShmInit(VOID)
 
 
 LOS_MODULE_INIT(ShmInit, LOS_INIT_LEVEL_VM_COMPLETE);//共享内存模块初始化
-//共享内存反初始化
+/*!
+ * 共享内存反初始化
+ */
 UINT32 ShmDeinit(VOID)
 {
     UINT32 ret;
@@ -234,7 +238,9 @@ UINT32 ShmDeinit(VOID)
 
     return 0;
 }
-///给共享段中所有物理页框贴上共享标签
+/*!
+ * 给共享段中所有物理页框贴上共享标签
+ */
 STATIC inline VOID ShmSetSharedFlag(struct shmIDSource *seg)
 {
     LosVmPage *page = NULL;
@@ -243,7 +249,9 @@ STATIC inline VOID ShmSetSharedFlag(struct shmIDSource *seg)
         OsSetPageShared(page);
     }
 }
-///给共享段中所有物理页框撕掉共享标签
+/*!
+ * 给共享段中所有物理页框撕掉共享标签
+ */
 STATIC inline VOID ShmClearSharedFlag(struct shmIDSource *seg)
 {
     LosVmPage *page = NULL;
@@ -252,7 +260,9 @@ STATIC inline VOID ShmClearSharedFlag(struct shmIDSource *seg)
         OsCleanPageShared(page);
     }
 }
-///seg下所有共享页引用减少
+/*!
+ * seg下所有共享页引用减少
+ */
 STATIC VOID ShmPagesRefDec(struct shmIDSource *seg)
 {
     LosVmPage *page = NULL;
@@ -264,8 +274,8 @@ STATIC VOID ShmPagesRefDec(struct shmIDSource *seg)
 
 /**
  * @brief 为共享段分配物理内存
- 例如:参数size = 4097, LOS_Align(size, PAGE_SIZE) = 8192
- 分配页数    size >> PAGE_SHIFT = 2页 
+ * 例如:参数size = 4097, LOS_Align(size, PAGE_SIZE) = 8192
+ * 分配页数    size >> PAGE_SHIFT = 2页 
  * @param key 
  * @param size 
  * @param shmflg 
@@ -346,7 +356,9 @@ STATIC INT32 ShmAllocSeg(key_t key, size_t size, INT32 shmflg)
 
     return segNum;
 }
-///释放seg->node 所占物理页框,seg本身重置
+/*!
+ * 释放seg->node 所占物理页框,seg本身重置
+ */
 STATIC INLINE VOID ShmFreeSeg(struct shmIDSource *seg, UINT32 *shmUsedPageCount)
 {
     UINT32 count;
@@ -366,7 +378,9 @@ STATIC INLINE VOID ShmFreeSeg(struct shmIDSource *seg, UINT32 *shmUsedPageCount)
     seg->status = SHM_SEG_FREE;//seg恢复自由之身
     LOS_ListInit(&seg->node);//重置node
 }
-///通过key查找 shmId
+/*!
+ * 通过key查找 shmId
+ */
 STATIC INT32 ShmFindSegByKey(key_t key)
 {
     INT32 i;
@@ -382,7 +396,9 @@ STATIC INT32 ShmFindSegByKey(key_t key)
 
     return -1;
 }
-///共享内存段有效性检查
+/*!
+ * 共享内存段有效性检查
+ */
 STATIC INT32 ShmSegValidCheck(INT32 segNum, size_t size, INT32 shmFlg)
 {
     struct shmIDSource *seg = &IPC_SHM_SEGS[segNum];//拿到shmID
@@ -398,7 +414,9 @@ STATIC INT32 ShmSegValidCheck(INT32 segNum, size_t size, INT32 shmFlg)
 
     return segNum;
 }
-///通过ID找到共享内存资源
+/*!
+ * 通过ID找到共享内存资源
+ */
 STATIC struct shmIDSource *ShmFindSeg(int shmid)
 {
     struct shmIDSource *seg = NULL;
@@ -416,7 +434,9 @@ STATIC struct shmIDSource *ShmFindSeg(int shmid)
 
     return seg;
 }
-///共享内存映射
+/*!
+ * 共享内存映射
+ */
 STATIC VOID ShmVmmMapping(LosVmSpace *space, LOS_DL_LIST *pageList, VADDR_T vaddr, UINT32 regionFlags)
 {
     LosVmPage *vmPage = NULL;
@@ -434,7 +454,9 @@ STATIC VOID ShmVmmMapping(LosVmSpace *space, LOS_DL_LIST *pageList, VADDR_T vadd
         va += PAGE_SIZE;
     }
 }
-///fork 一个共享线性区
+/*!
+ * fork 一个共享线性区
+ */
 VOID OsShmFork(LosVmSpace *space, LosVmMapRegion *oldRegion, LosVmMapRegion *newRegion)
 {
     struct shmIDSource *seg = NULL;
@@ -453,7 +475,9 @@ VOID OsShmFork(LosVmSpace *space, LosVmMapRegion *oldRegion, LosVmMapRegion *new
     seg->ds.shm_nattch++;//附在共享线性区上的进程数++
     SYSV_SHM_UNLOCK();
 }
-///释放共享线性区
+/*!
+ * 释放共享线性区
+ */
 VOID OsShmRegionFree(LosVmSpace *space, LosVmMapRegion *region)
 {
     struct shmIDSource *seg = NULL;
@@ -476,12 +500,16 @@ VOID OsShmRegionFree(LosVmSpace *space, LosVmMapRegion *region)
     }
     SYSV_SHM_UNLOCK();
 }
-///是否为共享线性区,是否有标签?
+/*!
+ * 是否为共享线性区,是否有标签?
+ */
 BOOL OsIsShmRegion(LosVmMapRegion *region)
 {
     return (region->regionFlags & VM_MAP_REGION_FLAG_SHM) ? TRUE : FALSE;
 }
-///获取共享内存池中已被使用的段数量
+/*!
+ * 获取共享内存池中已被使用的段数量
+ */
 STATIC INT32 ShmSegUsedCount(VOID)
 {
     INT32 i;
@@ -496,7 +524,9 @@ STATIC INT32 ShmSegUsedCount(VOID)
     }
     return count;
 }
-///对共享内存段权限检查
+/*!
+ * 对共享内存段权限检查
+ */
 STATIC INT32 ShmPermCheck(struct shmIDSource *seg, mode_t mode)
 {
     INT32 uid = LOS_GetUserID();//当前进程的用户ID
@@ -617,7 +647,9 @@ INT32 ShmatParamCheck(const VOID *shmaddr, INT32 shmflg)
 
     return 0;
 }
-///分配一个共享线性区并映射好
+/*!
+ * 分配一个共享线性区并映射好
+ */
 LosVmMapRegion *ShmatVmmAlloc(struct shmIDSource *seg, const VOID *shmaddr,
                               INT32 shmflg, UINT32 prot)
 {
@@ -998,7 +1030,9 @@ STATIC VOID OsShmCmdUsage(VOID)
            "\t-r [shmid],    Recycle the specified shared memory about shmid\n"
            "\t-h | --help,   print shm command usage\n");
 }
-///共享内存
+/*!
+ * 共享内存
+ */
 UINT32 OsShellCmdShm(INT32 argc, const CHAR *argv[])
 {
     INT32 shmid;
@@ -1033,4 +1067,3 @@ DONE:
 SHELLCMD_ENTRY(shm_shellcmd, CMD_TYPE_SHOW, "shm", 2, (CmdCallBackFunc)OsShellCmdShm);
 #endif
 #endif
-

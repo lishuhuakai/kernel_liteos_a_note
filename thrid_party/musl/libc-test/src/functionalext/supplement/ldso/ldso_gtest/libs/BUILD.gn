@@ -1,0 +1,1217 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/clang/clang.gni")
+import("../../../../../../test_template.gni")
+
+group("ldso_libs") {
+  testonly = true
+  deps = [
+    ":dlopen_004",
+    ":dlopen_005",
+    ":dlopen_009_1",
+    ":dlopen_009_2",
+    ":dlopen_010",
+    ":dlopen_common",
+    ":dlopen_common_close",
+    ":dlopen_common_relro",
+    ":dlopen_global",
+    ":dlopen_gnu_hash",
+    ":dlopen_init_finalize",
+    ":dlopen_load_so",
+    ":dlopen_nodelete",
+    ":dlopen_nodelete_1",
+    ":dlopen_order_003",
+    ":dlopen_order_02",
+    ":dlopen_relocation",
+    ":dlopen_rpath",
+    ":dlopen_sysv_hash",
+    ":dlopen_test_dependency",
+    ":dlsym_get_answer",
+    ":dlsym_get_symbol",
+    ":dlsym_get_symbol_impl",
+    ":dlsym_global_symbol",
+    ":dlsym_lib_use_rtld_next",
+    ":dlsym_symbol_impl_v1",
+    ":dlsym_symbol_impl_v2",
+    ":dlsym_symbol_v1",
+    ":dlsym_symbol_v2_relro",
+    ":dlsym_symbol_v2_second",
+    ":dlsym_symbol_v3_relro",
+    ":dlsym_symbol_version_2",
+    ":dlsym_symbol_version_3",
+    ":dlsym_symbol_version_empty",
+    ":dlsym_to_use_global_symbol",
+    ":dlsym_weak_func",
+    ":dlsym_weak_func_undefined",
+    ":empty",
+    ":ldso_cfi_lib",
+    ":ldso_cfi_lib_exit",
+    ":ldso_cxa_thread_atexit_test",
+    ":ldso_cxa_thread_atexit_test_A",
+    ":ldso_cxa_thread_atexit_test_B",
+    ":ldso_cxa_thread_atexit_test_C",
+    ":ldso_dlclose_test_a",
+    ":ldso_dlclose_test_b",
+    ":ldso_dlclose_test_c",
+    ":ldso_dlsym_dependent",
+    ":ldso_dlsym_dependent_impl",
+    ":ldso_norelro_test",
+    ":ldso_ns_empty",
+    ":ldso_ns_root",
+    ":ldso_ns_test_permitted_root",
+    ":ldso_relro_recursive_test",
+    ":ldso_thread_test",
+    ":ldso_thread_test_2",
+  ]
+  if ("${musl_arch}" == "arm" || "${musl_arch}" == "aarch64") {
+    deps += [ ":copy_zip_lib" ]
+  }
+}
+
+root_libs_dir = "/data/tmp/libcgtest/libs"
+
+ohos_shared_library("dlopen_relocation_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_relocation_1.c" ]
+  output_name = "dlopen_relocation_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_relocation_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_relocation_2.c" ]
+  output_name = "dlopen_relocation_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_relocation") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_relocation.c" ]
+  output_name = "dlopen_relocation"
+  output_extension = "so"
+  deps = [
+    ":dlopen_relocation_1",
+    ":dlopen_relocation_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_1.c" ]
+  output_name = "dlopen_order_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_2.c" ]
+  output_name = "dlopen_order_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_3") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_3.c" ]
+  output_name = "dlopen_order_3"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_1_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_1_2.c" ]
+  output_name = "dlopen_order_1_2"
+  output_extension = "so"
+  deps = [
+    ":dlopen_order_1",
+    ":dlopen_order_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_02") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order.c" ]
+  output_name = "dlopen_order_02"
+  output_extension = "so"
+  deps = [
+    ":dlopen_order_1_2",
+    ":dlopen_order_3",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_003_1_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_003_1_1.c" ]
+  output_name = "dlopen_order_003_1_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_003_1_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_003_1_2.c" ]
+  output_name = "dlopen_order_003_1_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_003_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_003_1.c" ]
+  output_name = "dlopen_order_003_1"
+  output_extension = "so"
+  deps = [
+    ":dlopen_order_003_1_1",
+    ":dlopen_order_003_1_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_003_2_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_003_2_1.c" ]
+  output_name = "dlopen_order_003_2_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_003_2_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_003_2_2.c" ]
+  output_name = "dlopen_order_003_2_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_003_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_003_2.c" ]
+  output_name = "dlopen_order_003_2"
+  output_extension = "so"
+  deps = [
+    ":dlopen_order_003_2_1",
+    ":dlopen_order_003_2_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_order_003") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_order_003.c" ]
+  output_name = "dlopen_order_003"
+  output_extension = "so"
+  deps = [
+    ":dlopen_order_003_1",
+    ":dlopen_order_003_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_common") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_common.c" ]
+  output_name = "dlopen_common"
+  output_extension = "so"
+  ldflags = [ "-Wl,-soname=libdlopen_common_soname.so" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_004_1_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_004_1_1.c" ]
+  output_name = "dlopen_004_1_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_004_1_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_004_1_2.c" ]
+  output_name = "dlopen_004_1_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_004_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_004_1.c" ]
+  output_name = "dlopen_004_1"
+  output_extension = "so"
+  deps = [
+    ":dlopen_004_1_1",
+    ":dlopen_004_1_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_004") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_004.c" ]
+  output_name = "dlopen_004"
+  output_extension = "so"
+  deps = [ ":dlopen_004_1" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+
+  ldflags = [ "-Wl,--allow-shlib-undefined" ]
+}
+
+ohos_shared_library("dlopen_005_1_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_1_1.c" ]
+  output_name = "dlopen_005_1_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_005_1_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_1_2.c" ]
+  output_name = "dlopen_005_1_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_005_2_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_2_1.c" ]
+  output_name = "dlopen_005_2_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_005_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_1.c" ]
+  output_name = "dlopen_005_1"
+  output_extension = "so"
+  deps = [
+    ":dlopen_005_1_1",
+    ":dlopen_005_1_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_005_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_2.c" ]
+  output_name = "dlopen_005_2"
+  output_extension = "so"
+  deps = [ ":dlopen_005_2_1" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_005") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005.c" ]
+  output_name = "dlopen_005"
+  output_extension = "so"
+  deps = [
+    ":dlopen_005_1",
+    ":dlopen_005_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_009") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_009.c" ]
+  output_name = "dlopen_009"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_009_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_009_1.c" ]
+  output_name = "dlopen_009_1"
+  output_extension = "so"
+  deps = [ ":dlopen_009" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_009_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_009_2.c" ]
+  output_name = "dlopen_009_2"
+  output_extension = "so"
+  deps = [ ":dlopen_009" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_010") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_location.c" ]
+  output_name = "dlopen_010"
+  output_extension = "so"
+  deps = [ ":dlopen_relocation_1" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_load_so_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_load_so_1.c" ]
+  output_name = "dlopen_load_so_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_load_so") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_load_so.c" ]
+  output_name = "dlopen_load_so"
+  output_extension = "so"
+  deps = [ ":dlopen_load_so_1" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_test_dependency_1_1_invalid") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_empty.c" ]
+  output_name = "dlopen_test_dependency_1_1_invalid"
+  output_extension = "so"
+  ldflags = [ "-Wl,-soname=libdlopen_test_dependency_1_1.so" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_test_dependency_1_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_test_dependency_1_1.c" ]
+  output_name = "dlopen_test_dependency_1_1"
+  output_extension = "so"
+  deps = [ ":dlopen_test_dependency_1_1_1" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_test_dependency_1_1_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_test_dependency_1_1_1.c" ]
+  output_name = "dlopen_test_dependency_1_1_1"
+  output_extension = "so"
+  deps = [ ":dlopen_test_dependency_1" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_test_dependency_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_test_dependency_1.c" ]
+  output_name = "dlopen_test_dependency_1"
+  output_extension = "so"
+  deps = [ ":dlopen_test_dependency_1_1_invalid" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_test_dependency") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_test_dependency.c" ]
+  output_name = "dlopen_test_dependency"
+  output_extension = "so"
+  deps = [ ":dlopen_test_dependency_1" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_nodelete") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_nodelete.c" ]
+  output_name = "dlopen_nodelete"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_nodelete_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_nodelete.c" ]
+  output_name = "dlopen_nodelete_1"
+  output_extension = "so"
+  ldflags = [ "-Wl,-z,nodelete" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_init_finalize") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_init_finalize.c" ]
+  output_name = "dlopen_init_finalize"
+  output_extension = "so"
+  deps = [
+    ":dlopen_init_finalize_1",
+    ":dlopen_init_finalize_2",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_init_finalize_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_init_finalize_1.c" ]
+  output_name = "dlopen_init_finalize_1"
+  output_extension = "so"
+  deps = [ ":dlopen_init_finalize_2" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_init_finalize_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_init_finalize_2.c" ]
+  output_name = "dlopen_init_finalize_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_gnu_hash") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_common.c" ]
+  output_name = "dlopen_gnu_hash"
+  output_extension = "so"
+  ldflags = [ "-Wl,--hash-style=gnu" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_sysv_hash") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_common.c" ]
+  output_name = "dlopen_sysv_hash"
+  output_extension = "so"
+  ldflags = [ "-Wl,--hash-style=sysv" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_global") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_common.c" ]
+  output_name = "dlopen_global"
+  output_extension = "so"
+  ldflags = [ "-Wl,-z,global" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_rpath") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005.c" ]
+  output_name = "dlopen_rpath"
+  output_extension = "so"
+  deps = [
+    ":dlopen_rpath_1",
+    ":dlopen_rpath_2",
+  ]
+  ldflags = [
+    "-Wl,-rpath=${root_libs_dir}/rpath-test/",
+    "-Wl,--enable-new-dtags",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_rpath_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_1.c" ]
+  output_name = "dlopen_rpath_1"
+  output_extension = "so"
+  deps = [
+    ":dlopen_rpath_1_1",
+    ":dlopen_rpath_1_2",
+  ]
+  ldflags = [ "-Wl,-rpath=${root_libs_dir}/rpath-test/" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_rpath_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_2.c" ]
+  output_name = "dlopen_rpath_2"
+  output_extension = "so"
+  deps = [ ":dlopen_rpath_2_1" ]
+  ldflags = [ "-Wl,-rpath=${root_libs_dir}/rpath-test/" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_rpath_1_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_1_1.c" ]
+  output_name = "dlopen_rpath_1_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_rpath_1_2") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_1_2.c" ]
+  output_name = "dlopen_rpath_1_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_rpath_2_1") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_005_2_1.c" ]
+  output_name = "dlopen_rpath_2_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_common_close") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_common.c" ]
+  output_name = "dlopen_common_close"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_dlclose_test_a") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_dlclose_test_a.c" ]
+  deps = [
+    ":ldso_dlclose_test_b",
+    ":ldso_dlclose_test_c",
+  ]
+  output_name = "ldso_dlclose_test_a"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_dlclose_test_b") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_dlclose_test_b.c" ]
+  output_name = "ldso_dlclose_test_b"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_dlclose_test_c") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_dlclose_test_c.c" ]
+  deps = [ ":ldso_dlclose_test_b" ]
+  output_name = "ldso_dlclose_test_c"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_thread_test") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_thread_test.cpp" ]
+  output_name = "ldso_thread_test"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_thread_test_1") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_thread_test_1.cpp" ]
+  output_name = "ldso_thread_test_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_thread_test_2") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_thread_test_2.cpp" ]
+  output_name = "ldso_thread_test_2"
+  output_extension = "so"
+  deps = [
+    ":ldso_thread_test",
+    ":ldso_thread_test_1",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_common_relro") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_common.c" ]
+  output_name = "dlopen_common_relro"
+  output_extension = "so"
+  ldflags = [ "-Wl,-z,relro" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_relro_test") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_relro_test.c" ]
+  output_name = "ldso_relro_test"
+  output_extension = "so"
+  deps = [ ":dlopen_common" ]
+  ldflags = [ "-Wl,-z,relro" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_relro_recursive_test") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_relro_recursive_test.c" ]
+  output_name = "ldso_relro_recursive_test"
+  output_extension = "so"
+  deps = [ ":ldso_relro_test" ]
+  ldflags = [ "-Wl,-z,relro" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_norelro_test") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_relro_test.c" ]
+  output_name = "ldso_norelro_test"
+  output_extension = "so"
+  deps = [ ":dlopen_common" ]
+  ldflags = [ "-Wl,-z,norelro" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_root") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_ns_root.c" ]
+  output_name = "ldso_ns_root"
+  output_extension = "so"
+  deps = [
+    ":ldso_ns_one",
+    ":ldso_ns_two",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_one") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_ns_one.c" ]
+  output_name = "ldso_ns_one"
+  output_extension = "so"
+  deps = [ ":ldso_ns_one_impl" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_one_impl") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_ns_one_impl.c" ]
+  output_name = "ldso_ns_one_impl"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_two") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_ns_two.c" ]
+  output_name = "ldso_ns_two"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_no_symbol") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_ns_no_symbol.c" ]
+  output_name = "ldso_ns_no_symbol"
+  output_extension = "so"
+  ldflags = [ "-Wl,--allow-shlib-undefined" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_test_permitted_root") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_ns_root.c" ]
+  output_name = "ldso_ns_test_permitted_root"
+  output_extension = "so"
+  deps = [
+    ":ldso_ns_one",
+    ":ldso_ns_two_impl",
+  ]
+  ldflags = [
+    "-Wl,-rpath=${root_libs_dir}/namespace_two_impl_libs/",
+    "-Wl,--enable-new-dtags",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_two_impl") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_ns_two.c" ]
+  output_name = "ldso_ns_two_impl"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlopen_zip_test") {
+  include_dirs = [ "." ]
+  sources = [ "dlopen_common.c" ]
+  output_name = "dlopen_zip_test"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+action("copy_zip_lib") {
+  script = "//third_party/musl/scripts/copy_libs.sh"
+
+  libs_dir = []
+  if ("${musl_arch}" == "arm") {
+    libs_dir += [ "//third_party/musl/libc-test/src/functionalext/supplement/ldso/ldso_gtest/libs/ziplibs_32" ]
+  } else if ("${musl_arch}" == "aarch64") {
+    libs_dir += [ "//third_party/musl/libc-test/src/functionalext/supplement/ldso/ldso_gtest/libs/ziplibs_64" ]
+  }
+
+  target_dir = [ "${root_out_dir}/musl/libc-gtest-lib" ]
+
+  outputs = [ "$target_out_dir" ]
+
+  args = [ "-i" ] + rebase_path(libs_dir)
+  args += [ "-o" ] + rebase_path(target_dir)
+
+  deps = [
+    ":dlopen_common",
+    ":dlopen_rpath",
+  ]
+}
+
+ohos_shared_library("ldso_dlsym_dependent") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_dependent.c" ]
+
+  output_name = "ldso_dlsym_dependent"
+
+  output_extension = "so"
+
+  deps = [ ":ldso_dlsym_dependent_impl" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_dlsym_dependent_impl") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_dependent_impl.c" ]
+
+  output_name = "ldso_dlsym_dependent_impl"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("empty") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_empty.c" ]
+
+  output_name = "empty"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_get_answer") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_get_answer.c" ]
+
+  output_name = "dlsym_get_answer"
+
+  deps = [ ":dlsym_get_symbol_impl" ]
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_get_symbol_impl") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_get_symbol_impl.c" ]
+
+  output_name = "dlsym_get_symbol_impl"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_get_symbol") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_get_symbol.c" ]
+
+  output_name = "dlsym_get_symbol"
+
+  output_extension = "so"
+
+  deps = [ ":dlsym_get_symbol_impl" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("test_so") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_test_so.c" ]
+
+  output_name = "test_so"
+
+  output_extension = "so"
+
+  cflags = [ "-Wl,-Bstatic -lempty.so" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_weak_func") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_weak_func.c" ]
+
+  output_name = "dlsym_weak_func"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_weak_func_undefined") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_weak_func_undefined.c" ]
+
+  output_name = "dlsym_weak_func_undefined"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_lib_use_rtld_next") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_lib_use_rtld_next.c" ]
+
+  output_name = "dlsym_lib_use_rtld_next"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_global_symbol") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_global_symbol.c" ]
+
+  output_name = "dlsym_global_symbol"
+
+  output_extension = "so"
+
+  ldflags = [
+    "-Wl,-z,global",
+    "-fuse-ld=bfd",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_to_use_global_symbol") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_to_use_global_symbol.c" ]
+
+  output_name = "dlsym_to_use_global_symbol"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_v1") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_v1.c" ]
+
+  output_name = "dlsym_symbol_v1"
+
+  output_extension = "so"
+
+  version_script = "dlsym_symbol_v1.map"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_version_2") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_v2.c" ]
+
+  output_name = "dlsym_symbol_version_2"
+
+  output_extension = "so"
+
+  version_script = "dlsym_symbol_v2.map"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_version_3") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_v3.c" ]
+
+  output_name = "dlsym_symbol_version_3"
+
+  version_script = "dlsym_symbol_v3.map"
+
+  output_extension = "so"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_impl_v1") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_impl.c" ]
+
+  output_name = "dlsym_symbol_impl_v1"
+
+  output_extension = "so"
+
+  deps = [ ":dlsym_symbol_v1" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_impl_v2") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_impl.c" ]
+
+  output_name = "dlsym_symbol_impl_v2"
+
+  output_extension = "so"
+
+  deps = [ ":dlsym_symbol_version_2" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_v2_second") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_v2_second.c" ]
+
+  output_name = "dlsym_symbol_v2_second"
+
+  output_extension = "so"
+
+  version_script = "dlsym_symbol_v2_second.map"
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_v2_relro") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_impl.c" ]
+
+  output_name = "dlsym_symbol_v2_relro"
+
+  output_extension = "so"
+
+  deps = [
+    ":dlsym_symbol_v2_second",
+    ":dlsym_symbol_version_2",
+  ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_v3_relro") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_dlsym_symbol_impl.c" ]
+
+  output_name = "dlsym_symbol_v3_relro"
+
+  output_extension = "so"
+
+  deps = [
+    ":dlsym_symbol_version_3",
+    ":dlsym_symbol_version_empty",
+  ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("dlsym_symbol_version_empty") {
+  include_dirs = [ "." ]
+
+  sources = [ "ldso_empty.c" ]
+
+  output_name = "dlsym_symbol_version_empty"
+
+  output_extension = "so"
+
+  ldflags = [ "-Wl,-soname,dlsym_symbol_v2_second.so" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_ns_empty") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_empty.c" ]
+  output_name = "ldso_ns_empty"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_cfi_lib") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_cfi_lib.c" ]
+  output_name = "ldso_cfi_lib"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_cfi_lib_exit") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_cfi_lib.c" ]
+  output_name = "ldso_cfi_lib_exit"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_cxa_thread_atexit_test") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_cxa_thread_atexit_test_B.cpp" ]
+  output_name = "ldso_cxa_thread_atexit_test"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_cxa_thread_atexit_test_A") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_cxa_thread_atexit_test_A.cpp" ]
+  output_name = "ldso_cxa_thread_atexit_test_A"
+  output_extension = "so"
+  deps = [
+    ":ldso_cxa_thread_atexit_test_B",
+    ":ldso_cxa_thread_atexit_test_C",
+  ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_cxa_thread_atexit_test_B") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_cxa_thread_atexit_test_B.cpp" ]
+  output_name = "ldso_cxa_thread_atexit_test_B"
+  output_extension = "so"
+  deps = [ ":ldso_cxa_thread_atexit_test_C" ]
+  defines = [ "TEST_FOR_DLCLOSE" ]
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}
+
+ohos_shared_library("ldso_cxa_thread_atexit_test_C") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_cxa_thread_atexit_test_C.cpp" ]
+  output_name = "ldso_cxa_thread_atexit_test_C"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-gtest-lib"
+}

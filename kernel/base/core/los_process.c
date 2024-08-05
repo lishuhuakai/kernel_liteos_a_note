@@ -2001,7 +2001,9 @@ ERROR:
     OsDeInitPCB(processCB);
     return ret;
 }
-/// 拷贝用户信息 直接用memcpy_s
+/*!
+ * 拷贝用户信息 直接用memcpy_s
+ */
 STATIC UINT32 OsCopyUser(LosProcessCB *childCB, LosProcessCB *parentCB)
 {
 #ifdef LOSCFG_SECURITY_CAPABILITY
@@ -2016,7 +2018,9 @@ STATIC UINT32 OsCopyUser(LosProcessCB *childCB, LosProcessCB *parentCB)
     return LOS_OK;
 }
 
-//拷贝一个Task过程
+/*!
+ * 拷贝一个Task过程
+ */
 STATIC VOID GetCopyTaskParam(LosProcessCB *childProcessCB, UINTPTR entry, UINT32 size,
                              TSK_INIT_PARAM_S *taskParam, SchedParam *param)
 {
@@ -2086,7 +2090,9 @@ STATIC UINT32 OsCopyTask(UINT32 flags, LosProcessCB *childProcessCB, const CHAR 
     }
     return LOS_OK;
 }
-//拷贝父亲大人的遗传基因信息
+/*!
+ * 拷贝父亲大人的遗传基因信息
+ */
 STATIC UINT32 OsCopyParent(UINT32 flags, LosProcessCB *childProcessCB, LosProcessCB *runProcessCB)
 {
     UINT32 intSave;
@@ -2110,7 +2116,9 @@ STATIC UINT32 OsCopyParent(UINT32 flags, LosProcessCB *childProcessCB, LosProces
     SCHEDULER_UNLOCK(intSave);
     return LOS_OK;
 }
-//拷贝虚拟空间
+/*!
+ * 拷贝虚拟空间
+ */
 STATIC UINT32 OsCopyMM(UINT32 flags, LosProcessCB *childProcessCB, LosProcessCB *runProcessCB)
 {
     status_t status;
@@ -2134,7 +2142,9 @@ STATIC UINT32 OsCopyMM(UINT32 flags, LosProcessCB *childProcessCB, LosProcessCB 
     }
     return LOS_OK;
 }
-/// 拷贝进程文件描述符(proc_fd)信息
+/*!
+ * 拷贝进程文件描述符(proc_fd)信息
+ */
 STATIC UINT32 OsCopyFile(UINT32 flags, LosProcessCB *childProcessCB, LosProcessCB *runProcessCB)
 {
 #ifdef LOSCFG_FS_VFS
@@ -2181,7 +2191,9 @@ STATIC UINT32 OsForkInitPCB(UINT32 flags, LosProcessCB *child, const CHAR *name,
 
     return OsCopyTask(flags, child, name, sp, size);//拷贝任务，设置任务入口函数，栈大小
 }
-//设置进程组和加入进程调度就绪队列
+/*!
+ * 设置进程组和加入进程调度就绪队列
+ */
 STATIC UINT32 OsChildSetProcessGroupAndSched(LosProcessCB *child, LosProcessCB *run)
 {
     UINT32 intSave;
@@ -2205,7 +2217,9 @@ STATIC UINT32 OsChildSetProcessGroupAndSched(LosProcessCB *child, LosProcessCB *
     (VOID)LOS_MemFree(m_aucSysMem1, pgroup);
     return LOS_OK;
 }
-/// 拷贝进程资源
+/*!
+ * 拷贝进程资源
+ */
 STATIC UINT32 OsCopyProcessResources(UINT32 flags, LosProcessCB *child, LosProcessCB *run)
 {
     UINT32 ret;
@@ -2358,7 +2372,9 @@ LITE_OS_SEC_TEXT INT32 OsClone(UINT32 flags, UINTPTR sp, UINT32 size)
 
     return OsCopyProcess(cloneFlag & flags, NULL, sp, size);
 }
-//著名的 fork 函数 记得前往 https://gitee.com/weharmony/kernel_liteos_a_note  fork一下 :)
+/*!
+ * 著名的 fork 函数 记得前往 https://gitee.com/weharmony/kernel_liteos_a_note  fork一下 :)
+ */
 LITE_OS_SEC_TEXT INT32 LOS_Fork(UINT32 flags, const CHAR *name, const TSK_ENTRY_FUNC entry, UINT32 stackSize)
 {
     UINT32 cloneFlag = CLONE_PARENT | CLONE_THREAD | CLONE_VFORK | CLONE_FILES;
@@ -2457,12 +2473,16 @@ LITE_OS_SEC_TEXT struct fd_table_s *LOS_GetFdTable(UINT32 pid)
     return files->fdt;
 }
 #endif
-/// 获取当前进程的进程ID
+/*!
+ * 获取当前进程的进程ID
+ */
 LITE_OS_SEC_TEXT UINT32 LOS_GetCurrProcessID(VOID)
 {
     return OsCurrProcessGet()->processID;
 }
-/// 按指定状态退出指定进程
+/*!
+ * 按指定状态退出指定进程
+ */
 #ifdef LOSCFG_KERNEL_VM
 STATIC VOID ThreadGroupActiveTaskKilled(LosTaskCB *taskCB)
 {
@@ -2535,12 +2555,16 @@ LITE_OS_SEC_TEXT VOID OsProcessThreadGroupDestroy(VOID)
 #endif
     return;
 }
-/// 获取系统支持的最大进程数目
+/*!
+ * 获取系统支持的最大进程数目
+ */
 LITE_OS_SEC_TEXT UINT32 LOS_GetSystemProcessMaximum(VOID)
 {
     return g_processMaxNum;
 }
-/// 获取用户态进程的根进程,所有用户进程都是g_processCBArray[g_userInitProcess] fork来的
+/*!
+ * 获取用户态进程的根进程,所有用户进程都是g_processCBArray[g_userInitProcess] fork来的
+ */
 LITE_OS_SEC_TEXT LosProcessCB *OsGetUserInitProcess(VOID)
 {
     return &g_processCBArray[OS_USER_ROOT_PROCESS_ID];
@@ -2550,7 +2574,9 @@ LITE_OS_SEC_TEXT LosProcessCB *OsGetKernelInitProcess(VOID)
 {
     return &g_processCBArray[OS_KERNEL_ROOT_PROCESS_ID];
 }
-/// 获取空闲进程，0号进程为空闲进程，该进程不干活，专给CPU休息的。
+/*!
+ * 获取空闲进程，0号进程为空闲进程，该进程不干活，专给CPU休息的。
+ */
 LITE_OS_SEC_TEXT LosProcessCB *OsGetIdleProcess(VOID)
 {
     return &g_processCBArray[OS_KERNEL_IDLE_PROCESS_ID];

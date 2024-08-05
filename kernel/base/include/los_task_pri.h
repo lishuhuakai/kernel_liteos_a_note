@@ -295,7 +295,9 @@ STATIC INLINE BOOL OsTaskIsUserMode(const LosTaskCB *taskCB)
 #define OS_TASK_WAIT_EVENT      (OS_TASK_WAIT_FUTEX + 1) 	///< 等待事件发生
 #define OS_TASK_WAIT_COMPLETE   (OS_TASK_WAIT_EVENT + 1)	///< 等待结束信号
 
-/// 设置事件阻塞掩码,即设置任务的等待事件.
+/*!
+ * 设置事件阻塞掩码,即设置任务的等待事件.
+ */
 STATIC INLINE VOID OsTaskWaitSetPendMask(UINT16 mask, UINTPTR lockID, UINT32 timeout)
 {
     LosTaskCB *runTask = OsCurrTaskGet();
@@ -304,7 +306,9 @@ STATIC INLINE VOID OsTaskWaitSetPendMask(UINT16 mask, UINTPTR lockID, UINT32 tim
     (VOID)timeout;
 }
 
-/// 清除事件阻塞掩码,即任务不再等待任何事件.
+/*!
+ * 清除事件阻塞掩码,即任务不再等待任何事件.
+ */
 STATIC INLINE VOID OsTaskWakeClearPendMask(LosTaskCB *resumeTask)
 {
     resumeTask->waitID = 0;

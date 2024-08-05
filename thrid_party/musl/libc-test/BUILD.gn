@@ -1,0 +1,34 @@
+import("//build/test.gni")
+import("../musl_config.gni")
+
+group("musl_libc_test") {
+  testonly = true
+
+  deps = [
+    "src/api:main",
+    "src/common:runtest",
+    "src/functional:functional_test",
+    "src/functionalext:functionalext_test",
+    "src/math:math_test",
+    "src/musl:pleval",
+    "src/nativehook:nativehook_test",
+    "src/regression:regression_test",
+    "src/static_link:static_link_test",
+  ]
+
+  if (musl_use_gwp_asan) {
+    deps += [ "src/gwp_asan:gwp_asan_test" ]
+  }
+
+  if (current_cpu == "arm") {
+    deps += [ "src/eabi:eabi_test" ]
+  }
+}
+
+group("libc_gtest") {
+  testonly = true
+  deps = [
+    "src/functionalext/supplement:musl_unittest",
+    "src/functionalext/supplement/ldso/ldso_gtest/libs:ldso_libs",
+  ]
+}

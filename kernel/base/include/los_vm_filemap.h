@@ -95,7 +95,9 @@ struct file_map { //为在内核层面文件在内存的身份证,每个需映�
 
 #endif
 
-/// 文件页结构体
+/*!
+ * 文件页结构体
+ */
 typedef struct FilePage {
     LOS_DL_LIST             node;		///< 节点,节点挂到page_mapping.page_list上,链表以 pgoff 从小到大方式排序.
     LOS_DL_LIST             lru;		///< lru节点, 结合 LosVmPhysSeg: LOS_DL_LIST lruList[VM_NR_LRU_LISTS] 理解
@@ -266,4 +268,3 @@ struct file_map* GetFileMappingList(void);
 #endif /* __cplusplus */
 
 #endif /* __LOS_VM_FILEMAP_H__ */
-

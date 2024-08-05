@@ -1,0 +1,61 @@
+import("../../../test_template.gni")
+
+group("dl_different_hash") {
+  testonly = true
+  deps = [
+    ":dl_a_sysv_hash_so",
+    ":dl_different_hash_exe",
+    ":dl_gnu_hash_so",
+  ]
+}
+
+ohos_shared_library("dl_a_sysv_hash_so") {
+  include_dirs = [ "." ]
+
+  sources = [ "sysv_hash_file.c" ]
+
+  output_name = "dl_sysv_hash_so"
+
+  output_extension = "so"
+
+  cflags = [ "-fPIC" ]
+
+  ldflags = [ "-Wl,--hash-style=sysv" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_shared_library("dl_gnu_hash_so") {
+  include_dirs = [ "." ]
+
+  sources = [ "gnu_hash_file.c" ]
+
+  output_name = "dl_gnu_hash_so"
+
+  output_extension = "so"
+
+  cflags = [ "-fPIC" ]
+
+  ldflags = [ "-Wl,--hash-style=gnu" ]
+
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_executable("dl_different_hash_exe") {
+  sources = [ "dl_different_hash_exe.c" ]
+  testonly = true
+  deps = [
+    ":dl_a_sysv_hash_so",
+    ":dl_gnu_hash_so",
+  ]
+  include_dirs = [
+    "../common",
+    "//third_party/musl/libc-test/src/common",
+  ]
+  ldflags = [ "-Wl,-rpath=./:/data/local/tmp/libc-test-lib/" ]
+  configs = [ "//third_party/musl/libc-test/src/common:config_runtest" ]
+  subsystem_name = "musl"
+  part_name = "libc-test"
+}

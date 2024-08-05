@@ -1,0 +1,121 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+group("benchmark_musl_group") {
+  testonly = true
+  deps = [
+    ":musl_benchmark",
+    ":musl_dlopen",
+  ]
+}
+
+ohos_executable("musl_benchmark") {
+  testonly = true
+  sources = [
+    "benchmark_framework.cpp",
+    "libc_ctype.cpp",
+    "libc_cxa_finalize.cpp",
+    "libc_dirent.cpp",
+    "libc_epoll.cpp",
+    "libc_errno.cpp",
+    "libc_eventfd.cpp",
+    "libc_fcntl.cpp",
+    "libc_fenv.cpp",
+    "libc_grp.cpp",
+    "libc_hilog.cpp",
+    "libc_inotify.cpp",
+    "libc_ioctl.cpp",
+    "libc_linker.cpp",
+    "libc_locale.cpp",
+    "libc_malloc.cpp",
+    "libc_math.cpp",
+    "libc_mman.cpp",
+    "libc_network.cpp",
+    "libc_poll.cpp",
+    "libc_pthread.cpp",
+    "libc_pwd.cpp",
+    "libc_random.cpp",
+    "libc_regex.cpp",
+    "libc_sched.cpp",
+    "libc_select.cpp",
+    "libc_setjmp.cpp",
+    "libc_signal.cpp",
+    "libc_stat.cpp",
+    "libc_stdio.cpp",
+    "libc_stdlib.cpp",
+    "libc_string.cpp",
+    "libc_syscall.cpp",
+    "libc_sysinfo.cpp",
+    "libc_time.cpp",
+    "libc_unistd.cpp",
+    "libc_wait.cpp",
+    "socket_test.cpp",
+    "util.cpp",
+  ]
+
+  deps = []
+  if (!is_llvm_build) {
+    external_deps = [
+      "benchmark:benchmark",
+      "cJSON:cjson",
+    ]
+  }
+
+  deps += [
+    ":cpp_benchmark",
+    "//third_party/musl:create_porting_src",
+  ]
+
+  if (current_cpu == "arm") {
+    defines = [ "SYSTEM_32_BIT" ]
+  }
+
+  part_name = "musl"
+  subsystem_name = "thirdparty"
+}
+
+source_set("cpp_benchmark") {
+  include_dirs = []
+  sources = [ "libc_exception.cpp" ]
+
+  cflags = [
+    "-frtti",
+    "-fexceptions",
+  ]
+
+  configs -= [
+    "//build/config/compiler:no_exceptions",
+    "//build/config/compiler:no_rtti",
+  ]
+
+  if (!is_llvm_build) {
+    external_deps = [ "benchmark:benchmark" ]
+  }
+}
+
+ohos_executable("musl_dlopen") {
+  testonly = true
+  sources = [ "libc_dlopen.cpp" ]
+  if (!is_llvm_build) {
+    deps = [ "//third_party/benchmark:benchmark" ]
+  }
+
+  if (current_cpu == "arm") {
+    defines = [ "SYSTEM_32_BIT" ]
+  }
+
+  part_name = "musl"
+  subsystem_name = "thirdparty"
+}

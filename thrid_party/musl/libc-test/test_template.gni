@@ -1,0 +1,364 @@
+import("//build/test.gni")
+import("//third_party/musl/musl_config.gni")
+
+musl_base_dir = "third_party/musl/"
+test_dir = "${musl_base_dir}/libc-test"
+out_test_dir = "${root_out_dir}/obj/${musl_base_dir}/libc-test"
+
+if (current_cpu == "arm") {
+  musl_arch = "arm"
+} else if (current_cpu == "arm64") {
+  musl_arch = "aarch64"
+} else if (current_cpu == "x86_64") {
+  musl_arch = "x86_64"
+}
+
+musl_include_dir =
+    "${root_out_dir}/obj/${musl_base_dir}/usr/include/${musl_arch}-linux-ohos"
+musl_lib_dir =
+    "${root_out_dir}/obj/${musl_base_dir}/usr/lib/${musl_arch}-linux-ohos"
+
+test_lib_dir = "musl/libc-test-lib"
+
+musl_src_base = "${root_out_dir}/obj/${musl_base_dir}/${musl_ported_dir}"
+
+template("test_unittest") {
+  assert(defined(invoker.target_name),
+         "file name is required in target ${target_name}")
+
+  target_name = invoker.target_name
+  target_dir = invoker.target_dir
+
+  if (defined(invoker.cpp_file)) {
+    cpp_file = invoker.cpp_file
+  } else {
+    cpp_file = false
+  }
+
+  if (defined(invoker.musl_unit_test_flag)) {
+    musl_unit_test_flag = invoker.musl_unit_test_flag
+  }
+  target("ohos_executable", "${target_name}") {
+    subsystem_name = "musl"
+    part_name = "libc-test"
+
+    if (target_cpu == "arm64") {
+      defines = [ "_ARM64_" ]
+    }
+
+    cflags = []
+
+    if (cpp_file) {
+      sources = [ "${target_name}.cpp" ]
+      cflags = [ "-std=c++17" ]
+    } else {
+      sources = [ "${target_name}.c" ]
+    }
+
+    include_dirs = [
+      "//${test_dir}/src/common",
+      "//${musl_include_dir}",
+      "//${test_dir}/src/functionalext/common",
+      "//${musl_base_dir}/include/arpa",
+      "//${musl_base_dir}/src/process",
+    ]
+
+    cflags_c = [
+      "-pipe",
+      "-std=c99",
+      "-D_POSIX_C_SOURCE=200809L",
+      "-Wall",
+      "-Wno-unused",
+      "-Wno-unused-function",
+      "-Wno-missing-braces",
+      "-Wno-overflow",
+      "-Wno-unknown-pragmas",
+      "-Wno-unsupported-floating-point-opt",
+      "-Wno-ignored-pragmas",
+      "-fno-builtin",
+      "-frounding-math",
+      "-Werror=implicit-function-declaration",
+      "-Werror=implicit-int",
+      "-Werror=pointer-sign",
+      "-Werror=pointer-arith",
+      "-g",
+      "-D_FILE_OFFSET_BITS=64",
+      "-c",
+      "-o",
+    ]
+
+    if (musl_use_pthread_cancel) {
+      cflags += [ "-DFEATURE_PTHREAD_CANCEL" ]
+    }
+
+    ldflags = [ "-nostdlib" ]
+
+    libs = [ "//${out_test_dir}/src/common/libtest.a" ]
+    if (!musl_unit_test_flag) {
+      libs += [ "${musl_lib_dir}/libc.a" ]
+    }
+
+    if (target_dir == "math") {
+      include_dirs += [
+        "//${test_dir}/src/math/crlibm",
+        "//${test_dir}/src/math/gen",
+        "//${test_dir}/src/math/sanity",
+        "//${test_dir}/src/math/special",
+        "//${test_dir}/src/math/ucb",
+      ]
+
+      if (musl_ld128_flag) {
+        include_dirs += [ "//${test_dir}/src/math/ld128" ]
+        if (!defined(defines)) {
+          defines = []
+        }
+        defines += [ "LD128_ENABLE" ]
+      }
+
+      cflags += [
+        # math/dremf.c:1:9: error: '_GNU_SOURCE' macro redefined [-Werror,-Wmacro-redefined]
+        # cflags_c无法生效此命令
+        # -Wno-error无法屏蔽错误，改为屏蔽警告
+        "-Wno-macro-redefined",
+      ]
+    }
+
+    if (target_dir == "functional") {
+      cflags_c += [
+        # include/${musl_arch}-linux-ohos/endian.h:26:25: error: '&' within '|' [-Werror,-Wbitwise-op-parentheses]
+        "-Wno-error=bitwise-op-parentheses",
+
+        #functional/sscanf.c:73:9: error: magnitude of floating-point constant too large for type 'double'; maximum is 1.7976931348623157E+308 [-Werror,-Wliteral-range]
+        "-Wno-error=literal-range",
+      ]
+
+      cflags += [
+        # functional/strptime.c:3:9: error: '_GNU_SOURCE' macro redefined [-Werror,-Wmacro-redefined]
+        "-Wno-macro-redefined",
+      ]
+
+      if (target_name == "dlopen") {
+        ldflags += [ "-rdynamic" ]
+        #libs += [ "//${root_out_dir}/${test_lib_dir}/libdlopen_dso.so" ]
+      }
+
+      if (target_name == "dlopen_ns") {
+        ldflags += [ "-rdynamic" ]
+        #libs += [ "//${root_out_dir}/${test_lib_dir}/libdlopen_ns_dso.so" ]
+      }
+
+      if (target_name == "dlclose_reset") {
+        ldflags += [ "-rdynamic" ]
+        #libs += [ "//${root_out_dir}/${test_lib_dir}/libdlclose_reset_dso.so" ]
+      }
+
+      if (target_name == "dl_multithread_test") {
+        ldflags += [ "-Wl,-rpath=./" ]
+      }
+
+      if (target_name == "dlopen") {
+        ldflags += [ "-Wl,-rpath=./" ]
+      }
+
+      if (target_name == "tls_align") {
+        ldflags += [ "-Wl,-rpath=./" ]
+        libs += [ "//${root_out_dir}/${test_lib_dir}/libtls_align_dso.so" ]
+      }
+
+      if (target_name == "tls_init") {
+        ldflags += [ "-Wl,-rpath=./" ]
+        libs += [ "//${root_out_dir}/${test_lib_dir}/libtls_init_dso.so" ]
+      }
+
+      if (target_name == "test-malloc-info") {
+        deps = [ "//third_party/libxml2:xml2" ]
+      }
+    }
+
+    if (target_dir == "functionalext/fortify") {
+      if (!defined(defines)) {
+        defines = []
+      }
+      defines += [ "_FORTIFY_SOURCE=2" ]
+    }
+
+    if (target_dir == "functionalext/ldso_randomization") {
+      if (target_name == "ldso_randomization_test") {
+        ldflags += [ "-Wl,--export-dynamic,-rpath=./" ]
+      }
+
+      if (target_name == "ldso_randomization_manual") {
+        ldflags += [ "-Wl,-rpath=./" ]
+      }
+
+      include_dirs += [ "//${test_dir}/src/functionalext/common" ]
+    }
+
+    if (target_dir == "functionalext/symver") {
+      ldflags += [ "-Wl,-rpath=./" ]
+      if (target_name == "dlsym" || target_name == "dlvsym" ||
+          target_name == "dynlink" || target_name == "dynlink_default") {
+        libs += [
+          "//${root_out_dir}/${test_lib_dir}/libdso_easy_symver.so",
+          "//${root_out_dir}/${test_lib_dir}/libdso_hard_symver.so",
+          "//${root_out_dir}/${test_lib_dir}/libdso_no_symver.so",
+          "//${root_out_dir}/${test_lib_dir}/libdso_symver.so",
+        ]
+      }
+    }
+
+    if (target_dir == "musl") {
+      cflags_c += [ "-w" ]
+
+      libs += [
+        "//${musl_lib_dir}/libc.a",
+        "//${musl_lib_dir}/libm.a",
+        "//${musl_lib_dir}/librt.a",
+        "//${musl_lib_dir}/libcrypt.a",
+        "//${musl_lib_dir}/libdl.a",
+        "//${musl_lib_dir}/libresolv.a",
+        "//${musl_lib_dir}/libutil.a",
+        "//${musl_lib_dir}/libpthread.a",
+      ]
+    }
+
+    if (target_dir == "regression") {
+      cflags_c += [
+        # regression/daemon-failure.c:56:24: error: adding 'int' to a string does not append to the string [-Werror,-Wstring-plus-int]
+        "-Wno-string-plus-int",
+        "-Wno-error=string-plus-int",
+      ]
+
+      cflags += [
+        # regression/syscall-sign-extend.c:3:9: error: '_GNU_SOURCE' macro redefined [-Werror,-Wmacro-redefined]
+        "-Wno-macro-redefined",
+      ]
+
+      if (target_name == "tls_get_new-dtv") {
+        ldflags += [ "-Wl,-rpath=./" ]
+        libs +=
+            [ "//${root_out_dir}/${test_lib_dir}/libtls_get_new-dtv_dso.so" ]
+      }
+    }
+
+    if (target_dir == "functionalext/relro") {
+      if (target_name == "dlopen_ext_relro_test") {
+        include_dirs += [ "//${test_dir}/src/functionalext/common" ]
+
+        ldflags += [ "-Wl,-rpath=./" ]
+      }
+    }
+
+    if (target_dir == "functionalext/thread") {
+      if (!defined(defines)) {
+        defines = []
+      }
+      if (musl_target_os == "linux" && product_path != "" &&
+          product_path != rebase_path("//productdefine/common/products")) {
+        _product_config = read_file("${product_path}/config.json", "json")
+        if (target_name == "pthread_stack_size") {
+          if (defined(_product_config.device_stack_size)) {
+            defines +=
+                [ "TARGET_STACK_SIZE=${_product_config.device_stack_size}" ]
+          }
+        }
+        if (target_name == "pthread_guard_size") {
+          if (defined(_product_config.device_guard_size)) {
+            defines +=
+                [ "TARGET_GUARD_SIZE=${_product_config.device_guard_size}" ]
+          }
+        }
+      }
+    }
+
+    if (target_dir == "functionalext/sigchain") {
+      include_dirs += [ "//${musl_base_dir}/include" ]
+    }
+  }
+}
+
+template("test_sharedlib") {
+  assert(defined(invoker.target_name),
+         "shared_lib name is required in target ${target_name}")
+
+  target_name = invoker.target_name
+  if (defined(invoker.cpp_file)) {
+    cpp_file = invoker.cpp_file
+  } else {
+    cpp_file = false
+  }
+
+  if (defined(invoker.global)) {
+    global = invoker.global
+  } else {
+    global = false
+  }
+
+  target("ohos_shared_library", "${target_name}") {
+    include_dirs = [ "//${test_dir}/src/common" ]
+
+    if (cpp_file) {
+      sources = [ "${target_name}.cpp" ]
+      cflags = [ "-std=c++17" ]
+    } else {
+      sources = [ "${target_name}.c" ]
+      cflags = [
+        "-std=c99",
+        "-D_POSIX_C_SOURCE=200809L",
+      ]
+    }
+
+    cflags_common = [
+      "-pipe",
+      "-Wall",
+      "-Wno-unused",
+      "-Wno-unused-function",
+      "-Wno-missing-braces",
+      "-Wno-overflow",
+      "-Wno-unknown-pragmas",
+      "-Wno-unsupported-floating-point-opt",
+      "-fno-builtin",
+      "-frounding-math",
+      "-Werror=implicit-function-declaration",
+      "-Werror=implicit-int",
+      "-Werror=pointer-sign",
+      "-Werror=pointer-arith",
+      "-g",
+      "-D_FILE_OFFSET_BITS=64",
+      "-fPIC",
+      "-DSHARED",
+      "-c",
+      "-o",
+    ]
+
+    cflags_c = cflags
+    cflags_c += cflags_common
+
+    ldflags = [
+      "-shared",
+      "-nostdlib",
+    ]
+
+    if (global) {
+      ldflags += [ "-Wl,-z,global" ]
+    }
+
+    if (defined(invoker.version_script)) {
+      _version_script = rebase_path(invoker.version_script, root_build_dir)
+      ldflags += [ "-Wl,--version-script=${_version_script}" ]
+    }
+
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    }
+
+    libs = [ "//${out_test_dir}/src/common/libtest.a" ]
+
+    output_name = "${target_name}"
+
+    output_extension = "so"
+
+    subsystem_name = "musl"
+    part_name = "libc-test-lib"
+  }
+}

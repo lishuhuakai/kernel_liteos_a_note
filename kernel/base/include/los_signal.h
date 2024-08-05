@@ -154,7 +154,9 @@ typedef void (*sa_siginfoaction_t)(int, siginfo_t *, void *);
 #define SIGNO2SET(s) ((sigset_t)1ULL << (s))
 #define NULL_SIGNAL_SET ((sigset_t)0ULL)	///< 信号集全部清0
 #define FULL_SIGNAL_SET ((sigset_t)~0ULL)	///< 信号集全部置1
-///信号ID是否有效
+/*!
+ * 信号ID是否有效
+ */
 static inline int GOOD_SIGNO(unsigned int sig)
 {
     return (sig < _NSIG) ? 1 : 0;// 
@@ -222,7 +224,7 @@ typedef struct {
     sigset_t sigPendFlag;	///< 信号阻塞标签集,记录那些信号来过,任务依然阻塞的集合.即:这些信号不能唤醒任务
     sigset_t sigprocmask;   ///< Signals that are blocked | 任务屏蔽了哪些信号
     sq_queue_t sigactionq;	///< 信号捕捉队列					
-    LOS_DL_LIST waitList;	///< 待链表,上面挂的是等待信号到来的任务, 请查找 OsTaskWait(&sigcb->waitList, timeout, TRUE)	理解						
+    LOS_DL_LIST waitList;	///< 等待链表,上面挂的是等待信号到来的任务, 请查找 OsTaskWait(&sigcb->waitList, timeout, TRUE)	理解						
     sigset_t sigwaitmask; /*! Waiting for pending signals   | 任务在等待哪些信号的到来 */
     siginfo_t sigunbinfo; /*! Signal info when task unblocked   | 任务解锁时的信号信息  */
     SigInfoListNode *tmpInfoListHead; /*! Signal info List */

@@ -1,0 +1,14 @@
+DlsymVersion_1 {
+    global:
+        DlsymVersion;
+};
+
+DlsymVersion_2 {
+    global:
+        DlsymVersion;
+} DlsymVersion_1;
+
+DlsymVersion_3 {
+    global:
+        DlsymVersion;
+} DlsymVersion_2;

@@ -144,7 +144,10 @@ STATIC STATUS_T OsDoReadFault(LosVmMapRegion *region, LosVmPgFault *vmPgFault)//
     return LOS_ERRNO_VM_NO_MEMORY;
 }
 
-/* numap a page when cow happend only *///仅当写时拷贝发生时取消页面映射
+/* numap a page when cow happend only */
+/*!
+ * 仅当写时拷贝发生时取消页面映射
+ */
 STATIC LosVmPage *OsCowUnmapOrg(LosArchMmu *archMmu, LosVmMapRegion *region, LosVmPgFault *vmf)
 {
     UINT32 intSave;
@@ -172,7 +175,9 @@ STATIC LosVmPage *OsCowUnmapOrg(LosArchMmu *archMmu, LosVmMapRegion *region, Los
     return oldPage;
 }
 #endif
-//在私有线性区写入文件时发生缺页的处理
+/*!
+ * 在私有线性区写入文件时发生缺页的处理
+ */
 status_t OsDoCowFault(LosVmMapRegion *region, LosVmPgFault *vmPgFault)
 {
     STATUS_T ret;
@@ -459,7 +464,7 @@ STATUS_T OsVmPageFaultHandler(VADDR_T vaddr, UINT32 flags, ExcContext *frame)
 
         status = LOS_OK;
         goto DONE;
-    } else {//
+    } else {
         /* map all of the pages */
         LOS_AtomicInc(&newPage->refCounts);//引用数自增
         status = LOS_ArchMmuMap(&space->archMmu, vaddr, newPaddr, 1, region->regionFlags);//映射新物理地址,如此下次就不会缺页了
@@ -486,4 +491,3 @@ DONE:
     return status;
 }
 #endif
-

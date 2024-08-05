@@ -1,0 +1,26 @@
+import("../../test_template.gni")
+
+eabi_list = [
+  "__aeabi_memcpy",
+  "__aeabi_memmove",
+  "__aeabi_memset",
+  "__aeabi_memclr",
+  "__gmtime64",
+  "__aeabi_read_tp",
+  "__sigtimedwait_time64",
+]
+
+foreach(s, eabi_list) {
+  test_unittest(s) {
+    target_dir = "eabi"
+  }
+}
+
+group("eabi_test") {
+  testonly = true
+  deps = []
+
+  foreach(s, eabi_list) {
+    deps += [ ":${s}" ]
+  }
+}

@@ -1,0 +1,7 @@
+#ifndef LDSO_LDSO_GTEST_LIBS_DLOPEN_RELOCATION_H
+#define LDSO_LDSO_GTEST_LIBS_DLOPEN_RELOCATION_H
+
+int RelocationTestOrder();
+int RelocationMainProcessTestImpl();
+
+#endif // LDSO_LDSO_GTEST_LIBS_DLOPEN_RELOCATION_H

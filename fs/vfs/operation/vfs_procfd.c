@@ -407,6 +407,7 @@ static struct fd_table_s *GetProcessFTable(unsigned int pid, sem_t *semId)
 }
 /*!
  * 拷贝一个进程FD给指定的进程,使两个进程的FD都指向同一个系统FD
+ *@param targetPid 指定进程id
  */
 int CopyFdToProc(int fd, unsigned int targetPid)
 {

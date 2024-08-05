@@ -323,7 +323,9 @@ STATIC INLINE BOOL OsMemSentinelNodeCheck(struct OsMemNodeHead *sentinelNode)
 
     return TRUE;
 }
-/// 是否为最后一个哨兵节点
+/*!
+ * 是否为最后一个哨兵节点
+ */
 STATIC INLINE BOOL OsMemIsLastSentinelNode(struct OsMemNodeHead *sentinelNode)
 {
     if (OsMemSentinelNodeCheck(sentinelNode) == FALSE) {
@@ -338,7 +340,9 @@ STATIC INLINE BOOL OsMemIsLastSentinelNode(struct OsMemNodeHead *sentinelNode)
 
     return FALSE;
 }
-/// 设置哨兵节点内容
+/*!
+ * 设置哨兵节点内容
+ */
 STATIC INLINE VOID OsMemSentinelNodeSet(struct OsMemNodeHead *sentinelNode, VOID *newNode, UINT32 size)
 {
     if (sentinelNode->ptr.next != NULL) { //哨兵节点有 逻辑地址不连续的衔接内存块
@@ -378,7 +382,9 @@ STATIC INLINE struct OsMemNodeHead *PreSentinelNodeGet(const VOID *pool, const s
 
     return NULL;
 }
-/// 大内存释放
+/*!
+ * 大内存释放
+ */
 UINT32 OsMemLargeNodeFree(const VOID *ptr)
 {
     LosVmPage *page = OsVmVaddrToPage((VOID *)ptr);//获取物理页
@@ -424,7 +430,9 @@ STATIC INLINE BOOL TryShrinkPool(const VOID *pool, const struct OsMemNodeHead *n
 #endif
     return TRUE;
 }
-/// 内存池扩展实现
+/*!
+ * 内存池扩展实现
+ */
 STATIC INLINE INT32 OsMemPoolExpandSub(VOID *pool, UINT32 size, UINT32 intSave)
 {
     UINT32 tryCount = MAX_SHRINK_PAGECACHE_TRY;
@@ -474,7 +482,9 @@ RETRY:
 
     return 0;
 }
-/// 扩展内存池
+/*!
+ * 扩展内存池
+ */
 STATIC INLINE INT32 OsMemPoolExpand(VOID *pool, UINT32 allocSize, UINT32 intSave)
 {
     UINT32 expandDefault = MEM_EXPAND_SIZE(LOS_MemPoolSizeGet(pool));//至少要扩展现有内存池的 1/8 大小
@@ -496,7 +506,9 @@ STATIC INLINE INT32 OsMemPoolExpand(VOID *pool, UINT32 allocSize, UINT32 intSave
 
     return -1;
 }
-///< 允许指定内存池扩展
+/*!
+ * 允许指定内存池扩展
+ */
 VOID LOS_MemExpandEnable(VOID *pool)
 {
     if (pool == NULL) {
@@ -597,7 +609,9 @@ STATIC INLINE VOID OsMemUsedNodePrint(struct OsMemNodeHead *node)
         PRINTK("\n");
     }
 }
-/// 打印已使用的节点
+/*!
+ * 打印已使用的节点
+ */
 VOID OsMemUsedNodeShow(VOID *pool)
 {
     if (pool == NULL) {
@@ -782,7 +796,9 @@ STATIC INLINE VOID OsMemListAdd(struct OsMemPoolHead *pool, UINT32 listIndex, st
     OsMemSetFreeListBit(pool, listIndex);
     node->header.magic = OS_MEM_NODE_MAGIC;
 }
-/// 从空闲链表中删除
+/*!
+ * 从空闲链表中删除
+ */
 STATIC INLINE VOID OsMemListDelete(struct OsMemPoolHead *pool, UINT32 listIndex, struct OsMemFreeNodeHead *node)
 {
     if (node == pool->freeList[listIndex]) {
@@ -800,7 +816,9 @@ STATIC INLINE VOID OsMemListDelete(struct OsMemPoolHead *pool, UINT32 listIndex,
     }
     node->header.magic = OS_MEM_NODE_MAGIC;
 }
-/// 添加一个空闲节点
+/*!
+ * 添加一个空闲节点
+ */
 STATIC INLINE VOID OsMemFreeNodeAdd(VOID *pool, struct OsMemFreeNodeHead *node)
 {
     UINT32 index = OsMemFreeListIndexGet(node->header.sizeAndFlag);//根据大小定位索引位
@@ -810,7 +828,9 @@ STATIC INLINE VOID OsMemFreeNodeAdd(VOID *pool, struct OsMemFreeNodeHead *node)
     }
     OsMemListAdd(pool, index, node);//挂入链表
 }
-/// 从空闲链表上摘除节点
+/*!
+ * 从空闲链表上摘除节点
+ */
 STATIC INLINE VOID OsMemFreeNodeDelete(VOID *pool, struct OsMemFreeNodeHead *node)
 {
     UINT32 index = OsMemFreeListIndexGet(node->header.sizeAndFlag);//根据大小定位索引位
@@ -835,7 +855,9 @@ STATIC INLINE struct OsMemNodeHead *OsMemFreeNodeGet(VOID *pool, UINT32 size)
     OsMemListDelete(poolHead, index, firstNode); //将节点从内存池中移除
     return &firstNode->header;
 }
-/// 合并节点,和前面的节点合并 node 消失
+/*!
+ * 合并节点,和前面的节点合并 node 消失
+ */
 STATIC INLINE VOID OsMemMergeNode(struct OsMemNodeHead *node)
 {
     struct OsMemNodeHead *nextNode = NULL;
@@ -846,7 +868,9 @@ STATIC INLINE VOID OsMemMergeNode(struct OsMemNodeHead *node)
         nextNode->ptr.prev = node->ptr.prev;//后一个节点的前节点变成前前节点
     }
 }
-/// 切割节点
+/*!
+ * 切割节点
+ */
 STATIC INLINE VOID OsMemSplitNode(VOID *pool, struct OsMemNodeHead *allocNode, UINT32 allocSize)
 {
     struct OsMemFreeNodeHead *newFreeNode = NULL;
@@ -867,7 +891,7 @@ STATIC INLINE VOID OsMemSplitNode(VOID *pool, struct OsMemNodeHead *allocNode, U
 
     OsMemFreeNodeAdd(pool, newFreeNode);//挂入空闲链表
 }
-//
+
 STATIC INLINE VOID *OsMemCreateUsedNode(VOID *addr)
 {
     struct OsMemUsedNodeHead *node = (struct OsMemUsedNodeHead *)addr;//直接将地址转成使用节点,说明节点信息也存在内存池中
@@ -962,7 +986,9 @@ STATIC VOID OsMemPoolDeinit(const VOID *pool, UINT32 size)
 #endif
     (VOID)memset_s(pool, size, 0, sizeof(struct OsMemPoolHead));
 }
-/// 新增内存池
+/*!
+ * 新增内存池
+ */
 STATIC UINT32 OsMemPoolAdd(VOID *pool, UINT32 size)
 {
     VOID *nextPool = g_poolHead;
@@ -990,7 +1016,9 @@ STATIC UINT32 OsMemPoolAdd(VOID *pool, UINT32 size)
     ((struct OsMemPoolHead *)pool)->nextPool = NULL; //新池下一个无所指
     return LOS_OK;
 }
-/// 删除内存池
+/*!
+ * 删除内存池
+ */
 STATIC UINT32 OsMemPoolDelete(const VOID *pool)
 {
     UINT32 ret = LOS_NOK;
@@ -1053,7 +1081,9 @@ UINT32 LOS_MemInit(VOID *pool, UINT32 size)
 }
 
 #ifdef LOSCFG_MEM_MUL_POOL
-/// 删除指定内存池
+/*!
+ * 删除指定内存池
+ */
 UINT32 LOS_MemDeInit(VOID *pool)
 {
     struct OsMemPoolHead *tmpPool = (struct OsMemPoolHead *)pool;
@@ -1337,7 +1367,9 @@ STATIC UINT32 OsMemCheckUsedNode(const struct OsMemPoolHead *pool, const struct 
 
     return LOS_OK;
 }
-/// 释放内存
+/*!
+ * 释放内存
+ */
 STATIC INLINE UINT32 OsMemFree(struct OsMemPoolHead *pool, struct OsMemNodeHead *node)
 {
     UINT32 ret = OsMemCheckUsedNode(pool, node);
@@ -1392,7 +1424,9 @@ STATIC INLINE UINT32 OsMemFree(struct OsMemPoolHead *pool, struct OsMemNodeHead 
 #endif
     return ret;
 }
-/// 释放从指定动态内存中申请的内存
+/*!
+ * 释放从指定动态内存中申请的内存
+ */
 UINT32 LOS_MemFree(VOID *pool, VOID *ptr)
 {
     UINT32 intSave;
@@ -1533,7 +1567,9 @@ STATIC INLINE VOID *OsMemRealloc(struct OsMemPoolHead *pool, const VOID *ptr,
     }
     return tmpPtr;
 }
-/// 按size大小重新分配内存块，并将原内存块内容拷贝到新内存块。如果新内存块申请成功，则释放原内存块
+/*!
+ * 按size大小重新分配内存块，并将原内存块内容拷贝到新内存块。如果新内存块申请成功，则释放原内存块
+ */
 VOID *LOS_MemRealloc(VOID *pool, VOID *ptr, UINT32 size)
 {
     if ((pool == NULL) || OS_MEM_NODE_GET_USED_FLAG(size) || OS_MEM_NODE_GET_ALIGNED_FLAG(size)) {
@@ -1626,7 +1662,9 @@ UINT32 LOS_MemFreeByTaskID(VOID *pool, UINT32 taskID)
     return LOS_OK;
 }
 #endif
-/// 获取指定动态内存池的总大小
+/*!
+ * 获取指定动态内存池的总大小
+ */
 UINT32 LOS_MemPoolSizeGet(const VOID *pool)
 {
     UINT32 count = 0;
@@ -1651,7 +1689,9 @@ UINT32 LOS_MemPoolSizeGet(const VOID *pool)
 #endif
     return count;
 }
-/// 获取指定动态内存池的总使用量大小
+/*!
+ * 获取指定动态内存池的总使用量大小
+ */
 UINT32 LOS_MemTotalUsedGet(VOID *pool)
 {
     struct OsMemNodeHead *tmpNode = NULL;
@@ -1801,7 +1841,9 @@ OUT:
 #endif
     }
 }
-//对指定内存池做完整性检查,
+/*!
+ * 对指定内存池做完整性检查
+ */
 STATIC UINT32 OsMemIntegrityCheck(const struct OsMemPoolHead *pool, struct OsMemNodeHead **tmpNode,
                 struct OsMemNodeHead **preNode)
 {
@@ -1926,7 +1968,9 @@ STATIC INLINE UINT32 OsMemAllocCheck(struct OsMemPoolHead *pool, UINT32 intSave)
     return LOS_OK;
 }
 #endif
-/// 对指定内存池做完整性检查
+/*!
+ * 对指定内存池做完整性检查
+ */
 UINT32 LOS_MemIntegrityCheck(const VOID *pool)
 {
     if (pool == NULL) {
@@ -2071,7 +2115,9 @@ STATIC VOID OsMemInfoPrint(VOID *pool)
            status.freeNodeNum);
 #endif
 }
-/// 打印指定内存池的空闲内存块的大小及数量
+/*!
+ * 打印指定内存池的空闲内存块的大小及数量
+ */
 UINT32 LOS_MemFreeNodeShow(VOID *pool)
 {
     struct OsMemPoolHead *poolInfo = (struct OsMemPoolHead *)pool;
@@ -2151,7 +2197,9 @@ STATUS_T OsKHeapInit(size_t size)
 #endif
     return LOS_OK;
 }
-///< 判断地址是否在堆区
+/*!
+ * 判断地址是否在堆区
+ */
 BOOL OsMemIsHeapNode(const VOID *ptr)
 {
     struct OsMemPoolHead *pool = (struct OsMemPoolHead *)m_aucSysMem1;//内核堆区开始地址
@@ -2179,5 +2227,3 @@ BOOL OsMemIsHeapNode(const VOID *ptr)
 #endif
     return FALSE;
 }
-
-

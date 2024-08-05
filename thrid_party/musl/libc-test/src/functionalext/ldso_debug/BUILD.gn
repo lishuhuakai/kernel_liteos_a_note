@@ -1,0 +1,86 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../test_template.gni")
+
+group("functionalext_ldso_debug_test") {
+  testonly = true
+  deps = [
+    ":ldso_debug_test",
+    ":ldso_debug_test_lib_1",
+    ":ldso_debug_test_lib_2",
+    ":ldso_debug_test_lib_3",
+    ":ldso_debug_test_lib_4",
+    ":ldso_debug_test_lib_5",
+  ]
+}
+
+ohos_executable("ldso_debug_test") {
+  subsystem_name = "musl"
+  part_name = "libc-test"
+  include_dirs = [ "../common" ]
+
+  sources = [ "ldso_debug_test.c" ]
+  configs = [ "//third_party/musl/libc-test/src/common:config_runtest" ]
+}
+
+ohos_shared_library("ldso_debug_test_lib_1") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_debug_test_lib_1.c" ]
+
+  output_name = "ldso_debug_test_lib_1"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_shared_library("ldso_debug_test_lib_2") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_debug_test_lib_2.c" ]
+
+  output_name = "ldso_debug_test_lib_2"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_shared_library("ldso_debug_test_lib_3") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_debug_test_lib_3.c" ]
+
+  output_name = "ldso_debug_test_lib_3"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_shared_library("ldso_debug_test_lib_4") {
+  include_dirs = [ "." ]
+  deps = [ ":ldso_debug_test_lib_5" ]
+  sources = [ "ldso_debug_test_lib_4.c" ]
+
+  output_name = "ldso_debug_test_lib_4"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}
+
+ohos_shared_library("ldso_debug_test_lib_5") {
+  include_dirs = [ "." ]
+  sources = [ "ldso_debug_test_lib_5.c" ]
+
+  output_name = "ldso_debug_test_lib_5"
+  output_extension = "so"
+  subsystem_name = "musl"
+  part_name = "libc-test-lib"
+}

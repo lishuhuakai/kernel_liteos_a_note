@@ -41,9 +41,9 @@
 /**
  * @brief 
  * @verbatim
-    从用户空间拷贝到内核空间
-    请思考个问题,系统调用时为什么一定要copy_from_user ? 为什么不直接用memcpy？
-    https://mp.weixin.qq.com/s/H3nXlOpP_XyF7M-1B4qreQ
+ *   从用户空间拷贝到内核空间
+ *   请思考个问题,系统调用时为什么一定要copy_from_user ? 为什么不直接用memcpy？
+ *   https://mp.weixin.qq.com/s/H3nXlOpP_XyF7M-1B4qreQ
  * @endverbatim
  * @param dst 
  * @param src 
@@ -63,7 +63,9 @@ size_t LOS_ArchCopyFromUser(void *dst, const void *src, size_t len)
 
     return _arm_user_copy(dst, src, len);//完成从用户空间到内核空间的拷贝
 }
-///拷贝到用户空间
+/*!
+ * 拷贝到用户空间
+ */
 size_t arch_copy_to_user(void *dst, const void *src, size_t len)
 {
     return LOS_ArchCopyToUser(dst, src, len);//
@@ -84,7 +86,9 @@ size_t LOS_ArchCopyToUser(void *dst, const void *src, size_t len)
 
     return _arm_user_copy(dst, src, len);//完成从内核空间到用户空间的拷贝
 }
-///将内核数据拷贝到用户空间
+/*!
+ * 将内核数据拷贝到用户空间
+ */
 INT32 LOS_CopyFromKernel(VOID *dest, UINT32 max, const VOID *src, UINT32 count)
 {
     INT32 ret;
@@ -97,7 +101,9 @@ INT32 LOS_CopyFromKernel(VOID *dest, UINT32 max, const VOID *src, UINT32 count)
 
     return ret;
 }
-///将用户空间的数据拷贝到内核空间
+/*!
+ * 将用户空间的数据拷贝到内核空间
+ */
 INT32 LOS_CopyToKernel(VOID *dest, UINT32 max, const VOID *src, UINT32 count)
 {
     INT32 ret;
@@ -110,7 +116,9 @@ INT32 LOS_CopyToKernel(VOID *dest, UINT32 max, const VOID *src, UINT32 count)
 
     return ret;
 }
-///清除用户空间数据
+/*!
+ * 清除用户空间数据
+ */
 INT32 LOS_UserMemClear(unsigned char *buf, UINT32 len)
 {
     INT32 ret = 0;
@@ -123,5 +131,3 @@ INT32 LOS_UserMemClear(unsigned char *buf, UINT32 len)
     }
     return ret;
 }
-
-

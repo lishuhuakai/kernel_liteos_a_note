@@ -70,11 +70,11 @@ VOID ResetPageCacheHitInfo(int *try, int *hit)
 
 /**
  * @brief 
-    @verbatim
-    增加文件页到页高速缓存(page cache)
-    LosFilePage将一个文件切成了一页一页,因为读文件过程随机seek,所以文件页也不会是连续的,
-    pgoff记录文件的位置,并确保在cache的文件数据是按顺序排列的.
-    @endverbatim
+ * @verbatim
+ *  增加文件页到页高速缓存(page cache)
+ *  LosFilePage将一个文件切成了一页一页,因为读文件过程随机seek,所以文件页也不会是连续的,
+ *  pgoff记录文件的位置,并确保在cache的文件数据是按顺序排列的.
+ * @endverbatim
  * @param page 
  * @param mapping 
  * @param pgoff 
@@ -96,13 +96,17 @@ STATIC VOID OsPageCacheAdd(LosFilePage *page, struct page_mapping *mapping, VM_O
 done_add:
     mapping->nrpages++;	//文件在缓存中多了一个 文件页
 }
-///将页面加到活动文件页LRU链表上
+/*!
+ * 将页面加到活动文件页LRU链表上
+ */
 VOID OsAddToPageacheLru(LosFilePage *page, struct page_mapping *mapping, VM_OFFSET_T pgoff)
 {
     OsPageCacheAdd(page, mapping, pgoff);
     OsLruCacheAdd(page, VM_LRU_ACTIVE_FILE);
 }
-///从页高速缓存上删除页
+/*!
+ * 从页高速缓存上删除页
+ */
 VOID OsPageCacheDel(LosFilePage *fpage)
 {
     /* delete from file cache list */
@@ -119,10 +123,10 @@ VOID OsPageCacheDel(LosFilePage *fpage)
     LOS_MemFree(m_aucSysMem0, fpage);//释放文件页结构体内存
 }
 /**************************************************************************************************
-每个进程都有自己的地址空间, 多个进程可以访问同一个LosFilePage,每个进程使用的虚拟地址都需要单独映射
-所以同一个LosFilePage会映射到多个进程空间.本函数记录页面被哪些进程映射过
-在两个地方会被被空间映射
-1.缺页中断 2.克隆地址空间
+* 每个进程都有自己的地址空间, 多个进程可以访问同一个LosFilePage,每个进程使用的虚拟地址都需要单独映射
+* 所以同一个LosFilePage会映射到多个进程空间.本函数记录页面被哪些进程映射过
+* 在两个地方会被被空间映射
+* 1.缺页中断 2.克隆地址空间
 **************************************************************************************************/
 VOID OsAddMapInfo(LosFilePage *page, LosArchMmu *archMmu, VADDR_T vaddr)
 {
@@ -140,7 +144,9 @@ VOID OsAddMapInfo(LosFilePage *page, LosArchMmu *archMmu, VADDR_T vaddr)
     LOS_ListAdd(&page->i_mmap, &info->node);//将 LosMapInfo 节点挂入链表
     page->n_maps++;//映射总数++
 }
-///通过虚拟地址获取文件页映射信息,archMmu每个进程都有属于自己的mmu
+/*!
+ * 通过虚拟地址获取文件页映射信息,archMmu每个进程都有属于自己的mmu
+ */
 LosMapInfo *OsGetMapInfo(const LosFilePage *page, const LosArchMmu *archMmu, VADDR_T vaddr)
 {
     LosMapInfo *info = NULL;
@@ -153,7 +159,9 @@ LosMapInfo *OsGetMapInfo(const LosFilePage *page, const LosArchMmu *archMmu, VAD
     }
     return NULL;
 }
-///删除页高速缓存和LRU,对应 OsAddToPageacheLru
+/*!
+ * 删除页高速缓存和LRU,对应 OsAddToPageacheLru
+ */
 VOID OsDeletePageCacheLru(LosFilePage *page)
 {
     /* delete form lru list */
@@ -162,7 +170,9 @@ VOID OsDeletePageCacheLru(LosFilePage *page)
     OsPageCacheDel(page); //从page缓存中删除
 }
 
-//解除文件页和进程的映射关系
+/*!
+ * 解除文件页和进程的映射关系
+ */
 STATIC VOID OsPageCacheUnmap(LosFilePage *fpage, LosArchMmu *archMmu, VADDR_T vaddr)
 {
     UINT32 intSave;
@@ -182,7 +192,9 @@ STATIC VOID OsPageCacheUnmap(LosFilePage *fpage, LosArchMmu *archMmu, VADDR_T va
 
     LOS_SpinUnlockRestore(&fpage->physSeg->lruLock, intSave);
 }
-///删除文件
+/*!
+ * 删除文件
+ */
 VOID OsVmmFileRemove(LosVmMapRegion *region, LosArchMmu *archMmu, VM_OFFSET_T pgoff)
 {
     UINT32 intSave;
@@ -229,7 +241,9 @@ VOID OsVmmFileRemove(LosVmMapRegion *region, LosArchMmu *archMmu, VM_OFFSET_T pg
     }
     return;
 }
-///标记page为脏页 进程修改了高速缓存里的数据时，该页就被内核标记为脏页
+/*!
+ * 标记page为脏页 进程修改了高速缓存里的数据时，该页就被内核标记为脏页
+ */
 VOID OsMarkPageDirty(LosFilePage *fpage, const LosVmMapRegion *region, INT32 off, INT32 len)
 {
     if (region != NULL) {
@@ -274,13 +288,16 @@ STATIC UINT32 GetDirtySize(LosFilePage *fpage, struct Vnode *vnode)
 
     return PAGE_SIZE;
 }
-///冲洗脏页，回写磁盘
+/*!
+ * 冲洗脏页，回写磁盘
+ */
 STATIC INT32 OsFlushDirtyPage(LosFilePage *fpage)
 {
     UINT32 ret;
     size_t len;
     char *buff = NULL;
-    struct Vnode *vnode = fpage->mapping->host;/* owner of this mapping */ //此映射属于哪个文件,注意<file,page_mapping>是1:1的关系.
+	//此映射属于哪个文件,注意<file,page_mapping>是1:1的关系
+    struct Vnode *vnode = fpage->mapping->host;/* owner of this mapping */
     if (vnode == NULL) {
         VM_ERR("page cache vnode error");
         return LOS_NOK;
@@ -296,7 +313,7 @@ STATIC INT32 OsFlushDirtyPage(LosFilePage *fpage)
     buff = (char *)OsVmPageToVaddr(fpage->vmPage);
 
     /* actually, we did not update the fpage->dirtyOff */
-    ret = vnode->vop->WritePage(vnode, (VOID *)buff, fpage->pgoff, len);
+    ret = vnode->vop->WritePage(vnode, (VOID *)buff, fpage->pgoff, len); // 将脏数据写回
     if (ret <= 0) {
         VM_ERR("WritePage error ret %d", ret);
     } else {
@@ -306,7 +323,9 @@ STATIC INT32 OsFlushDirtyPage(LosFilePage *fpage)
 
     return ret;
 }
-///备份脏页,老脏页撕掉脏页标签
+/*!
+ * 备份脏页,老脏页撕掉脏页标签
+ */
 LosFilePage *OsDumpDirtyPage(LosFilePage *oldFPage)
 {
     LosFilePage *newFPage = NULL;
@@ -322,7 +341,9 @@ LosFilePage *OsDumpDirtyPage(LosFilePage *oldFPage)
 
     return newFPage;
 }
-///冲洗脏页数据,将脏页数据回写磁盘
+/*!
+ * 冲洗脏页数据,将脏页数据回写磁盘
+ */
 VOID OsDoFlushDirtyPage(LosFilePage *fpage)
 {
     if (fpage == NULL) {
@@ -344,7 +365,9 @@ STATIC VOID OsReleaseFpage(struct page_mapping *mapping, LosFilePage *fpage)
     LOS_SpinUnlockRestore(lruLock, lruSave);
     LOS_SpinUnlockRestore(&mapping->list_lock, intSave);
 }
-///删除映射信息
+/*!
+ * 删除映射信息
+ */
 VOID OsDelMapInfo(LosVmMapRegion *region, LosVmPgFault *vmf, BOOL cleanDirty)
 {
     UINT32 intSave;
@@ -379,9 +402,9 @@ VOID OsDelMapInfo(LosVmMapRegion *region, LosVmPgFault *vmf, BOOL cleanDirty)
     LOS_SpinUnlockRestore(&mapping->list_lock, intSave);
 }
 /*!
-文件缺页时的处理,先读入磁盘数据，再重新读页数据
-被 OsDoReadFault(...),OsDoCowFault(...),OsDoSharedFault(...) 等调用
-*/
+ * 文件缺页时的处理,先读入磁盘数据，再重新读页数据
+ * 被 OsDoReadFault(...),OsDoCowFault(...),OsDoSharedFault(...) 等调用
+ */
 INT32 OsVmmFileFault(LosVmMapRegion *region, LosVmPgFault *vmf)
 {
     INT32 ret;
@@ -392,8 +415,8 @@ INT32 OsVmmFileFault(LosVmMapRegion *region, LosVmPgFault *vmf)
     struct Vnode *vnode = NULL;
     struct page_mapping *mapping = NULL;
     LosFilePage *fpage = NULL;
-
-    if (!LOS_IsRegionFileValid(region) || (region->unTypeData.rf.vnode == NULL) || (vmf == NULL)) {//文件是否映射到了内存
+    //文件是否映射到了内存
+    if (!LOS_IsRegionFileValid(region) || (region->unTypeData.rf.vnode == NULL) || (vmf == NULL)) {
         VM_ERR("Input param is NULL");
         return LOS_NOK;
     }
@@ -422,7 +445,7 @@ INT32 OsVmmFileFault(LosVmMapRegion *region, LosVmPgFault *vmf)
 
     /* read file to new page cache */
     if (newCache) {//新cache
-        ret = vnode->vop->ReadPage(vnode, kvaddr, fpage->pgoff << PAGE_SHIFT);
+        ret = vnode->vop->ReadPage(vnode, kvaddr, fpage->pgoff << PAGE_SHIFT); // 读取文件内容到对应的地址中
         if (ret == 0) {
             VM_ERR("Failed to read from file!");
             OsReleaseFpage(mapping, fpage);
@@ -445,11 +468,13 @@ INT32 OsVmmFileFault(LosVmMapRegion *region, LosVmPgFault *vmf)
         OsMarkPageDirty(fpage, region, 0, 0);//标记为脏页,要回写磁盘,内核会在适当的时候回写磁盘
     }
 
-    vmf->pageKVaddr = kvaddr;//缺陷页记录文件页的虚拟地址
+    vmf->pageKVaddr = kvaddr; // 缺陷页记录文件页的虚拟地址
     LOS_SpinUnlockRestore(&mapping->list_lock, intSave);
     return LOS_OK;
 }
-///文件缓存冲洗,把所有fpage冲洗一边，把脏页洗到dirtyList中,配合OsFileCacheRemove理解 
+/*!
+ * 文件缓存冲洗,把所有fpage冲洗一边，把脏页洗到dirtyList中,配合OsFileCacheRemove理解
+ */
 VOID OsFileCacheFlush(struct page_mapping *mapping)
 {
     UINT32 intSave;
@@ -480,8 +505,8 @@ VOID OsFileCacheFlush(struct page_mapping *mapping)
 }
 
 /******************************************************************************
- 删除文件缓存,清空文件在page cache的痕迹
- 参数 mapping 可理解为文件在内存的身份证
+ * 删除文件缓存,清空文件在page cache的痕迹
+ * 参数 mapping 可理解为文件在内存的身份证
 ******************************************************************************/
 VOID OsFileCacheRemove(struct page_mapping *mapping)
 {
@@ -513,14 +538,18 @@ VOID OsFileCacheRemove(struct page_mapping *mapping)
         OsDoFlushDirtyPage(fpage);//遍历脏页链表,一页一页处理
     }
 }
-///虚拟内存文件操作实现类
-LosVmFileOps g_commVmOps = {//
+/*!
+ * 虚拟内存文件操作实现类
+ */
+LosVmFileOps g_commVmOps = {
     .open = NULL,
     .close = NULL,
     .fault = OsVmmFileFault, //缺页中断处理
     .remove = OsVmmFileRemove,//删除页
 };
-//文件映射
+/*!
+ * 文件映射
+ */
 INT32 OsVfsFileMmap(struct file *filep, LosVmMapRegion *region)
 {
     region->unTypeData.rf.vmFOps = &g_commVmOps;//文件操作
@@ -530,9 +559,9 @@ INT32 OsVfsFileMmap(struct file *filep, LosVmMapRegion *region)
     return ENOERR;
 }
 /*!
- 有名映射,可理解为文件映射,跟匿名映射相对应
- 参数filep是广义的文件,在鸿蒙内核,目录/普通文件/字符设备/块设备/网络套接字/管道/链接 都是文件
-*/
+ * 有名映射,可理解为文件映射,跟匿名映射相对应
+ * 参数filep是广义的文件,在鸿蒙内核,目录/普通文件/字符设备/块设备/网络套接字/管道/链接 都是文件
+ */
 STATUS_T OsNamedMMap(struct file *filep, LosVmMapRegion *region)
 {
     struct Vnode *vnode = NULL;
@@ -550,7 +579,7 @@ STATUS_T OsNamedMMap(struct file *filep, LosVmMapRegion *region)
         } else {
             LOS_SetRegionTypeFile(region);//设置为文件类型
         }
-        int ret = filep->ops->mmap(filep, region);
+        int ret = filep->ops->mmap(filep, region); // 在大多数的情况下,执行的是OsVfsFileMmap函数
         if (ret != LOS_OK) {
             file_release(filep);
             return LOS_ERRNO_VM_MAP_FAILED;
@@ -565,8 +594,8 @@ STATUS_T OsNamedMMap(struct file *filep, LosVmMapRegion *region)
 }
 
 /**************************************************************************************************
- 通过位置从文件映射页中找到的指定的文件页
- 举例:mapping->page_list上节点的数据可能只有是文件 1,3,4,6 页的数据,此时来找文件第5页的数据就会没有
+ * 通过位置从文件映射页中找到的指定的文件页
+ * 举例:mapping->page_list上节点的数据可能只有是文件 1,3,4,6 页的数据,此时来找文件第5页的数据就会没有
 **************************************************************************************************/
 LosFilePage *OsFindGetEntry(struct page_mapping *mapping, VM_OFFSET_T pgoff)
 {
@@ -587,10 +616,10 @@ LosFilePage *OsFindGetEntry(struct page_mapping *mapping, VM_OFFSET_T pgoff)
 
 /* need mutex & change memory to dma zone. */
 /*!
-以页高速缓存方式分配一个文件页 LosFilePage
- Direct Memory Access（存储器直接访问）指一种高速的数据传输操作，允许在外部设备和存储器之间直接读写数据。
- 整个数据传输操作在一个称为"DMA控制器"的控制下进行的。CPU只需在数据传输开始和结束时做一点处理（开始和结束时候要做中断处理）
-*/
+ * 以页高速缓存方式分配一个文件页 LosFilePage
+ * Direct Memory Access（存储器直接访问）指一种高速的数据传输操作，允许在外部设备和存储器之间直接读写数据。
+ * 整个数据传输操作在一个称为"DMA控制器"的控制下进行的。CPU只需在数据传输开始和结束时做一点处理（开始和结束时候要做中断处理）
+ */
 LosFilePage *OsPageCacheAlloc(struct page_mapping *mapping, VM_OFFSET_T pgoff)
 {
     VOID *kvaddr = NULL;
@@ -598,7 +627,7 @@ LosFilePage *OsPageCacheAlloc(struct page_mapping *mapping, VM_OFFSET_T pgoff)
     LosVmPage *vmPage = NULL;
     LosFilePage *fpage = NULL;
 
-    vmPage = LOS_PhysPageAlloc();	//先分配一个物理页
+    vmPage = LOS_PhysPageAlloc(); //先分配一个物理页
     if (vmPage == NULL) {
         VM_ERR("alloc vm page failed");
         return NULL;
@@ -618,7 +647,7 @@ LosFilePage *OsPageCacheAlloc(struct page_mapping *mapping, VM_OFFSET_T pgoff)
         return NULL;
     }
 
-    (VOID)memset_s((VOID *)fpage, sizeof(LosFilePage), 0, sizeof(LosFilePage));//调标准库函数 置0
+    (VOID)memset_s((VOID *)fpage, sizeof(LosFilePage), 0, sizeof(LosFilePage));//调标准库函数置0
 
     LOS_ListInit(&fpage->i_mmap);	//初始化映射,链表上挂 MapInfo
     LOS_ListInit(&fpage->node);		//节点初始化

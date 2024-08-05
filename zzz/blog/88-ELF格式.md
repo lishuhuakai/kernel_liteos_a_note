@@ -22,21 +22,22 @@
 开始之前先说结论:
 ELF 分四块，其中三块是描述信息(也叫头信息)，另一块是内容，放的是所有段/区的内容。
 
-* 1。 ELF头定义全局性信息
-* 2。 Segment(段)头，内容描述段的名字，开始位置，类型，偏移，大小及每段由哪些区组成。
-* 3。 内容区，ELF有两个重要概念 `Segment`(段) 和  `Section`(区)，段比区大，二者之间关系如下:
+* 1. ELF头定义全局性信息
+* 2. Segment(段)头，内容描述段的名字，开始位置，类型，偏移，大小及每段由哪些区组成。
+* 3. 内容区，ELF有两个重要概念 `Segment`(段)和 `Section`(区)，段比区大，二者之间关系如下:
+  
   * 每个`Segment`可以包含多个`Section`
   * 每个`Section`可以属于多个`Segment`
   * `Segment`之间可以有重合的部分
-  * 拿大家熟知的`.text`，`.data`，`。bss`举例，它们都叫区，但它们又属于`LOAD`段。
-* 4。 Section(区)头，内容描述区的名字，开始位置，类型，偏移，大小等信息
+  * 拿大家熟知的`.text`，`.data`，`.bss`举例，它们都叫区，但它们又属于`LOAD`段。
+* 4. `Section` (区)头，内容描述区的名字，开始位置，类型，偏移，大小等信息
 * ELF一体两面，面对不同的场景扮演不同的角色，这是理解ELF的关键，链接器只关注1，3(区)，4 的内容，加载器只关注1，2，3(段)的内容
 * 鸿蒙对`EFL`的定义在 `kernel\extended\dynload\include\los_ld_elf_pri.h`文件中
 [<img src="assets/88/Elf-layout.png" style="zoom:50%;" />](https://gitee.com/weharmony/kernel_liteos_a_note)  
 
 ### 示例代码
 
-在windows目录`E:\harmony\docker\case_code_100`下创建 main。c文件，如下:
+在windows目录`E:\harmony\docker\case_code_100`下创建 `main.c` 文件，如下:
 
 ```c
 #include <stdio.h>
@@ -53,7 +54,7 @@ int main()
 }    
 ```
 
-因在[v50。xx (编译环境篇) | docker编译鸿蒙真的很香](https://my。oschina。net/weharmony/blog/5028613)
+因在[v50.xx (编译环境篇) | docker编译鸿蒙真的很香](https://my。oschina。net/weharmony/blog/5028613)
 
 篇中已做好了环境映射，所以文件会同时出现在docker中。编译生成`ELF`->运行->`readelf -h`查看`app`头部信息。
 
@@ -71,7 +72,7 @@ hello， harmony os!
 
 一下是关于ELF的所有中英名词对照。建议先仔细看一篇再看系列篇部分。
 
-```
+```txt
 可执行可连接格式 : ELF(Executable and Linking Format)
 ELF文件头:ELF header
 基地址:base address
@@ -106,7 +107,7 @@ ELF文件头:ELF header
 
 ### ELF整体布局
 
-ELF规范中把ELF文件宽泛地称为"目标文件 (object file)"，这与我们平时的理解不同。一般地，我们把经过编译但没有连接的文件(比如Unix/Linux上的。o文件)称为目标文件，而ELF文件仅指连接好的可执行文件；在ELF规范中，所有符合ELF格式规范的都称为ELF文件，也称为目标文件，这两个名字是相同的，而经过编译但没有连接的文件则称为"可重定位文件 (relocatable file)"或"待重定位文件 (relocatable file)"。本文采用与此规范相同的命名方式，所以当提到可重定位文件时，一般可以理解为惯常所说的目标文件；而提到目标文件时，即指各种类型的ELF文件。
+ELF规范中把ELF文件宽泛地称为"目标文件 (object file)"，这与我们平时的理解不同。一般地，我们把经过编译但没有连接的文件(比如Unix/Linux上的.o文件)称为目标文件，而ELF文件仅指连接好的可执行文件；在ELF规范中，所有符合ELF格式规范的都称为ELF文件，也称为目标文件，这两个名字是相同的，而经过编译但没有连接的文件则称为"可重定位文件 (relocatable file)"或"待重定位文件 (relocatable file)"。本文采用与此规范相同的命名方式，所以当提到可重定位文件时，一般可以理解为惯常所说的目标文件；而提到目标文件时，即指各种类型的ELF文件。
 
 ELF格式可以表达四种类型的二进制对象文件(object files):
 
@@ -115,7 +116,7 @@ ELF格式可以表达四种类型的二进制对象文件(object files):
 * 共享目标文件(shared object file)，即动态连接库文件。它在以下两种情况下被使用:第一，在连接过程中与其它动态链接库或可重定位文件一起构建新的目标文件；第二，在可执行文件被加载的过程中，被动态链接到新的进程中，成为运行代码的一部分。包含了代码和数据，这些数据是在链接时被链接器（ld）和运行时动态链接器（ld.so.l、libc.so.l、ld-linux.so.l）使用的。
 * 核心转储文件(core dump file，就是core dump文件)
   
-     ```  
+     ```  shell
      可重定位文件用在编译和链接阶段。
      可执行文件用在程序运行阶段。
      共享库则同时用在编译链接和运行阶段，本篇 app 就是个 DYN，可直接运行。
@@ -139,25 +140,40 @@ ELF格式可以表达四种类型的二进制对象文件(object files):
 
 `ELF`头部信息对应鸿蒙源码结构体为 `LDElf32Ehdr`， 各字段含义已一一注解，很容易理解。
 
-```shell
+```c
 //kernel\extended\dynload\include\los_ld_elf_pri.h
 /* Elf header */
 #define LD_EI_NIDENT           16
 typedef struct {
-    UINT8       elfIdent[LD_EI_NIDENT]; /* Magic number and other info *///含前16个字节，又可细分成class、data、version等字段，具体含义不用太关心，只需知道前4个字节点包含`ELF`关键字，这样可以判断当前文件是否是ELF格式
-    UINT16      elfType;                /* Object file type *///表示具体ELF类型，可重定位文件/可执行文件/共享库文件
-    UINT16      elfMachine;             /* Architecture *///表示cpu架构
-    UINT32      elfVersion;             /* Object file version *///表示文件版本号
-    UINT32      elfEntry;               /* Entry point virtual address *///对应`Entry point address`，程序入口函数地址，通过进程虚拟地址空间地址表达
-    UINT32      elfPhoff;               /* Program header table file offset *///对应`Start of program headers`，表示program header table在文件内的偏移位置
-    UINT32      elfShoff;               /* Section header table file offset *///对应`Start of section headers`，表示section header table在文件内的偏移位置
-    UINT32      elfFlags;               /* Processor-specific flags *///表示与CPU处理器架构相关的信息
-    UINT16      elfHeadSize;            /* ELF header size in bytes *///对应`Size of this header`，表示本ELF header自身的长度
-    UINT16      elfPhEntSize;           /* Program header table entry size *///对应`Size of program headers`，表示program header table中每个元素的大小
-    UINT16      elfPhNum;               /* Program header table entry count *///对应`Number of program headers`，表示program header table中元素个数
-    UINT16      elfShEntSize;           /* Section header table entry size *///对应`Size of section headers`，表示section header table中每个元素的大小
-    UINT16      elfShNum;               /* Section header table entry count *///对应`Number of section headers`，表示section header table中元素的个数
-    UINT16      elfShStrIndex;          /* Section header string table index *///对应`Section header string table index`，表示描述各section字符名称的string table在section header table中的下标
+ //含前16个字节，又可细分成class、data、version等字段，具体含义不用太关心，只需知道前4个字节点包含`ELF`关键字，
+ //这样可以判断当前文件是否是ELF格式
+ UINT8  elfIdent[LD_EI_NIDENT]; /* Magic number and other info */
+ //表示具体ELF类型，可重定位文件/可执行文件/共享库文件
+ UINT16 elfType;    /* Object file type */
+ //表示cpu架构
+ UINT16 elfMachine; /* Architecture */
+ //表示文件版本号
+ UINT32 elfVersion; /* Object file version */
+ //对应`Entry point address`，程序入口函数地址，通过进程虚拟地址空间地址表达
+ UINT32 elfEntry;   /* Entry point virtual address */
+ //对应`Start of program headers`，表示program header table在文件内的偏移位置
+ UINT32 elfPhoff;   /* Program header table file offset */
+ //对应`Start of section headers`，表示section header table在文件内的偏移位置
+ UINT32 elfShoff; /* Section header table file offset */
+ //表示与CPU处理器架构相关的信息
+ UINT32 elfFlags;     /* Processor-specific flags */
+ //对应`Size of this header`，表示本ELF header自身的长度
+ UINT16 elfHeadSize;  /* ELF header size in bytes */
+ //对应`Size of program headers`，表示program header table中每个元素的大小
+ UINT16 elfPhEntSize; /* Program header table entry size */
+ //对应`Number of program headers`，表示program header table中元素个数
+ UINT16 elfPhNum; /* Program header table entry count */
+ //对应`Size of section headers`，表示section header table中每个元素的大小
+ UINT16 elfShEntSize; /* Section header table entry size */
+ //对应`Number of section headers`，表示section header table中元素的个数
+ UINT16 elfShNum; /* Section header table entry count */
+ //对应`Section header string table index`，表示描述各section字符名称的string table在section header table中的下标
+ UINT16 elfShStrIndex;   /* Section header string table index */
 } LDElf32Ehdr;
 root@5e3abe332c5a:/home/docker/case_code_100# readelf -h app
 ELF Header:
@@ -198,7 +214,7 @@ root@5e3abe332c5a:/home/docker/case_code_100/51# od -Ax -t x1 -N 64 app
 
 简单解释一下命令的几个选项：
 
-```
+```shell
 -Ax: 显示地址的时候，用十六进制来表示。如果使用 -Ad，意思就是用十进制来显示地址;
 -t -x1: 显示字节码内容的时候，使用十六进制(x)，每次显示一个字节(1);
 -N 64：只需要读取64个字节;
@@ -206,31 +222,40 @@ root@5e3abe332c5a:/home/docker/case_code_100/51# od -Ax -t x1 -N 64 app
 
 这里留意这几个内容，下面会说明，先记住。
 
-```
-Entry point address:               0x1060   //代码区 .text 起始位置，即程序运行开始位置
-Size of program headers:           56 (bytes)//每个段头大小
-Number of program headers:         13       //段数量
-Size of section headers:           64 (bytes)//每个区头大小
-Number of section headers:         31       //区数量
-Section header string table index: 30       //字符串数组索引，该区记录所有区名称
+```shell
+Entry point address:               0x1060     //代码区 .text 起始位置，即程序运行开始位置
+Size of program headers:           56 (bytes) //每个段头大小
+Number of program headers:         13         //段数量
+Size of section headers:           64 (bytes) //每个区头大小
+Number of section headers:         31         //区数量
+Section header string table index: 30         //字符串数组索引，该区记录所有区名称
 ```
 
 ### 段(Segment)头信息
 
-段(Segment)信息对应鸿蒙源码结构体为 `LDElf32Phdr`，
+段(Segment)信息对应鸿蒙源码结构体为 `LDElf32Phdr`.
 
 ```c
 //kernel\extended\dynload\include\los_ld_elf_pri.h
 /* Program Header */
 typedef struct {
-    UINT32 type;     /* Segment type */ //段类型
-    UINT32 offset;   /* Segment file offset */  //此数据成员给出本段内容在文件中的位置，即段内容的开始位置相对于文件开头的偏移量。
-    UINT32 vAddr;    /* Segment virtual address */ //此数据成员给出本段内容的开始位置在进程空间中的虚拟地址。
-    UINT32 phyAddr;  /* Segment physical address */ //此数据成员给出本段内容的开始位置在进程空间中的物理地址。对于目前大多数现代操作系统而言，应用程序中段的物理地址事先是不可知的，所以目前这个成员多数情况下保留不用，或者被操作系统改作它用。
-    UINT32 fileSize; /* Segment size in file */  //此数据成员给出本段内容在文件中的大小，单位是字节，可以是0。
-    UINT32 memSize;  /* Segment size in memory */ //此数据成员给出本段内容在内容镜像中的大小，单位是字节，可以是0。
-    UINT32 flags;    /* Segment flags */   //此数据成员给出了本段内容的属性。
-    UINT32 align;    /* Segment alignment */  //对于可装载的段来说，其p_vaddr和p_offset的值至少要向内存页面大小对齐。
+    //段类型
+    UINT32 type;     /* Segment type */ 
+    //此数据成员给出本段内容在文件中的位置，即段内容的开始位置相对于文件开头的偏移量。
+    UINT32 offset;   /* Segment file offset */
+    //此数据成员给出本段内容的开始位置在进程空间中的虚拟地址。
+    UINT32 vAddr;    /* Segment virtual address */
+    //此数据成员给出本段内容的开始位置在进程空间中的物理地址。对于目前大多数现代操作系统而言，
+    //应用程序中段的物理地址事先是不可知的，所以目前这个成员多数情况下保留不用，或者被操作系统改作它用。
+    UINT32 phyAddr;  /* Segment physical address */
+    //此数据成员给出本段内容在文件中的大小，单位是字节，可以是0。
+    UINT32 fileSize; /* Segment size in file */
+    //此数据成员给出本段内容在内容镜像中的大小，单位是字节，可以是0。
+    UINT32 memSize;  /* Segment size in memory */
+    //此数据成员给出了本段内容的属性。
+    UINT32 flags;    /* Segment flags */
+    //对于可装载的段来说，其p_vaddr和p_offset的值至少要向内存页面大小对齐。
+    UINT32 align;    /* Segment alignment */
 } LDElf32Phdr;
 ```
 
@@ -244,51 +269,37 @@ Elf file type is DYN (Shared object file)
 Entry point 0x1060
 There are 13 program headers， starting at offset 64
 Program Headers:
-  Type           Offset             VirtAddr           PhysAddr
-                 FileSiz            MemSiz              Flags  Align
-  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040
-                 0x00000000000002d8 0x00000000000002d8  R      0x8
-  INTERP         0x0000000000000318 0x0000000000000318 0x0000000000000318
-                 0x000000000000001c 0x000000000000001c  R      0x1
-      [Requesting program interpreter: /lib64/ld-linux-x86-64.so。2]
-  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
-                 0x0000000000000618 0x0000000000000618  R      0x1000
-  LOAD           0x0000000000001000 0x0000000000001000 0x0000000000001000
-                 0x0000000000000225 0x0000000000000225  R E    0x1000
-  LOAD           0x0000000000002000 0x0000000000002000 0x0000000000002000
-                 0x0000000000000190 0x0000000000000190  R      0x1000
-  LOAD           0x0000000000002db8 0x0000000000003db8 0x0000000000003db8
-                 0x0000000000000260 0x0000000000000268  RW     0x1000
-  DYNAMIC        0x0000000000002dc8 0x0000000000003dc8 0x0000000000003dc8
-                 0x00000000000001f0 0x00000000000001f0  RW     0x8
-  NOTE           0x0000000000000338 0x0000000000000338 0x0000000000000338
-                 0x0000000000000020 0x0000000000000020  R      0x8
-  NOTE           0x0000000000000358 0x0000000000000358 0x0000000000000358
-                 0x0000000000000044 0x0000000000000044  R      0x4
-  GNU_PROPERTY   0x0000000000000338 0x0000000000000338 0x0000000000000338
-                 0x0000000000000020 0x0000000000000020  R      0x8
-  GNU_EH_FRAME   0x000000000000201c 0x000000000000201c 0x000000000000201c
-                 0x000000000000004c 0x000000000000004c  R      0x4
-  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
-                 0x0000000000000000 0x0000000000000000  RW     0x10
-  GNU_RELRO      0x0000000000002db8 0x0000000000003db8 0x0000000000003db8
-                 0x0000000000000248 0x0000000000000248  R      0x1
+  Type           Offset     VirtAddr   PhysAddr      FileSiz            MemSiz              Flags  Align
+  PHDR           0x00000040 0x00000040 0x00000040    0x00000000000002d8 0x00000000000002d8  R      0x8
+  INTERP         0x00000318 0x00000318 0x00000318    0x000000000000001c 0x000000000000001c  R      0x1
+      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+  LOAD           0x00000000 0x00000000 0x00000000    0x0000000000000618 0x0000000000000618  R      0x1000 # 0x2db8
+  LOAD           0x00001000 0x00001000 0x00001000    0x0000000000000225 0x0000000000000225  R E    0x1000
+  LOAD           0x00002000 0x00002000 0x00002000    0x0000000000000190 0x0000000000000190  R      0x1000
+  LOAD           0x00002db8 0x00003db8 0x00003db8    0x0000000000000260 0x0000000000000268  RW     0x1000
+  DYNAMIC        0x00002dc8 0x00003dc8 0x00003dc8    0x00000000000001f0 0x00000000000001f0  RW     0x8
+  NOTE           0x00000338 0x00000338 0x00000338    0x0000000000000020 0x0000000000000020  R      0x8
+  NOTE           0x00000358 0x00000358 0x00000358    0x0000000000000044 0x0000000000000044  R      0x4
+  GNU_PROPERTY   0x00000338 0x00000338 0x00000338    0x0000000000000020 0x0000000000000020  R      0x8
+  GNU_EH_FRAME   0x0000201c 0x0000201c 0x0000201c    0x000000000000004c 0x000000000000004c  R      0x4
+  GNU_STACK      0x00000000 0x00000000 0x00000000    0x0000000000000000 0x0000000000000000  RW     0x10
+  GNU_RELRO      0x00002db8 0x00003db8 0x00003db8    0x0000000000000248 0x0000000000000248  R      0x1   # 0x2db8
 ```
 
 数一下一共13个段，其实在ELF头信息也告诉了我们共13个段
 
 ```shell
 Size of program headers:           56 (bytes)//每个段头大小
-Number of program headers:         13       //段数量
+Number of program headers:         13        //段数量
 ```
 
 仔细看下这些段的开始地址和大小，发现有些段是重叠的。那是因为一个区可以被多个段所拥有。例如:`0x2db8` 对应的 `.init_array`区就被第四`LOAD` 和 `GNU_RELRO`两段所共有。
 
-`PHDR`，此类型header元素描述了program header table自身的信息。从这里的内容看出，示例程序的program header table在文件中的偏移(`Offset`)为`0x40`，即64号字节处。该段映射到进程空间的虚拟地址(`VirtAddr`)为`0x40`。`PhysAddr`暂时不用，其保持和`VirtAddr`一致。该段占用的文件大小`FileSiz`为`0x2d8`。运行时占用进程空间内存大小`MemSiz`也为`0x2d8`。`Flags`标记表示该段的读写权限，这里`R`表示只读，`Align`对齐为8，表明本段按8字节对齐。
+`PHDR`，此类型header元素描述了 `program header table` 自身的信息。从这里的内容看出，示例程序的 `program header table` 在文件中的偏移(`Offset`)为`0x40`，即64号字节处。该段映射到进程空间的虚拟地址(`VirtAddr`)为`0x40`。`PhysAddr`暂时不用，其保持和`VirtAddr`一致。该段占用的文件大小`FileSiz`为`0x2d8`。运行时占用进程空间内存大小`MemSiz`也为`0x2d8`。`Flags`标记表示该段的读写权限，这里`R`表示只读，`Align`对齐为8，表明本段按8字节对齐。
 
-`INTERP`，此类型header元素描述了一个特殊内存段，该段内存记录了动态加载解析器的访问路径字符串。示例程序中，该段内存位于文件偏移`0x318`处，即紧跟program header table。映射的进程虚拟地址空间地址为`0x318`。文件长度和内存映射长度均为`0x1c`，即28个字符，具体内容为`/lib64/ld-linux-x86-64.so。2`。段属性为只读，并按字节对齐。
+`INTERP`，此类型header元素描述了一个特殊内存段，该段内存记录了动态加载解析器的访问路径字符串。示例程序中，该段内存位于文件偏移`0x318`处，即紧跟`program header table` 。映射的进程虚拟地址空间地址为`0x318`。文件长度和内存映射长度均为`0x1c`，即28个字符，具体内容为`/lib64/ld-linux-x86-64.so。2`。段属性为只读，并按字节对齐。
 
-`LOAD`，此类型`header`元素描述了可加载到进程空间的代码区或数据区:
+`LOAD`，此类型`header`元素描述了**可加载到进程空间的代码区或数据区**:
 
 * 其第二段包含了代码区，文件内偏移为0x1000，文件大小为0x225，映射到进程地址0x001000处，属性为只读可执行(RE)，段地址按0x1000(4K)边界对齐。
 * 其第四段包含了数据区，文件内偏移为0x2db8，文件大小为0x260，映射到进程地址0x003db8处，属性为可读可写(RW)，段地址也按0x1000(4K)边界对齐。
@@ -298,9 +309,9 @@ Number of program headers:         13       //段数量
 
 `GNU_STACK`，可执行栈，即栈区，在加载段的过程中，当发现存在PT_GNU_STACK，也就是GNU_STACK segment 的存在，如果存在这个这个段的话，看这个段的 flags 是否有可执行权限，来设置对应的值。必须为RW方式。
 
-再看命令返回内容的后半部分-段区映射关系
+再看命令返回内容的后半部分-**段区映射关系** :
 
-```
+```shell
  Section to Segment mapping:
   Segment Sections...
    00
@@ -318,12 +329,12 @@ Number of program headers:         13       //段数量
    12     .init_array .fini_array .dynamic .got
 ```
 
-13个段和31个区的映射关系，右边其实不止31个区，是因为一个区可以共属于多个段，例如 `.dynamic` ，`.interp`，`.got`
+13个段和31个区的映射关系，右边其实不止31个区，是因为一个区( `Section` )可以共属于多个段( `Segment` )，例如 `.dynamic` ，`.interp`，`.got`
 Segment:Section(M:N)是多对多的包含关系.Segment是由多个Section组成，Section也能属于多个段。这个很重要，说第二遍了。
 
 * `INTERP`段只包含了`.interp`区
-* `LOAD2`段包含`.interp`、`.plt`、`.text`等区，`.text`代码区位于这个段。 这个段是 'RE'属性，只读可执行的。
-* `LOAD4`包含`.dynamic`、`.data`、`.bss`等区， 数据区位于这个段。这个段是 'RW'属性，可读可写。 `.data`、`.bss`都是数据区，有何区别呢？
+* `LOAD2`段包含`.interp`、`.plt`、`.text`等区，`.text`代码区位于这个段。 这个段是 `RE`属性，只读可执行的。
+* `LOAD4`包含`.dynamic`、`.data`、`.bss`等区， 数据区位于这个段。这个段是 `RW` 属性，可读可写。 `.data`、`.bss`都是数据区，有何区别呢？
 * `.data(ZI data)`它用来存放初始化了的(initailized)全局变量(global)和初始化了的静态变量(static)。
 * `.bss(RW data )`它用来存放未初始化的(uninitailized)全局变量(global)和未初始化的静态变量。
 * `DYNAMIC`段包含`.dynamic`区。
@@ -336,97 +347,72 @@ Segment:Section(M:N)是多对多的包含关系.Segment是由多个Section组成
 //kernel\extended\dynload\include\los_ld_elf_pri.h
 /* Section header */
 typedef struct {
-    UINT32 shName;      /* Section name (string tbl index) *///表示每个区的名字
-    UINT32 shType;      /* Section type *///表示每个区的功能
-    UINT32 shFlags;     /* Section flags *///表示每个区的属性
-    UINT32 shAddr;      /* Section virtual addr at execution *///表示每个区的进程映射地址
-    UINT32 shOffset;    /* Section file offset *///表示文件内偏移
-    UINT32 shSize;      /* Section size in bytes *///表示区的大小
-    UINT32 shLink;      /* Link to another section *///Link和Info记录不同类型区的相关信息
-    UINT32 shInfo;      /* Additional section information *///Link和Info记录不同类型区的相关信息
-    UINT32 shAddrAlign; /* Section alignment *///表示区的对齐单位
-    UINT32 shEntSize;   /* Entry size if section holds table *///表示区中每个元素的大小(如果该区为一个数组的话，否则该值为0)
+    //表示每个区的名字
+    UINT32 shName;      /* Section name (string tbl index) */
+    //表示每个区的功能
+    UINT32 shType;      /* Section type */
+    //表示每个区的属性
+    UINT32 shFlags;     /* Section flags */
+    //表示每个区的进程映射地址 -- 虚拟地址
+    UINT32 shAddr;      /* Section virtual addr at execution */
+    //表示文件内偏移
+    UINT32 shOffset;    /* Section file offset */
+    //表示区的大小
+    UINT32 shSize;      /* Section size in bytes */
+    //Link和Info记录不同类型区的相关信息
+    UINT32 shLink;      /* Link to another section */
+    //Link和Info记录不同类型区的相关信息
+    UINT32 shInfo;      /* Additional section information */
+    //表示区的对齐单位
+    UINT32 shAddrAlign; /* Section alignment */
+    //表示区中每个元素的大小(如果该区为一个数组的话，否则该值为0)
+    UINT32 shEntSize;   /* Entry size if section holds table */
 } LDElf32Shdr;
 ```
 
 示例程序共生成31个区。其实在头文件中也已经告诉我们了
 
-```
+```shell
 Size of section headers:           64 (bytes)//每个区头大小
-Number of section headers:         31       //区数量
+Number of section headers:         31        //区数量
 ```
 
 通过`readelf -S`命令看看示例程序中 section header table的内容，如下所示。
 
 ```shell
-root@5e3abe332c5a:/home/docker/case_code_100# readelf -S app
-There are 31 section headers， starting at offset 0x39c0:
-
 Section Headers:
-  [Nr] Name              Type             Address           Offset
-       Size              EntSize          Flags  Link  Info  Align
-  [ 0]                   NULL             0000000000000000  00000000
-       0000000000000000  0000000000000000           0     0     0
-  [ 1] .interp           PROGBITS         0000000000000318  00000318
-       000000000000001c  0000000000000000   A       0     0     1
-  [ 2] .note.gnu.propert NOTE             0000000000000338  00000338
-       0000000000000020  0000000000000000   A       0     0     8
-  [ 3] .note.gnu.build-i NOTE             0000000000000358  00000358
-       0000000000000024  0000000000000000   A       0     0     4
-  [ 4] .note.ABI-tag     NOTE             000000000000037c  0000037c
-       0000000000000020  0000000000000000   A       0     0     4
-  [ 5] .gnu.hash         GNU_HASH         00000000000003a0  000003a0
-       0000000000000024  0000000000000000   A       6     0     8
-  [ 6] .dynsym           DYNSYM           00000000000003c8  000003c8
-       00000000000000a8  0000000000000018   A       7     1     8
-  [ 7] .dynstr           STRTAB           0000000000000470  00000470
-       0000000000000084  0000000000000000   A       0     0     1
-  [ 8] .gnu.version      VERSYM           00000000000004f4  000004f4
-       000000000000000e  0000000000000002   A       6     0     2
-  [ 9] .gnu.version_r    VERNEED          0000000000000508  00000508
-       0000000000000020  0000000000000000   A       7     1     8
-  [10] .rela.dyn         RELA             0000000000000528  00000528
-       00000000000000d8  0000000000000018   A       6     0     8
-  [11] .rela.plt         RELA             0000000000000600  00000600
-       0000000000000018  0000000000000018  AI       6    24     8
-  [12] .init             PROGBITS         0000000000001000  00001000
-       000000000000001b  0000000000000000  AX       0     0     4
-  [13] .plt              PROGBITS         0000000000001020  00001020
-       0000000000000020  0000000000000010  AX       0     0     16
-  [14] .plt.got          PROGBITS         0000000000001040  00001040
-       0000000000000010  0000000000000010  AX       0     0     16
-  [15] .plt.sec          PROGBITS         0000000000001050  00001050
-       0000000000000010  0000000000000010  AX       0     0     16
-  [16] .text             PROGBITS         0000000000001060  00001060
-       00000000000001b5  0000000000000000  AX       0     0     16
-  [17] .fini             PROGBITS         0000000000001218  00001218
-       000000000000000d  0000000000000000  AX       0     0     4
-  [18] .rodata           PROGBITS         0000000000002000  00002000
-       000000000000001b  0000000000000000   A       0     0     4
-  [19] .eh_frame_hdr     PROGBITS         000000000000201c  0000201c
-       000000000000004c  0000000000000000   A       0     0     4
-  [20] .eh_frame         PROGBITS         0000000000002068  00002068
-       0000000000000128  0000000000000000   A       0     0     8
-  [21] .init_array       INIT_ARRAY       0000000000003db8  00002db8
-       0000000000000008  0000000000000008  WA       0     0     8
-  [22] .fini_array       FINI_ARRAY       0000000000003dc0  00002dc0
-       0000000000000008  0000000000000008  WA       0     0     8
-  [23] .dynamic          DYNAMIC          0000000000003dc8  00002dc8
-       00000000000001f0  0000000000000010  WA       7     0     8
-  [24] .got              PROGBITS         0000000000003fb8  00002fb8
-       0000000000000048  0000000000000008  WA       0     0     8
-  [25] .data             PROGBITS         0000000000004000  00003000
-       0000000000000018  0000000000000000  WA       0     0     8
-  [26] .bss              NOBITS           0000000000004018  00003018
-       0000000000000008  0000000000000000  WA       0     0     1
-  [27] .comment          PROGBITS         0000000000000000  00003018
-       000000000000002a  0000000000000001  MS       0     0     1
-  [28] .symtab           SYMTAB           0000000000000000  00003048
-       0000000000000648  0000000000000018          29    46     8
-  [29] .strtab           STRTAB           0000000000000000  00003690
-       0000000000000216  0000000000000000           0     0     1
-  [30] .shstrtab         STRTAB           0000000000000000  000038a6
-       000000000000011a  0000000000000000           0     0     1
+[Nr] Name              Type       Address          Offset   Size             EntSize          Flags Link Info Align
+[ 0]                   NULL       0000000000000000 00000000 0000000000000000 0000000000000000          0    0    0
+[ 1] .interp           PROGBITS   0000000000000318 00000318 000000000000001c 0000000000000000   A      0    0    1
+[ 2] .note.gnu.propert NOTE       0000000000000338 00000338 0000000000000020 0000000000000000   A      0    0    8
+[ 3] .note.gnu.build-i NOTE       0000000000000358 00000358 0000000000000024 0000000000000000   A      0    0    4
+[ 4] .note.ABI-tag     NOTE       000000000000037c 0000037c 0000000000000020 0000000000000000   A      0    0    4
+[ 5] .gnu.hash         GNU_HASH   00000000000003a0 000003a0 0000000000000024 0000000000000000   A      6    0    8
+[ 6] .dynsym           DYNSYM     00000000000003c8 000003c8 00000000000000a8 0000000000000018   A      7    1    8
+[ 7] .dynstr           STRTAB     0000000000000470 00000470 0000000000000084 0000000000000000   A      0    0    1
+[ 8] .gnu.version      VERSYM     00000000000004f4 000004f4 000000000000000e 0000000000000002   A      6    0    2
+[ 9] .gnu.version_r    VERNEED    0000000000000508 00000508 0000000000000020 0000000000000000   A      7    1    8
+[10] .rela.dyn         RELA       0000000000000528 00000528 00000000000000d8 0000000000000018   A      6    0    8
+[11] .rela.plt         RELA       0000000000000600 00000600 0000000000000018 0000000000000018  AI      6   24    8
+[12] .init             PROGBITS   0000000000001000 00001000 000000000000001b 0000000000000000  AX      0    0    4
+[13] .plt              PROGBITS   0000000000001020 00001020 0000000000000020 0000000000000010  AX      0    0    16
+[14] .plt.got          PROGBITS   0000000000001040 00001040 0000000000000010 0000000000000010  AX      0    0    16
+[15] .plt.sec          PROGBITS   0000000000001050 00001050 0000000000000010 0000000000000010  AX      0    0    16
+[16] .text             PROGBITS   0000000000001060 00001060 00000000000001b5 0000000000000000  AX      0    0    16
+[17] .fini             PROGBITS   0000000000001218 00001218 000000000000000d 0000000000000000  AX      0    0    4
+[18] .rodata           PROGBITS   0000000000002000 00002000 000000000000001b 0000000000000000   A      0    0    4
+[19] .eh_frame_hdr     PROGBITS   000000000000201c 0000201c 000000000000004c 0000000000000000   A      0    0    4
+[20] .eh_frame         PROGBITS   0000000000002068 00002068 0000000000000128 0000000000000000   A      0    0    8
+[21] .init_array       INIT_ARRAY 0000000000003db8 00002db8 0000000000000008 0000000000000008  WA      0    0    8
+[22] .fini_array       FINI_ARRAY 0000000000003dc0 00002dc0 0000000000000008 0000000000000008  WA      0    0    8
+[23] .dynamic          DYNAMIC    0000000000003dc8 00002dc8 00000000000001f0 0000000000000010  WA      7    0    8
+[24] .got              PROGBITS   0000000000003fb8 00002fb8 0000000000000048 0000000000000008  WA      0    0    8
+[25] .data             PROGBITS   0000000000004000 00003000 0000000000000018 0000000000000000  WA      0    0    8
+[26] .bss              NOBITS     0000000000004018 00003018 0000000000000008 0000000000000000  WA      0    0    1
+[27] .comment          PROGBITS   0000000000000000 00003018 000000000000002a 0000000000000001  MS      0    0    1
+[28] .symtab           SYMTAB     0000000000000000 00003048 0000000000000648 0000000000000018         29   46    8
+[29] .strtab           STRTAB     0000000000000000 00003690 0000000000000216 0000000000000000          0    0    1
+[30] .shstrtab         STRTAB     0000000000000000 000038a6 000000000000011a 0000000000000000          0    0    1
 Key to Flags:
   W (write)， A (alloc)， X (execute)， M (merge)， S (strings)， I (info)，
   L (link order)， O (extra OS processing required)， G (group)， T (TLS)，
@@ -463,28 +449,33 @@ Hex dump of section '.shstrtab':
   0x00000110 002e636f 6d6d656e 7400              ..comment.
 ```
 
-可以发现，这里其实是一堆字符串，这些字符串对应的就是各个区的名字。因此section header table中每个元素的Name字段其实是这个string table的索引。为节省空间而做的设计，再回头看看ELF header中的 `elfShStrIndex`，
+可以发现，这里其实是一堆字符串，这些字符串对应的就是各个区的名字。因此 `section header table` 中每个元素的 `Name` 字段其实是这个 `string table` 的索引。为节省空间而做的设计，再回头看看 `ELF header` 中的 `elfShStrIndex`:
 
 ```shell
 Section header string table index: 30 //字符串数组索引，该区记录所有区名称
 ```
 
-它的值正好就是30，指向了当前的string table。
+它的值正好就是30，指向了当前的 `string table` 。
 
 ### 符号表 Symbol Table
 
 Section Header Table中，还有一类`SYMTAB`(DYNSYM)区，该区叫符号表。符号表中的每个元素对应一个符号，记录了每个符号对应的实际数值信息，通常用在重定位过程中或问题定位过程中，进程执行阶段并不加载符号表。符号表对应鸿蒙源码结构体为 `LDElf32Sym`。
-//kernel\extended\dynload\include\los_ld_elf_pri.h
 
 ```c
+//kernel\extended\dynload\include\los_ld_elf_pri.h
 /* Symbol table */
 typedef struct {
-    UINT32 stName;  /* Symbol table name (string tbl index) *///表示符号对应的源码字符串，为对应String Table中的索引
-    UINT32 stValue; /* Symbol table value *///表示符号对应的数值
-    UINT32 stSize;  /* Symbol table size *///表示符号对应数值的空间占用大小
-    UINT8 stInfo;   /* Symbol table type and binding *///表示符号的相关信息 如符号类型(变量符号、函数符号)
+    //表示符号对应的源码字符串，为对应String Table中的索引
+    UINT32 stName;  /* Symbol table name (string tbl index) */
+    //表示符号对应的数值
+    UINT32 stValue; /* Symbol table value */
+    //表示符号对应数值的空间占用大小
+    UINT32 stSize;  /* Symbol table size */
+    //表示符号的相关信息 如符号类型(变量符号、函数符号)
+    UINT8 stInfo;   /* Symbol table type and binding */
     UINT8 stOther;  /* Symbol table visibility */
-    UINT16 stShndx; /* Section table index *///表示与该符号相关的区的索引，例如函数符号与对应的代码区相关
+    //表示与该符号相关的区的索引，例如函数符号与对应的代码区相关
+    UINT16 stShndx; /* Section table index */
 } LDElf32Sym;
 ```
 
@@ -506,33 +497,7 @@ Symbol table '.dynsym' contains 7 entries:
 Symbol table '.symtab' contains 67 entries:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND
-     1: 0000000000000318     0 SECTION LOCAL  DEFAULT    1
-     2: 0000000000000338     0 SECTION LOCAL  DEFAULT    2
-     3: 0000000000000358     0 SECTION LOCAL  DEFAULT    3
-     4: 000000000000037c     0 SECTION LOCAL  DEFAULT    4
-     5: 00000000000003a0     0 SECTION LOCAL  DEFAULT    5
-     6: 00000000000003c8     0 SECTION LOCAL  DEFAULT    6
-     7: 0000000000000470     0 SECTION LOCAL  DEFAULT    7
-     8: 00000000000004f4     0 SECTION LOCAL  DEFAULT    8
-     9: 0000000000000508     0 SECTION LOCAL  DEFAULT    9
-    10: 0000000000000528     0 SECTION LOCAL  DEFAULT   10
-    11: 0000000000000600     0 SECTION LOCAL  DEFAULT   11
-    12: 0000000000001000     0 SECTION LOCAL  DEFAULT   12
-    13: 0000000000001020     0 SECTION LOCAL  DEFAULT   13
-    14: 0000000000001040     0 SECTION LOCAL  DEFAULT   14
-    15: 0000000000001050     0 SECTION LOCAL  DEFAULT   15
-    16: 0000000000001060     0 SECTION LOCAL  DEFAULT   16
-    17: 0000000000001218     0 SECTION LOCAL  DEFAULT   17
-    18: 0000000000002000     0 SECTION LOCAL  DEFAULT   18
-    19: 000000000000201c     0 SECTION LOCAL  DEFAULT   19
-    20: 0000000000002068     0 SECTION LOCAL  DEFAULT   20
-    21: 0000000000003db8     0 SECTION LOCAL  DEFAULT   21
-    22: 0000000000003dc0     0 SECTION LOCAL  DEFAULT   22
-    23: 0000000000003dc8     0 SECTION LOCAL  DEFAULT   23
-    24: 0000000000003fb8     0 SECTION LOCAL  DEFAULT   24
-    25: 0000000000004000     0 SECTION LOCAL  DEFAULT   25
-    26: 0000000000004018     0 SECTION LOCAL  DEFAULT   26
-    27: 0000000000000000     0 SECTION LOCAL  DEFAULT   27
+    # ...
     28: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
     29: 0000000000001090     0 FUNC    LOCAL  DEFAULT   16 deregister_tm_clones
     30: 00000000000010c0     0 FUNC    LOCAL  DEFAULT   16 register_tm_clones
@@ -583,11 +548,10 @@ Symbol table '.symtab' contains 67 entries:
 
 `main`函数符号对应的数值为`0x1174`，其类型为`FUNC`，大小为30字节，对应的代码区索引为16。
 `say_hello`函数符号对应数值为`0x1149`，其类型为`FUNC`，大小为43字节，对应的代码区索引同为16。
-Section Header Table:
 
 ```shell
-  [16] .text             PROGBITS         0000000000001060  00001060
-       00000000000001b5  0000000000000000  AX       0     0     16
+Section Header Table:
+[16] .text     PROGBITS    0000000000001060  00001060    00000000000001b5  0000000000000000  AX       0     0     16
 ```
 
 ### 反汇编代码区
@@ -629,7 +593,7 @@ main():
     119c:       0f 1f 40 00             nopl   0x0(%rax)
 ```
 
-`0x1149` `0x1174`正是`say_hello`，`main`函数的入口地址。并看到了激动人心的指令
+`0x1149` `0x1174`正是`say_hello`，`main`函数的入口地址。并看到了激动人心的指令:
 
 ```assembly
 1186:       e8 be ff ff ff          callq  1149 <say_hello>
@@ -662,8 +626,7 @@ Entry point address:               0x1060   //代码区 .text 起始位置，即
 它的地址并不是main函数位置`0x1174`，是`0x1060`!而且代码区的开始位置是`0x1060`没错的。
 
 ```assembly
-  [16] .text             PROGBITS         0000000000001060  00001060
-       00000000000001b5  0000000000000000  AX       0     0     16
+[16] .text  PROGBITS   0000000000001060  00001060   00000000000001b5  0000000000000000  AX       0     0     16
 ```
 
 难度`main`不是入口地址？ 那`0x1060`上放的是何方神圣，再查符号表发现是

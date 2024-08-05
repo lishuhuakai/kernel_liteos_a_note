@@ -1,0 +1,1167 @@
+import("//build/config/clang/clang.gni")
+import("//build/ohos.gni")
+import("musl_src.gni")
+template("static_and_shared_libs_template") {
+  if (defined(invoker.musl_use_gwp_asan)) {
+    __use_gwp_asan = invoker.musl_use_gwp_asan
+  } else {
+    __use_gwp_asan = musl_use_gwp_asan
+  }
+  __use_flto = invoker.musl_use_flto
+
+  config("gwp_asan_config_${target_name}") {
+    if (__use_gwp_asan) {
+      defines = [ "USE_GWP_ASAN" ]
+      if (!defined(libs)) {
+        libs = [ rebase_path(libgwp_asan_file) ]
+      } else {
+        libs += [ rebase_path(libgwp_asan_file) ]
+      }
+    }
+  }
+
+  config("soft_hook_config_${target_name}") {
+    defines = []
+    configs = [ "//build/config/coverage:default_coverage" ]
+
+    if (is_posix) {
+      configs += [ "//build/config/posix:runtime_library" ]
+    }
+
+    cflags_cc = []
+
+    defines = [
+      "__GNU_SOURCE=1",  # Necessary for clone().
+      "CHROMIUM_CXX_TWEAK_INLINES",  # Saves binary size.
+    ]
+
+    defines += [
+      "__MUSL__",
+      "_LIBCPP_HAS_MUSL_LIBC",
+      "__BUILD_LINUX_WITH_CLANG",
+    ]
+
+    if (!is_asan && musl_arch != "mips") {
+      defines += [
+        "HOOK_ENABLE",
+        "OHOS_SOCKET_HOOK_ENABLE",
+      ]
+    }
+
+    if (!is_llvm_build && !is_asan && musl_arch != "mips") {
+      defines += [ "OHOS_FDTRACK_HOOK_ENABLE" ]
+    }
+
+    ldflags = [ "-nostdlib" ]
+
+    libs = []
+
+    if (__use_gwp_asan) {
+      defines += [ "USE_GWP_ASAN" ]
+      libs += [ rebase_path(libgwp_asan_file) ]
+    }
+
+    if (is_component_build) {
+      defines += [ "COMPONENT_BUILD" ]
+    }
+  }
+
+  cur_gwp_asan_config = "gwp_asan_config_${target_name}"
+  cur_soft_hook_config = "soft_hook_config_${target_name}"
+
+  source_set("soft_musl_hook_${target_name}") {
+    include_dirs = []
+    sources = [
+      "./src/hook/linux/malloc_common.c",
+      "./src/hook/linux/memory_trace.c",
+      "./src/hook/linux/musl_fdtrack.c",
+      "./src/hook/linux/musl_fdtrack_load.c",
+      "./src/hook/linux/musl_preinit.c",
+      "./src/hook/linux/musl_preinit_common.c",
+      "./src/hook/linux/musl_socket_preinit.c",
+      "./src/hook/linux/musl_socket_preinit_common.c",
+      "./src/hook/linux/socket_common.c",
+    ]
+
+    deps = [
+      "//third_party/musl:create_alltypes_h",
+      "//third_party/musl:create_porting_src",
+      "//third_party/musl:create_syscall_h",
+      "//third_party/musl:create_version_h",
+      "//third_party/musl:musl_copy_inc_bits",
+      "//third_party/musl:musl_copy_inc_fortify",
+      "//third_party/musl:musl_copy_inc_root",
+      "//third_party/musl:musl_copy_inc_sys",
+    ]
+    if (use_musl && !is_llvm_build) {
+      defines = [ "OHOS_ENABLE_PARAMETER" ]
+      external_deps = [ "init:parameterbase" ]
+    }
+
+    if (musl_unit_test_flag) {
+      defines += [ "UNIT_TEST_STATIC" ]
+    }
+    if (use_jemalloc) {
+      defines += [ "USE_JEMALLOC" ]
+      if (use_jemalloc_dfx_intf) {
+        defines += [ "USE_JEMALLOC_DFX_INTF" ]
+      }
+      if (use_jemalloc_recycle_func) {
+        defines += [ "USE_JEMALLOC_RECYCLE_FUNC" ]
+      }
+      include_dirs += [ "${musl_malloc_plugin}/include/jemalloc" ]
+    }
+
+    configs -= musl_inherited_configs
+
+    include_dirs += [ "${target_out_dir}/${musl_ported_dir}/src/internal" ]
+
+    configs += [
+      "//build/config/compiler:compiler",
+      ":$cur_soft_hook_config",
+    ]
+
+    cflags = [
+      "-mllvm",
+      "--instcombine-max-iterations=0",
+      "-ffp-contract=fast",
+      "-O3",
+      "-Wno-int-conversion",
+    ]
+
+    if (!__use_flto) {
+      cflags_c = [ "-fno-lto" ]
+    }
+  }
+
+  source_set("soft_musl_src_${target_name}") {
+    forward_variables_from(invoker, [ "*" ])
+    sources_orig = []
+    sources = []
+
+    sources_orig = musl_src_arch_file + musl_src_file
+    sources_orig -= musl_src_filterout
+    sources_orig -= [
+      "src/string/mempcpy.c",
+      "src/string/memset.c",
+      "src/env/__init_tls.c",
+      "src/env/__libc_start_main.c",
+      "src/env/__stack_chk_fail.c",
+      "src/stdlib/qsort.c",
+      "src/stdlib/qsort_nr.c",
+      "src/string/strncpy.c",
+    ]
+
+    sources += [
+      "third_party/openbsd/gnu/lib/libexecinfo/backtrace.c",
+      "third_party/openbsd/lib/libc/string/strcasestr.c",
+    ]
+
+    if (musl_arch == "arm") {
+      sources_orig -= [
+        "src/thread/${musl_arch}/__set_thread_area.c",
+        "src/string/arm/memcpy.S",
+        "src/string/memchr.c",
+        "src/string/strcmp.c",
+        "src/string/strlen.c",
+        "src/math/sincosf.c",
+        "src/math/expf.c",
+        "src/math/exp2f.c",
+        "src/math/exp2l.c",
+        "src/math/exp2.c",
+        "src/math/log.c",
+        "src/math/logl.c",
+        "src/math/log2.c",
+        "src/math/log2f.c",
+        "src/math/log2l.c",
+        "src/math/logf.c",
+        "src/math/log_data.c",
+        "src/math/logf_data.c",
+        "src/math/log2_data.c",
+        "src/math/log2f_data.c",
+        "src/math/exp2f_data.c",
+        "src/math/pow.c",
+        "src/math/powf.c",
+        "src/math/powl.c",
+        "src/math/sinf.c",
+        "src/math/cosf.c",
+        "src/linux/flock.c",
+      ]
+    } else if (musl_arch == "aarch64") {
+      sources_orig -= [
+        "src/thread/${musl_arch}/__set_thread_area.s",
+        "src/string/memcpy.c",
+        "src/string/memmove.c",
+        "src/string/memchr.c",
+        "src/string/memcmp.c",
+        "src/string/strcpy.c",
+        "src/string/strcmp.c",
+        "src/string/strlen.c",
+        "src/string/stpcpy.c",
+        "src/string/strchr.c",
+        "src/string/strrchr.c",
+        "src/string/strnlen.c",
+        "src/string/strncmp.c",
+        "src/math/sincosf.c",
+        "src/math/sinf.c",
+        "src/math/cosf.c",
+        "src/math/cos.c",
+        "src/math/exp.c",
+        "src/math/exp2.c",
+        "src/math/exp2f.c",
+        "src/math/expf.c",
+        "src/math/log.c",
+        "src/math/log10.c",
+        "src/math/log2.c",
+        "src/math/log2f.c",
+        "src/math/logb.c",
+        "src/math/logf.c",
+        "src/math/sin.c",
+        "src/math/sincos.c",
+        "src/math/pow.c",
+        "src/math/powf.c",
+        "src/math/frexpl.c",
+        "src/linux/flock.c",
+      ]
+    } else if (musl_arch == "x86_64") {
+      sources_orig -= [
+        "src/thread/${musl_arch}/__set_thread_area.s",
+        "src/linux/flock.c",
+      ]
+    } else if (musl_arch == "riscv64") {
+      sources_orig -= [
+        "src/thread/${musl_arch}/__set_thread_area.s",
+        "src/math/copysign.c",
+        "src/math/copysignf.c",
+      ]
+    } else if (musl_arch == "loongarch64") {
+      sources_orig -= [ "src/thread/${musl_arch}/__set_thread_area.s" ]
+    }
+    if (musl_ld128_flag) {
+      if (musl_arch == "x86_64") {
+        sources_orig -= [
+          "src/math/x86_64/exp2l.s",
+          "src/math/x86_64/expl.s",
+          "src/math/x86_64/expm1l.s",
+          "src/math/x86_64/fabsl.s",
+          "src/math/x86_64/floorl.s",
+          "src/math/x86_64/log1pl.s",
+          "src/math/x86_64/log2l.s",
+          "src/math/x86_64/log10l.s",
+          "src/math/x86_64/logl.s",
+          "src/math/x86_64/sqrtl.s",
+          "src/math/acoshl.c",
+          "src/math/asinhl.c",
+          "src/math/coshl.c",
+          "src/math/sinhl.c",
+          "src/math/erfl.c",
+          "src/math/powl.c",
+          "src/math/lgammal.c",
+          "src/math/tanhl.c",
+        ]
+      } else if (musl_arch == "aarch64") {
+        sources_orig -= [
+          "src/math/acoshl.c",
+          "src/math/asinhl.c",
+          "src/math/coshl.c",
+          "src/math/sinhl.c",
+          "src/math/expl.c",
+          "src/math/expm1l.c",
+          "src/math/erfl.c",
+          "src/math/logl.c",
+          "src/math/log1pl.c",
+          "src/math/log2l.c",
+          "src/math/log10l.c",
+          "src/math/powl.c",
+          "src/math/lgammal.c",
+          "src/math/tanhl.c",
+        ]
+      }
+    }
+
+    defines = []
+    defines += [ "FEATURE_ICU_LOCALE" ]
+    if (use_icu_locale == true) {
+      defines += [ "FEATURE_ICU_LOCALE_TMP" ]
+    }
+
+    # There are two ways to implement cxa_thread_atexit_impl:
+    # - CXA_THREAD_USE_TSD(default): use pthread_key_xxx to implement cxa_thread_atexit_impl.
+    # - CXA_THREAD_USE_TLS: put dtors in pthread to implement cxa_thread_atexit_impl.
+    defines += [ "CXA_THREAD_USE_TSD" ]
+
+    if (musl_arch == "arm") {
+      defines += [ "MUSL_ARM_ARCH" ]
+    }
+    if (musl_arch == "aarch64") {
+      defines += [ "MUSL_AARCH64_ARCH" ]
+    }
+    if (musl_arch == "x86_64") {
+      defines += [ "MUSL_X86_64_ARCH" ]
+    }
+    if (musl_secure_level > 0) {
+      defines += [ "MALLOC_FREELIST_HARDENED" ]
+    }
+    if (musl_secure_level > 1) {
+      defines += [ "MALLOC_FREELIST_QUARANTINE" ]
+    }
+    if (musl_secure_level > 2) {
+      defines += [ "MALLOC_RED_ZONE" ]
+    }
+    if (is_debug || musl_secure_level >= 3) {
+      defines += [ "MALLOC_SECURE_ALL" ]
+    }
+
+    if (musl_iterate_and_stats_api) {
+      defines += [ "MUSL_ITERATE_AND_STATS_API" ]
+    }
+
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    if (musl_arch == "arm") {
+      sources += [
+        "$OPTRTDIR/math/cosf.c",
+        "$OPTRTDIR/math/exp2.c",
+        "$OPTRTDIR/math/exp2f.c",
+        "$OPTRTDIR/math/exp2f_data.c",
+        "$OPTRTDIR/math/expf.c",
+        "$OPTRTDIR/math/log.c",
+        "$OPTRTDIR/math/log2.c",
+        "$OPTRTDIR/math/log2_data.c",
+        "$OPTRTDIR/math/log2f.c",
+        "$OPTRTDIR/math/log2f_data.c",
+        "$OPTRTDIR/math/log_data.c",
+        "$OPTRTDIR/math/logf.c",
+        "$OPTRTDIR/math/logf_data.c",
+        "$OPTRTDIR/math/pow.c",
+        "$OPTRTDIR/math/powf.c",
+        "$OPTRTDIR/math/sincosf.c",
+        "$OPTRTDIR/math/sincosf_data.c",
+        "$OPTRTDIR/math/sinf.c",
+        "$OPTRTDIR/string/arm/memchr.S",
+        "$OPTRTDIR/string/arm/memcpy.S",
+        "$OPTRTDIR/string/arm/memset.S",
+        "$OPTRTDIR/string/arm/strcmp.S",
+        "$OPTRTDIR/string/arm/strlen-armv6t2.S",
+      ]
+
+      asmflags = [
+        "-D__memcpy_arm = memcpy",
+        "-D__memchr_arm = memchr",
+        "-D__memset_arm = memset",
+        "-D__strcmp_arm = strcmp",
+        "-D__strlen_armv6t2 = strlen",
+      ]
+    } else if (musl_arch == "aarch64") {
+      if (defined(ARM_FEATURE_SVE)) {
+        sources += [
+          "$OPTRTDIR/string/aarch64/memchr-sve.S",
+          "$OPTRTDIR/string/aarch64/memcmp-sve.S",
+          "$OPTRTDIR/string/aarch64/memcpy.S",
+          "$OPTRTDIR/string/aarch64/memset.S",
+          "$OPTRTDIR/string/aarch64/stpcpy-sve.S",
+          "$OPTRTDIR/string/aarch64/strchr-sve.S",
+          "$OPTRTDIR/string/aarch64/strchrnul-sve.S",
+          "$OPTRTDIR/string/aarch64/strcmp-sve.S",
+          "$OPTRTDIR/string/aarch64/strcpy-sve.S",
+          "$OPTRTDIR/string/aarch64/strlen-sve.S",
+          "$OPTRTDIR/string/aarch64/strncmp-sve.S",
+          "$OPTRTDIR/string/aarch64/strnlen-sve.S",
+          "$OPTRTDIR/string/aarch64/strrchr-sve.S",
+        ]
+        asmflags = [
+          "-D__memcpy_aarch64 = memcpy",
+          "-D__memset_aarch64 = memset",
+          "-D__memcmp_aarch64_sve = memcmp",
+          "-D__memchr_aarch64_sve = memchr",
+          "-D__strcmp_aarch64_sve = strcmp",
+          "-D__strlen_aarch64_sve = strlen",
+          "-D__strcpy_aarch64_sve = strcpy",
+          "-D__stpcpy_aarch64_sve = stpcpy",
+          "-D__strchr_aarch64_sve = strchr",
+          "-D__strrchr_aarch64_sve = strrchr",
+          "-D__strchrnul_aarch64_sve = strchrnul",
+          "-D__strnlen_aarch64_sve = strnlen",
+          "-D__strncmp_aarch64_sve = strncmp",
+        ]
+      } else if (defined(ARM_FEATURE_MTE)) {
+        sources += [
+          "$OPTRTDIR/string/aarch64/memchr-mte.S",
+          "$OPTRTDIR/string/aarch64/memcmp.S",
+          "$OPTRTDIR/string/aarch64/memcpy.S",
+          "$OPTRTDIR/string/aarch64/memset.S",
+          "$OPTRTDIR/string/aarch64/stpcpy-mte.S",
+          "$OPTRTDIR/string/aarch64/strchr-mte.S",
+          "$OPTRTDIR/string/aarch64/strchrnul-mte.S",
+          "$OPTRTDIR/string/aarch64/strcmp-mte.S",
+          "$OPTRTDIR/string/aarch64/strcpy-mte.S",
+          "$OPTRTDIR/string/aarch64/strlen-mte.S",
+          "$OPTRTDIR/string/aarch64/strncmp-mte.S",
+          "$OPTRTDIR/string/aarch64/strnlen.S",
+          "$OPTRTDIR/string/aarch64/strrchr-mte.S",
+        ]
+        asmflags = [
+          "-D__memcpy_aarch64 = memcpy",
+          "-D__memset_aarch64 = memset",
+          "-D__memcmp_aarch64 = memcmp",
+          "-D__memchr_aarch64_mte = memchr",
+          "-D__strcmp_aarch64_mte = strcmp",
+          "-D__strlen_aarch64_mte = strlen",
+          "-D__strcpy_aarch64_mte = strcpy",
+          "-D__stpcpy_aarch64_mte = stpcpy",
+          "-D__strchr_aarch64_mte = strchr",
+          "-D__strrchr_aarch64_mte = strrchr",
+          "-D__strchrnul_aarch64_mte = strchrnul",
+          "-D__strnlen_aarch64 = strnlen",
+          "-D__strncmp_aarch64_mte = strncmp",
+        ]
+      } else {
+        sources += [
+          "$OPTRTDIR/string/aarch64/memchr.S",
+          "$OPTRTDIR/string/aarch64/memcmp.S",
+          "$OPTRTDIR/string/aarch64/memcpy.S",
+          "$OPTRTDIR/string/aarch64/memset.S",
+          "$OPTRTDIR/string/aarch64/stpcpy.S",
+          "$OPTRTDIR/string/aarch64/strchr.S",
+          "$OPTRTDIR/string/aarch64/strchrnul.S",
+          "$OPTRTDIR/string/aarch64/strcmp.S",
+          "$OPTRTDIR/string/aarch64/strcpy.S",
+          "$OPTRTDIR/string/aarch64/strlen.S",
+          "$OPTRTDIR/string/aarch64/strncmp.S",
+          "$OPTRTDIR/string/aarch64/strnlen.S",
+          "$OPTRTDIR/string/aarch64/strrchr.S",
+        ]
+        asmflags = [
+          "-D__memmove_aarch64 = memmove",
+          "-D__memcpy_aarch64 = memcpy",
+          "-D__memchr_aarch64 = memchr",
+          "-D__memset_aarch64 = memset",
+          "-D__memcmp_aarch64 = memcmp",
+          "-D__strcmp_aarch64 = strcmp",
+          "-D__strlen_aarch64 = strlen",
+          "-D__strcpy_aarch64 = strcpy",
+          "-D__stpcpy_aarch64 = stpcpy",
+          "-D__strchr_aarch64 = strchr",
+          "-D__strrchr_aarch64 = strrchr",
+          "-D__strchrnul_aarch64 = strchrnul",
+          "-D__strnlen_aarch64 = strnlen",
+          "-D__strncmp_aarch64 = strncmp",
+        ]
+      }
+    }
+
+    cflags = [
+      "-O3",
+      "-fPIC",
+      "-fstack-protector-strong",
+    ]
+
+    if (!(use_libfuzzer || is_mac || is_asan || is_tsan || use_clang_coverage) && __use_flto) {
+      cflags += [ "-flto" ]
+    } else {
+      not_needed([ "__use_flto" ])
+    }
+
+    if (use_jemalloc) {
+      defines += [ "USE_JEMALLOC" ]
+      if (use_jemalloc_dfx_intf) {
+        defines += [ "USE_JEMALLOC_DFX_INTF" ]
+      }
+      if (use_jemalloc_recycle_func) {
+        defines += [ "USE_JEMALLOC_RECYCLE_FUNC" ]
+      }
+      include_dirs = [ "${musl_malloc_plugin}/include/jemalloc" ]
+    }
+
+    configs -= musl_inherited_configs
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":$cur_gwp_asan_config",
+    ]
+
+    if (!defined(defines)) {
+      defines = []
+    }
+    if (musl_target_os == "linux" && product_path != "" &&
+        product_path != rebase_path("//productdefine/common/products")) {
+      _product_config = read_file("${product_path}/config.json", "json")
+      if (defined(_product_config.device_stack_size)) {
+        defines += [ "TARGET_STACK_SIZE=${_product_config.device_stack_size}" ]
+      }
+      if (defined(_product_config.device_guard_size)) {
+        defines += [ "TARGET_GUARD_SIZE=${_product_config.device_guard_size}" ]
+      }
+    }
+
+    deps = porting_deps
+
+    if (musl_use_encaps) {
+      defines += [ "USE_ENCAPS" ]
+    }
+
+    external_deps = [ "FreeBSD:libc_static" ]
+    if (use_musl && !is_llvm_build) {
+      defines += [ "OHOS_ENABLE_PARAMETER" ]
+      external_deps += [ "init:parameterbase" ]
+    }
+  }
+
+  source_set("soft_musl_ldso_${target_name}") {
+    sources = []
+    sources_orig = musl_src_ldso
+
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+
+    configs -= musl_inherited_configs
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":$cur_gwp_asan_config",
+    ]
+    cflags = [
+      "-fPIC",
+      "-ffreestanding",
+      "-fno-stack-protector",
+      "-O3",
+    ]
+    if (is_asan || is_tsan) {
+      defines = [
+        "NSLIST_DEFAULT_SIZE=1600",
+        "DSOLIST_DEFAULT_SIZE=1600",
+        "INHERIT_DEFAULT_SIZE=1600",
+      ]
+    } else {
+      defines = [
+        "HANDLE_RANDOMIZATION",
+        "LOAD_ORDER_RANDOMIZATION",
+      ]
+    }
+
+    if (musl_use_encaps) {
+      defines += [ "USE_ENCAPS" ]
+    }
+
+    deps = porting_deps
+    if (use_musl && !is_llvm_build) {
+      defines += [ "OHOS_ENABLE_PARAMETER" ]
+      external_deps = [ "init:parameterbase" ]
+    }
+
+    if (musl_unit_test_flag) {
+      defines += [
+        "UNIT_TEST_STATIC",
+        "DL_NOMMU_SUPPORT=1",
+      ]
+    }
+  }
+}
+
+template("musl_libs") {
+  no_default_deps = true
+
+  forward_variables_from(invoker, [ "*" ])
+
+  _libs_path_prefix = "."
+  _libs_out_dir = "usr/lib/${musl_target_triple}/${musl_target_multilib}"
+
+  if (is_llvm_build) {
+    dfx_external_deps = []
+  } else {
+    dfx_external_deps = [ "faultloggerd:dfxsignalhandler" ]
+  }
+
+  group(target_name) {
+    deps = [
+      ":soft_create_linker",
+      ":soft_libc_musl_shared",
+      ":soft_libc_musl_static",
+      ":soft_musl_crt_libs",
+    ]
+  }
+
+  group("soft_musl_libs") {
+    deps = [
+      ":musl_headers",
+      ":soft_libc_musl_shared",
+      ":soft_libc_musl_static",
+      ":soft_libcrypt",
+      ":soft_libdl",
+      ":soft_libm",
+      ":soft_libpthread",
+      ":soft_libresolv",
+      ":soft_librt",
+      ":soft_libutil",
+      ":soft_libxnet",
+      ":soft_musl_crt_libs",
+    ]
+  }
+
+  group("soft_shared_libs") {
+    deps = [
+      ":musl_headers",
+      ":soft_libc_musl_shared",
+      ":soft_libcrypt",
+      ":soft_libdl",
+      ":soft_libm",
+      ":soft_libpthread",
+      ":soft_libresolv",
+      ":soft_librt",
+      ":soft_libutil",
+      ":soft_libxnet",
+      ":soft_musl_crt_libs",
+    ]
+  }
+
+  group("soft_static_libs") {
+    deps = [
+      ":musl_headers",
+      ":soft_libc_musl_static",
+      ":soft_libcrypt",
+      ":soft_libdl",
+      ":soft_libm",
+      ":soft_libpthread",
+      ":soft_libresolv",
+      ":soft_librt",
+      ":soft_libutil",
+      ":soft_libxnet",
+      ":soft_musl_crt_libs",
+    ]
+  }
+
+  group("soft_musl_crt_libs") {
+    deps = [ ":soft_musl_crt_install_action" ]
+  }
+
+  config("soft_jemalloc") {
+    configs = [ "//build/config/coverage:default_coverage" ]
+
+    include_dirs = [
+      "${target_out_dir}/${musl_ported_dir}/arch/${musl_arch}",
+      "${target_out_dir}/${musl_ported_dir}/arch/generic",
+      "${target_out_dir}/${musl_ported_dir}/src/internal",
+      "${target_out_dir}/${musl_ported_dir}/src/include",
+      "${target_out_dir}/${musl_ported_dir}/include",
+      "${target_out_dir}/${musl_inc_out_dir}",
+      "${clang_base_path}/lib/clang/${clang_version}/include",
+    ]
+
+    cflags = [
+      "--target=${musl_target_triple}",
+      "-D_GNU_SOURCE",
+      "-D_REENTRANT",
+      "-Wall",
+      "-Wshorten-64-to-32",
+      "-Wsign-compare",
+      "-Wundef",
+      "-Wno-format-zero-length",
+      "-pipe",
+      "-g3",
+      "-fvisibility=hidden",
+      "-O3",
+      "-funroll-loops",
+
+      # The following flags are for avoiding errors when compiling.
+      "-Wno-unused-parameter",
+      "-Wno-unused-function",
+      "-Wno-missing-field-initializers",
+
+      "-U_FORTIFY_SOURCE",
+
+      "-DOHOS_ENABLE_TCACHE",  # For jemalloc 5.X
+      "-DJEMALLOC_TCACHE",  # For jemalloc 4.X
+      "-DOHOS_LG_TCACHE_MAXCLASS_DEFAULT=16",
+      "-DOHOS_NUM_ARENAS=2",  # For jemalloc 5.X
+      "-DOHOS_MAX_ARENAS=2",  # For jemalloc 4.X
+      "-DOHOS_TCACHE_NSLOTS_SMALL_MAX=8",
+      "-DOHOS_TCACHE_NSLOTS_LARGE=16",
+    ]
+
+    if (is_llvm_build) {
+      cflags += [ "-fno-unwind-tables" ]
+    } else {
+      cflags += [ "-funwind-tables" ]
+    }
+
+    if (is_debug || musl_secure_level > 1) {
+      cflags += [ "-DOHOS_TCACHE_NSLOTS_RANDOM" ]
+    }
+
+    if (musl_arch == "arm") {
+      cflags += [
+        "-march=armv7-a",
+        "-DOHOS_LG_CHUNK_DEFAULT=19",  # For jemalloc 4.X
+      ]
+    } else if (musl_arch == "aarch64") {
+      cflags += [
+        "-march=armv8",
+        "-DOHOS_LG_CHUNK_DEFAULT=19",  # For jemalloc 4.X
+      ]
+    } else if (musl_arch == "x86_64") {
+      cflags += [ "-march=x86-64" ]
+    } else if (musl_arch == "mips") {
+      cflags += [ "-march=mips32r2" ]
+    } else if (musl_arch == "riscv64") {
+      cflags += [ "-march=rv64gc" ]
+    }
+
+    include_dirs += [
+      "//third_party/musl/src/include/",
+      "${musl_malloc_plugin}/include/",
+      "${musl_malloc_plugin}/include/jemalloc/internal",
+      "${musl_malloc_plugin}/include/jemalloc",
+    ]
+  }
+
+  source_set("soft_musl_crt") {
+    sources = [
+      "${target_out_dir}/${musl_ported_dir}/crt/Scrt1.c",
+      "${target_out_dir}/${musl_ported_dir}/crt/crt1.c",
+      "${target_out_dir}/${musl_ported_dir}/crt/crtplus.c",
+      "${target_out_dir}/${musl_ported_dir}/crt/rcrt1.c",
+    ]
+    if (musl_arch == "riscv64") {
+      sources += [
+        "${target_out_dir}/${musl_ported_dir}/crt/crti.c",
+        "${target_out_dir}/${musl_ported_dir}/crt/crtn.c",
+      ]
+    } else if (musl_arch == "loongarch64") {
+      sources += [
+        "${target_out_dir}/${musl_ported_dir}/crt/crti.c",
+        "${target_out_dir}/${musl_ported_dir}/crt/crtn.c",
+      ]
+    } else {
+      sources += [
+        "${target_out_dir}/${musl_ported_dir}/crt/${musl_arch}/crti.s",
+        "${target_out_dir}/${musl_ported_dir}/crt/${musl_arch}/crtn.s",
+      ]
+    }
+
+    defines = [ "CRT" ]
+
+    configs -= musl_inherited_configs
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":gwp_asan_config_shared",
+    ]
+    cflags = [
+      "-fPIC",
+      "-ffreestanding",
+      "-fno-stack-protector",
+    ]
+
+    deps = porting_deps
+
+    asmflags = cflags
+  }
+
+  source_set("soft_musl_src_strncpy") {
+    sources = []
+    sources += [ "third_party/openbsd/lib/libc/string/strncpy.c" ]
+    configs -= musl_inherited_configs
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":gwp_asan_config_shared",
+    ]
+    cflags = [
+      "-O2",
+      "-fPIC",
+      "-fstack-protector-strong",
+    ]
+
+    deps = porting_deps
+  }
+
+  source_set("soft_musl_src_optimize") {
+    sources = []
+    sources_orig = []
+
+    if (musl_arch == "aarch64") {
+      sources_orig += [
+        "src/math/cos.c",
+        "src/math/exp.c",
+        "src/math/exp2.c",
+        "src/math/exp2f.c",
+        "src/math/expf.c",
+        "src/math/log.c",
+        "src/math/log10.c",
+        "src/math/log2.c",
+        "src/math/log2f.c",
+        "src/math/logb.c",
+        "src/math/logf.c",
+        "src/math/sin.c",
+        "src/math/sincos.c",
+        "src/math/pow.c",
+        "src/math/powf.c",
+      ]
+    }
+
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+
+    if (musl_arch == "aarch64") {
+      sources += [
+        "$OPTRTDIR/math/cosf.c",
+        "$OPTRTDIR/math/sincosf.c",
+        "$OPTRTDIR/math/sincosf_data.c",
+        "$OPTRTDIR/math/sinf.c",
+      ]
+    }
+
+    configs -= musl_inherited_configs
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":gwp_asan_config_shared",
+    ]
+    cflags = [
+      "-mllvm",
+      "-instcombine-max-iterations=0",
+      "-ffp-contract=fast",
+      "-O3",
+      "-fPIC",
+      "-fstack-protector-strong",
+    ]
+
+    deps = porting_deps
+  }
+
+  source_set("soft_musl_src_nossp") {
+    sources = []
+    sources_orig = [
+      "src/string/mempcpy.c",
+      "src/env/__init_tls.c",
+      "src/env/__libc_start_main.c",
+      "src/env/__stack_chk_fail.c",
+    ]
+
+    defines = []
+    if (musl_iterate_and_stats_api) {
+      defines += [ "MUSL_ITERATE_AND_STATS_API" ]
+    }
+
+    if (musl_arch == "arm") {
+      sources_orig += [ "src/thread/${musl_arch}/__set_thread_area.c" ]
+    } else if (musl_arch == "aarch64") {
+      sources_orig += [ "src/thread/${musl_arch}/__set_thread_area.s" ]
+    } else if (musl_arch == "x86_64") {
+      sources_orig += [
+        "src/thread/${musl_arch}/__set_thread_area.s",
+        "src/string/memset.c",
+      ]
+    } else if (musl_arch == "mips") {
+      sources_orig += [ "src/string/memset.c" ]
+    } else if (musl_arch == "riscv64") {
+      sources_orig += [
+        "src/thread/${musl_arch}/__set_thread_area.s",
+        "src/string/memset.c",
+      ]
+    } else if (musl_arch == "loongarch64") {
+      sources_orig += [
+        "src/thread/${musl_arch}/__set_thread_area.s",
+        "src/string/memset.c",
+      ]
+    }
+
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+
+    configs -= musl_inherited_configs
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":gwp_asan_config_shared",
+    ]
+    cflags = [
+      "-O3",
+      "-fPIC",
+      "-ffreestanding",
+      "-fno-stack-protector",
+    ]
+
+    deps = porting_deps
+  }
+
+  source_set("soft_musl_jemalloc") {
+    sources = [ "${musl_malloc_plugin}/src/static.c" ]
+
+    deps = [
+      "//third_party/musl:create_alltypes_h",
+      "//third_party/musl:create_porting_src",
+      "//third_party/musl:create_syscall_h",
+      "//third_party/musl:create_version_h",
+      "//third_party/musl:musl_copy_inc_bits",
+      "//third_party/musl:musl_copy_inc_root",
+      "//third_party/musl:musl_copy_inc_sys",
+    ]
+
+    if (use_musl && !is_llvm_build) {
+      defines = [ "OHOS_ENABLE_PARAMETER" ]
+      external_deps = [ "init:parameterbase" ]
+    }
+
+    configs -= musl_inherited_configs
+
+    configs += [ ":soft_jemalloc" ]
+  }
+
+  source_set("soft_musl_src_ld128") {
+    sources = []
+    if (musl_arch == "x86_64") {
+      sources += [
+        "src/math/exp2l.c",
+        "src/math/fabsl.c",
+        "src/math/floorl.c",
+        "src/math/sqrtl.c",
+      ]
+    }
+
+    configs -= musl_inherited_configs
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":gwp_asan_config_shared",
+    ]
+    cflags = [
+      "-mllvm",
+      "-instcombine-max-iterations=0",
+      "-ffp-contract=fast",
+      "-O3",
+      "-fPIC",
+      "-fstack-protector-strong",
+    ]
+
+    deps = porting_deps
+    external_deps = [ "FreeBSD:ld128_static" ]
+  }
+
+  static_library("soft_libc_musl_static") {
+    output_name = "libc"
+    complete_static_lib = true
+
+    configs -= musl_inherited_configs
+
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+    deps = [
+      ":soft_musl_crt_install_action",
+      ":soft_musl_hook_static",
+      ":soft_musl_src_nossp",
+      ":soft_musl_src_optimize",
+      ":soft_musl_src_static",
+      ":soft_musl_src_strncpy",
+    ]
+    external_deps = dfx_external_deps
+    if (use_musl && !is_llvm_build) {
+      external_deps += [ "init:parameterbase" ]
+    }
+    if (use_jemalloc) {
+      deps += [ ":soft_musl_jemalloc" ]
+    }
+
+    if (musl_ld128_flag) {
+      deps += [ ":soft_musl_src_ld128" ]
+    }
+  }
+
+  static_library("soft_musl_ldso_static_library") {
+    output_name = "libc_ldso"
+    complete_static_lib = true
+
+    configs -= musl_inherited_configs
+
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+    deps = [ ":soft_musl_ldso_static" ]
+  }
+
+  static_library("soft_libm") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "libm"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  static_library("soft_librt") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "librt"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  static_library("soft_libpthread") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "libpthread"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  static_library("soft_libcrypt") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "libcrypt"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  static_library("soft_libutil") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "libutil"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  static_library("soft_libresolv") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "libresolv"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  static_library("soft_libxnet") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "libxnet"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  static_library("soft_libdl") {
+    complete_static_lib = true
+    configs -= musl_inherited_configs
+    output_name = "libdl"
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+  }
+
+  shared_library("soft_libc_musl_shared") {
+    output_dir = "${target_out_dir}/${_libs_out_dir}"
+    output_name = "libc"
+    output_extension = "so"
+
+    if (musl_is_legacy) {
+      libclang_rt_path = rebase_path(
+              "${runtime_lib_path}/${musl_target_triple}/nanlegacy/${_libs_path_prefix}")
+    } else {
+      libclang_rt_path = rebase_path(
+              "${runtime_lib_path}/${musl_target_triple}/${_libs_path_prefix}")
+    }
+
+    musl_lib_path = rebase_path("${target_out_dir}/${_libs_out_dir}")
+
+    ldflags = []
+    if (!musl_unit_test_flag) {
+      libc_map_path =
+          rebase_path("${target_out_dir}/${musl_ported_dir}/libc.map.txt")
+      ldflags += [ "-Wl,--version-script=${libc_map_path}" ]
+    }
+
+    ldflags += [
+      "-nostdlib",
+      "-Wl,-e,_dlstart",
+      "-L${libclang_rt_path}",
+      "-lclang_rt.builtins",
+      "-L${musl_lib_path}",
+      "-ldl",
+      "-lpthread",
+    ]
+
+    if (!is_llvm_build) {
+      ldflags += [ "-lunwind" ]
+    }
+
+    configs -= musl_inherited_configs
+    configs -= [ "//build/config:default_libs" ]
+    configs += [
+      "//build/config/components/musl:soft_musl_config",
+      ":gwp_asan_config_shared",
+    ]
+
+    deps = [
+      ":soft_libdl",
+      ":soft_libpthread",
+      ":soft_musl_crt_install_action",
+      ":soft_musl_hook_shared",
+      ":soft_musl_ldso_shared",
+      ":soft_musl_src_nossp",
+      ":soft_musl_src_optimize",
+      ":soft_musl_src_shared",
+      ":soft_musl_src_strncpy",
+    ]
+    external_deps = dfx_external_deps
+    if (use_musl && !is_llvm_build) {
+      external_deps += [ "init:parameterbase" ]
+    }
+
+    if (use_jemalloc) {
+      deps += [ ":soft_musl_jemalloc" ]
+    }
+
+    if (musl_ld128_flag) {
+      deps += [ ":soft_musl_src_ld128" ]
+    }
+  }
+
+  action_foreach("soft_musl_crt_install_action") {
+    redir = "${root_out_dir}/obj"
+    script = "${target_out_dir}/${musl_ported_dir}/scripts/install.py"
+    sources = [
+      "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/Scrt1.o",
+      "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/crt1.o",
+      "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/rcrt1.o",
+    ]
+
+    if (musl_arch == "riscv64") {
+      sources += [
+        "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/crti.o",
+        "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/crtn.o",
+      ]
+    } else if (musl_arch == "loongarch64") {
+      sources += [
+        "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/crti.o",
+        "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/crtn.o",
+      ]
+    } else {
+      sources += [
+        "${redir}/${target_out_dir}/${musl_ported_dir}/crt/${musl_arch}/soft_musl_crt/crti.o",
+        "${redir}/${target_out_dir}/${musl_ported_dir}/crt/${musl_arch}/soft_musl_crt/crtn.o",
+      ]
+    }
+
+    outputs = [ "${root_build_dir}/obj/third_party/musl/${_libs_out_dir}/{{source_file_part}}" ]
+
+    ldpath = []
+    if (is_mac) {
+      ldpath += [ "${clang_base_path}/bin/ld64.lld" ]
+    } else if (is_win) {
+      ldpath += [ "${clang_base_path}/bin/lld-link.exe" ]
+    } else {
+      ldpath += [ "${clang_base_path}/bin/ld.lld" ]
+    }
+
+    args = [
+      "--input",
+      "{{source}}",
+    ]
+    args += [ "--output" ] + rebase_path(outputs, root_build_dir)
+    args += [ "--ldpath" ] + rebase_path(ldpath, root_build_dir)
+    args += [ "--crtplus" ] + rebase_path(
+                [ "${redir}/${target_out_dir}/${musl_ported_dir}/crt/soft_musl_crt/crtplus.o" ],
+                root_build_dir)
+
+    deps = [ ":soft_musl_crt" ]
+  }
+
+  copy("soft_create_linker") {
+    deps = [ ":soft_libc_musl_shared" ]
+
+    # _libc_shared_outputs = get_target_outputs(":soft_libc_musl_shared")
+    _libc_shared_so = "${target_out_dir}/${_libs_out_dir}/libc.so"
+
+    # Note that build framework puts the "tsan" lib in the "asan" directory(like /system/asan/lib64).
+    # We need to take advantage of the ability of the asan version of libc to find the lib from the asan directory.
+    sources = [ _libc_shared_so ]
+    if (is_asan || is_tsan) {
+      asan = "-asan"
+    } else {
+      asan = ""
+    }
+    _muls_linker_so = "${root_out_dir}/common/common/libc/${_libs_path_prefix}/ld-musl-${musl_arch}${asan}.so.1"
+    outputs = [ _muls_linker_so ]
+  }
+}

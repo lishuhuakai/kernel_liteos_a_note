@@ -1,0 +1,63 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../test_template.gni")
+import("test_src_functionalext_symver.gni")
+
+foreach(s, functionalext_symver_list) {
+  test_unittest(s) {
+    target_dir = "functionalext/symver"
+  }
+}
+
+group("functionalext_symver_test") {
+  testonly = true
+  deps = [ ":dso_shared" ]
+
+  foreach(s, functionalext_symver_list) {
+    deps += [ ":${s}" ]
+  }
+}
+
+group("dso_shared") {
+  testonly = true
+
+  deps = [
+    ":dso_easy_symver",
+    ":dso_hard_symver",
+    ":dso_no_symver",
+    ":dso_symver",
+    ":reloc_symver_dso",
+  ]
+}
+
+test_sharedlib("dso_easy_symver") {
+  version_script = "dso_easy_symver.map"
+}
+
+test_sharedlib("dso_hard_symver") {
+  version_script = "dso_hard_symver.map"
+}
+
+test_sharedlib("dso_no_symver") {
+}
+
+test_sharedlib("dso_symver") {
+}
+
+test_sharedlib("reloc_symver_dso") {
+  deps = [
+    ":dso_easy_symver",
+    ":dso_no_symver",
+  ]
+}

@@ -1,0 +1,55 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+functionalext_supplement_list = [
+  "conf:functionalext_supplement_conf_test",
+  "ctype:functionalext_supplement_ctype_test",
+  "env:functionalext_supplement_env_test",
+  "errno:functionalext_supplement_errno_test",
+  "exit:functionalext_supplement_exit_test",
+  "dirent:functionalext_supplement_dirent_test",
+  "fcntl:functionalext_supplement_fcntl_test",
+  "ipc:functionalext_supplement_ipc_test",
+  "ldso:functionalext_supplement_ldso_test",
+  "linux:functionalext_supplement_linux_test",
+  "locale:functionalext_supplement_locale_test",
+  "malloc:functionalext_supplement_malloc_test",
+  "math:functionalext_supplement_math_test",
+  "mbrlen:functionalext_supplement_mbrlen_test",
+  "misc:functionalext_supplement_misc_test",
+  "mman:functionalext_supplement_mman_test",
+  "multibyte:functionalext_supplement_multibyte_test",
+  "network:functionalext_supplement_network_test",
+  "passwd:functionalext_supplement_passwd_test",
+  "prng:functionalext_supplement_prng_test",
+  "legacy:functionalext_supplement_legacy_test",
+  "process:functionalext_supplement_process_test",
+  "regex:functionalext_supplement_regex_test",
+  "sched:functionalext_supplement_sched_test",
+  "signal:functionalext_supplement_signal_test",
+  "stat:functionalext_supplement_stat_test",
+  "stdio:functionalext_supplement_stdio_test",
+  "stdlib:functionalext_supplement_stdlib_test",
+  "string:functionalext_supplement_string_test",
+  "temp:functionalext_supplement_temp_test",
+  "thread:functionalext_supplement_thread_test",
+  "time:functionalext_supplement_time_test",
+  "unistd:functionalext_supplement_unistd_test",
+  "wctype:functionalext_supplement_wctype_test",
+  "termios:functionalext_supplement_termios_test",
+  "setjmp:functionalext_supplement_setjmp_test",
+  "fenv:functionalext_supplement_fenv_test",
+  "select:functionalext_supplement_select_test",
+  "search:functionalext_supplement_search_test",
+  "manual:functionalext_supplement_manual_test",
+]

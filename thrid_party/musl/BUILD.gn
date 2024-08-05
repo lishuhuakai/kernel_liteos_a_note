@@ -1,0 +1,502 @@
+if (is_lite_system && current_os == "ohos") {
+  group("sysroot_lite") {
+    print("ohos_build_compiler:", ohos_build_compiler)
+    print("ohos_kernel_type:", ohos_kernel_type)
+
+    # Mini system of liteos_a needs not prepare for build, so set "kernel_is_prebuilt is true" in
+    # config.json to avoid it.
+    if (!is_mini_system && !ohos_kernel_is_prebuilt) {
+      deps = [ "scripts/build_lite:build" ]
+    } else if (!ohos_kernel_is_prebuilt) {
+      if (ohos_kernel_type == "liteos_m") {
+        all_dependent_configs = [
+          "${ohos_kernel_path}:public",
+          "${ohos_kernel_path}:kconfig_config",
+        ]
+      } else if (ohos_kernel_type == "uniproton") {
+        all_dependent_configs = [
+          "//kernel/uniproton:os_config",
+          "//kernel/uniproton:kconfig_config",
+        ]
+      }
+    }
+  }
+} else {
+  import("musl_template.gni")
+
+  group("musl_all") {
+    deps = [
+      ":musl_headers",
+      ":soft_libs",
+    ]
+  }
+
+  if (musl_arch != "mips" && musl_arch != "riscv64") {
+    ohos_prebuilt_etc("ld-musl-namespace-${musl_arch}-test.ini") {
+      source = "${musl_dir}/config/ld-musl-namespace-${musl_arch}-test.ini"
+    }
+
+    ohos_prebuilt_etc("ld-musl-namespace-${musl_arch}.ini") {
+      source = "${musl_dir}/config/ld-musl-namespace-${musl_arch}.ini"
+      install_images = [
+        "system",
+        "updater",
+        "ramdisk",
+      ]
+    }
+
+    group("musl_ns_config") {
+      deps = [
+        ":ld-musl-namespace-${musl_arch}-test.ini",
+        ":ld-musl-namespace-${musl_arch}.ini",
+      ]
+    }
+  } else {
+    group("musl_ns_config") {
+      deps = []
+    }
+  }
+
+  group("musl_libs") {
+    deps = [
+      ":musl_headers",
+      ":musl_sysparam",
+      ":musl_sysparam_dac",
+      ":soft_libs",
+    ]
+  }
+
+  ohos_prebuilt_etc("musl_sysparam") {
+    source = "${musl_dir}/etc/musl.para"
+    relative_install_dir = "param"
+  }
+
+  ohos_prebuilt_etc("musl_sysparam_dac") {
+    source = "${musl_dir}/etc/musl.para.dac"
+    relative_install_dir = "param"
+  }
+
+  musl_libs("soft_libs") {
+  }
+
+  group("musl_headers") {
+    deps = [
+      ":FreeBSD_copy",
+      ":copy_uapi",
+      ":create_alltypes_h",
+      ":create_syscall_h",
+      ":create_version_h",
+      ":musl_copy_inc_arpa",
+      ":musl_copy_inc_bits",
+      ":musl_copy_inc_fortify",
+      ":musl_copy_inc_hook",
+      ":musl_copy_inc_info",
+      ":musl_copy_inc_net",
+      ":musl_copy_inc_netinet",
+      ":musl_copy_inc_netpacket",
+      ":musl_copy_inc_root",
+      ":musl_copy_inc_scsi",
+      ":musl_copy_inc_sys",
+      ":musl_copy_inc_trace",
+      ":musl_ns_config",
+    ]
+  }
+
+  action("create_porting_src") {
+    script = "scripts/porting.sh"
+
+    sources_dir = [ "//third_party/musl" ]
+
+    outdir = [ "${target_out_dir}/${musl_ported_dir}" ]
+
+    src_files = musl_src_arch_file
+    src_files += musl_src_file
+    src_files += musl_src_ldso
+    src_files += musl_inc_bits_files
+    src_files += musl_inc_arpa_files
+    src_files += musl_inc_net_files
+    src_files += musl_inc_netinet_files
+    src_files += musl_inc_netpacket_files
+    src_files += musl_inc_scsi_files
+    src_files += musl_inc_sys_files
+    src_files += musl_inc_fortify_files
+    src_files += musl_inc_root_files
+    src_files += musl_inc_info_files
+    src_files += musl_inc_trace_files
+
+    src_files += [
+      "crt/Scrt1.c",
+      "crt/crt1.c",
+      "crt/rcrt1.c",
+      "tools/mkalltypes.sed",
+      "arch/${musl_arch}/bits/alltypes.h.in",
+      "arch/${musl_arch}/bits/syscall.h.in",
+      "include/alltypes.h.in",
+      "VERSION",
+      "tools/version.sh",
+      "tools/install.sh",
+      "scripts/install.py",
+      "scripts/create_alltypes.sh",
+      "scripts/create_vesion.sh",
+      "scripts/create_syscall.sh",
+    ]
+    if (musl_arch == "riscv64") {
+      src_files += [
+        "crt/crti.c",
+        "crt/crtn.c",
+      ]
+    } else if (musl_arch == "loongarch64") {
+      src_files += [
+        "crt/crti.c",
+        "crt/crtn.c",
+      ]
+    } else {
+      src_files += [
+        "crt/${musl_arch}/crti.s",
+        "crt/${musl_arch}/crtn.s",
+      ]
+    }
+
+    args = [ "-i" ] + rebase_path(sources_dir)
+    args += [ "-o" ] + rebase_path(outdir)
+    args += [ "-p" ] + [ "${musl_target_os}" ]
+
+    foreach(i, src_files) {
+      foreach(s, musl_src_files_ext) {
+        if (i == s) {
+          src_files -= [ "${s}" ]
+        }
+      }
+    }
+
+    outputs = []
+    foreach(s, src_files) {
+      outputs += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+
+    foreach(s, musl_src_files_ext) {
+      outputs += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+
+    inputs = []
+    foreach(i, src_files) {
+      foreach(s, musl_src_linux_files) {
+        if (i == s) {
+          src_files -= [ "${s}" ]
+        }
+      }
+    }
+    foreach(s, src_files) {
+      inputs += [ "${musl_dir}/${s}" ]
+    }
+
+    foreach(s, musl_src_files_ext) {
+      inputs += [ "${musl_dir}/${s}" ]
+    }
+  }
+
+  action("create_alltypes_h") {
+    script = "${target_out_dir}/${musl_ported_dir}/scripts/create_alltypes.sh"
+
+    outputs = [ "${target_out_dir}/${musl_inc_out_dir}/bits/alltypes.h" ]
+
+    sources = [ "${target_out_dir}/${musl_ported_dir}/tools/mkalltypes.sed" ]
+    sources += [
+      "${target_out_dir}/${musl_ported_dir}/arch/${musl_arch}/bits/alltypes.h.in",
+      "${target_out_dir}/${musl_ported_dir}/include/alltypes.h.in",
+    ]
+
+    args = [ "-o" ] + rebase_path(outputs, root_build_dir)
+    args += rebase_path(sources, root_build_dir)
+
+    deps = [ ":create_porting_src" ]
+  }
+
+  action("create_version_h") {
+    script = "${target_out_dir}/${musl_ported_dir}/scripts/create_vesion.sh"
+
+    outputs = [ "${target_out_dir}/${musl_inc_out_dir}/version.h" ]
+
+    sources = [
+      "${target_out_dir}/${musl_ported_dir}/VERSION",
+      "${target_out_dir}/${musl_ported_dir}/tools/version.sh",
+    ]
+
+    args = rebase_path(sources, root_build_dir)
+    args +=
+        [ rebase_path("${target_out_dir}/${musl_inc_out_dir}", root_build_dir) ]
+
+    deps = [ ":create_porting_src" ]
+  }
+
+  action("create_syscall_h") {
+    script = "${target_out_dir}/${musl_ported_dir}/scripts/create_syscall.sh"
+
+    outputs = [ "${target_out_dir}/${musl_inc_out_dir}/bits/syscall.h" ]
+
+    sources = [ "${target_out_dir}/${musl_ported_dir}/arch/${musl_arch}/bits/syscall.h.in" ]
+
+    args = rebase_path(sources, root_build_dir)
+    args += rebase_path(outputs, root_build_dir)
+
+    deps = [ ":create_porting_src" ]
+  }
+
+  # if uapi_dir does not exist, then make uapi from linux_kernel_dir
+  if (exec_script("/bin/sh",
+                  [
+                    "-c",
+                    "if [ ! -d " + rebase_path(uapi_dir) +
+                        " ]; then echo true; else echo false; fi",
+                  ],
+                  "value")) {
+    kernel_dir = rebase_path(linux_kernel_dir)
+    kernel_out_dir = "${kernel_dir}/make_output"
+    uapi_dir = "${kernel_out_dir}/usr/include"
+    make_uapi_cmd = "rm -rf ${uapi_dir}"
+    make_uapi_cmd += " && make -C ${kernel_dir} -sj headers O=${kernel_out_dir} ARCH=${target_cpu}"
+    make_uapi_cmd += " && cp -f ${kernel_dir}/drivers/staging/android/uapi/ashmem.h ${uapi_dir}/linux/ashmem.h"
+    make_uapi_cmd += " && sed -i '/#define _INPUT_H/i#define _UAPI_INPUT_H' ${uapi_dir}/linux/input.h"
+    make_uapi_cmd += " && sed -i '/struct __kernel_sockaddr_storage/i#define sockaddr_storage __kernel_sockaddr_storage' ${uapi_dir}/linux/socket.h"
+    args_make_uapi = [ "-c" ]
+    args_make_uapi += [ make_uapi_cmd ]
+    exec_script("/bin/sh", args_make_uapi, "value")
+    uapi_from = "make"
+  } else {
+    uapi_from = "local"
+  }
+
+  uapi_full_path = rebase_path(uapi_dir)
+  arguments_uapi = [ "-c" ]
+
+  # exclude these files because they need special treatment
+  if (uapi_from == "make") {
+    exclude_files = "^asm\$|^scsi\$"
+  } else {
+    exclude_files = "^asm-arm\$|^asm-arm64\$|^scsi\$"
+  }
+
+  arguments_uapi +=
+      [ "ls ${uapi_full_path} | grep -Ev " + "\"" + "${exclude_files}" + "\"" ]
+  uspi_files = exec_script("/bin/sh", arguments_uapi, "list lines")
+
+  # Generate a copy target for each file
+  foreach(file, uspi_files) {
+    copy("copy_uapi_${file}") {
+      sources = [ "${uapi_dir}/${file}" ]
+      outputs = [ "${target_out_dir}/${musl_inc_out_dir}/${file}" ]
+    }
+  }
+
+  group("copy_uapi_scsi") {
+    deps = []
+    sources = []
+    outputs = []
+    uapi_scsi_dir = rebase_path("${uapi_dir}/scsi")
+    arguments_scsi = [ "-c" ]
+    arguments_scsi += [ "ls ${uapi_scsi_dir}" ]
+    uapi_scsi_files = exec_script("/bin/sh", arguments_scsi, "list lines")
+
+    # Generate a copy target for each file in scsi dir to avoid being influenced by musl_copy_inc_scsi output
+    foreach(file, uapi_scsi_files) {
+      copy("copy_uapi_scsi_${file}") {
+        sources += [ "${uapi_dir}/scsi/${file}" ]
+        outputs += [ "${target_out_dir}/${musl_inc_out_dir}/scsi/${file}" ]
+      }
+      deps += [ ":copy_uapi_scsi_${file}" ]
+    }
+  }
+
+  copy("copy_uapi_asm") {
+    if (uapi_from == "local") {
+      if ("${musl_arch}" == "arm") {
+        file_name = "asm-arm"
+      } else if ("${musl_arch}" == "riscv64") {
+        file_name = "asm-riscv"
+      } else if ("${musl_arch}" == "loongarch64") {
+        file_name = "asm-loongarch"
+      } else {  # aarch64 and x86_64 use same file
+        file_name = "asm-arm64"
+      }
+      sources = [ "${uapi_dir}/${file_name}/asm" ]
+    } else {
+      sources = [ "${uapi_dir}/asm" ]
+    }
+    outputs = [ "${target_out_dir}/${musl_inc_out_dir}/asm" ]
+  }
+
+  group("copy_uapi") {
+    deps = [ ":copy_uapi_scsi" ]
+
+    # We need do different processing for asm according to the source of uapi
+    deps += [ ":copy_uapi_asm" ]
+    foreach(file, uspi_files) {
+      deps += [ ":copy_uapi_${file}" ]
+    }
+  }
+
+  copy("musl_copy_inc_bits") {
+    sources = []
+    sources_orig = musl_inc_bits_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/bits/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_arpa") {
+    sources = []
+    sources_orig = musl_inc_arpa_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/arpa/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_net") {
+    sources = []
+    sources_orig = musl_inc_net_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/net/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_netinet") {
+    sources = []
+    sources_orig = musl_inc_netinet_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/netinet/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_netpacket") {
+    sources = []
+    sources_orig = musl_inc_netpacket_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs = [
+      "${target_out_dir}/${musl_inc_out_dir}/netpacket/{{source_file_part}}",
+    ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_scsi") {
+    sources = []
+    sources_orig = musl_inc_scsi_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/scsi/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_sys") {
+    sources = []
+    sources_orig = musl_inc_sys_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/sys/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_trace") {
+    sources = []
+    sources_orig = musl_inc_trace_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/trace/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_info") {
+    sources = []
+    sources_orig = musl_inc_info_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/info/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_fortify") {
+    sources = []
+    sources_orig = musl_inc_fortify_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/fortify/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_root") {
+    sources = []
+    sources_orig = musl_inc_root_files
+    foreach(s, sources_orig) {
+      sources += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
+    }
+    outputs = [ "${target_out_dir}/${musl_inc_out_dir}/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("musl_copy_inc_hook") {
+    sources = musl_inc_hook_files
+    outputs = [ "${target_out_dir}/${musl_inc_out_dir}/{{source_file_part}}" ]
+  }
+
+  group("FreeBSD_copy") {
+    deps = [
+      ":FreeBSD_headers",
+      ":FreeBSD_sys_headers",
+    ]
+  }
+
+  copy("FreeBSD_headers") {
+    sources = freebsd_headers
+    outputs = [ "${target_out_dir}/${musl_inc_out_dir}/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  copy("FreeBSD_sys_headers") {
+    sources = freebsd_sys_headers
+    outputs =
+        [ "${target_out_dir}/${musl_inc_out_dir}/sys/{{source_file_part}}" ]
+    deps = [ ":create_porting_src" ]
+  }
+
+  group("libctest") {
+    testonly = true
+    deps = [ "libc-test:musl_libc_test" ]
+  }
+
+  group("benchmark-musl") {
+    testonly = true
+    deps = [ "Benchmark/musl:benchmark_musl_group" ]
+  }
+
+  static_and_shared_libs_template("static") {
+    musl_use_flto = false
+    musl_use_gwp_asan = false
+  }
+
+  static_and_shared_libs_template("shared") {
+    musl_use_flto = true
+  }
+}

@@ -1,0 +1,4 @@
+DlsymVersion_1 {
+    global:
+        DlsymVersion;
+};

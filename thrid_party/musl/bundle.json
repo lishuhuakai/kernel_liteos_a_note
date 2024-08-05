@@ -1,0 +1,57 @@
+{
+    "name": "@ohos/musl",
+    "description": "musl is an MIT-licensed implementation of the standard C library",
+    "version": "3.1",
+    "license": "MIT",
+    "publishAs": "code-segment",
+    "segment": {
+        "destPath": "third_party/musl"
+    },
+    "dirs": {},
+    "scripts": {},
+    "licensePath": "COPYRIGHT",
+    "readmePath": {
+        "en": "README"
+    },
+    "component": {
+        "name": "musl",
+        "subsystem": "thirdparty",
+        "syscap": [],
+        "features": [
+          "musl_use_encaps",
+          "musl_ld128_flag",
+          "musl_iterate_and_stats_api",
+          "musl_is_legacy",
+          "musl_enable_musl_log",
+          "musl_unit_test_flag",
+          "musl_user_custom_libc",
+          "musl_use_flto",
+          "musl_use_gwp_asan",
+          "musl_use_pthread_cancel"
+        ],
+        "adapted_system_type": ["mini", "small", "standard"],
+        "rom": "",
+        "ram": "",
+        "deps": {
+            "components": [
+                "init",
+                "FreeBSD",
+                "faultloggerd",
+                "benchmark",
+                "cJSON"
+            ],
+            "third_party": []
+        },
+        "build": {
+            "sub_component": [],
+            "inner_kits": [
+                {
+                    "name": "//third_party/musl:soft_libc_musl_static"
+                }
+            ],
+            "test": [
+                "//third_party/musl/fuzztest:fuzztest"
+            ]
+        }
+    }
+}

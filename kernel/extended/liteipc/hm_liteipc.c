@@ -794,7 +794,9 @@ LITE_OS_SEC_TEXT STATIC BOOL IsTaskAlive(UINT32 taskID)
     }
     return TRUE;
 }
-/// 按句柄方式处理, 参数 processID 往往不是当前进程
+/*!
+ * 按句柄方式处理, 参数 processID 往往不是当前进程
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 HandleFd(const LosProcessCB *pcb, SpecialObj *obj, BOOL isRollback)
 {
     int ret;
@@ -813,7 +815,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleFd(const LosProcessCB *pcb, SpecialObj *obj
 
     return LOS_OK;
 }
-/// 按指针方式处理
+/*!
+ * 按指针方式处理
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 HandlePtr(LosProcessCB *pcb, SpecialObj *obj, BOOL isRollback)
 {
     VOID *buf = NULL;
@@ -843,7 +847,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandlePtr(LosProcessCB *pcb, SpecialObj *obj, BOO
     }
     return LOS_OK;
 }
-/// 按服务的方式处理,此处推断 Svc 应该是 service 的简写 @note_thinking
+/*!
+ * 按服务的方式处理,此处推断 Svc 应该是 service 的简写 @note_thinking
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 HandleSvc(UINT32 dstTid, SpecialObj *obj, BOOL isRollback)
 {
     UINT32 taskID = 0;
@@ -881,13 +887,16 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleSvc(UINT32 dstTid, SpecialObj *obj, BOOL is
         if (taskCb->ipcTaskInfo == NULL) {
             taskCb->ipcTaskInfo = LiteIpcTaskInit();
         }
-        if (GetTid(obj->content.svc.handle, &taskID) == 0) {//获取参数消息服务ID所属任务
+        if (GetTid(obj->content.svc.handle, &taskID) == 0) {
+			//获取参数消息服务ID所属任务
             AddServiceAccess(dstTid, obj->content.svc.handle);
         }
     }
     return LOS_OK;
 }
-/// 创建处理对象,好复杂, 消息套消息
+/*!
+ * 创建处理对象,好复杂, 消息套消息
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 HandleObj(UINT32 dstTid, SpecialObj *obj, BOOL isRollback)
 {
     UINT32 ret;
@@ -908,7 +917,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleObj(UINT32 dstTid, SpecialObj *obj, BOOL is
     }
     return ret;
 }
-//处理指定任务的某个IPC节点
+/*!
+ * 处理指定任务的某个IPC节点
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 HandleSpecialObjects(UINT32 dstTid, IpcListNode *node, BOOL isRollback)
 {
     UINT32 ret = LOS_OK;
@@ -947,7 +958,9 @@ EXIT://异常回滚处理
     }
     return ret;
 }
-/// 检查消息内容大小
+/*!
+ * 检查消息内容大小
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 CheckMsgSize(IpcMsg *msg)
 {
     UINT64 totalSize;
@@ -982,7 +995,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 CheckMsgSize(IpcMsg *msg)
     (VOID)LOS_MuxUnlock(&g_serviceHandleMapMux);
     return LOS_OK;
 }
-///< 从用户空间拷贝消息数据到内核空间
+/*!
+ * 从用户空间拷贝消息数据到内核空间
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 CopyDataFromUser(IpcListNode *node, UINT32 bufSz, const IpcMsg *msg)
 {
     UINT32 ret;
@@ -1026,7 +1041,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 CopyDataFromUser(IpcListNode *node, UINT32 bufSz,
 #endif
     return LOS_OK;
 }
-/// 是否有效回复
+/*!
+ * 是否有效回复
+ */
 LITE_OS_SEC_TEXT STATIC BOOL IsValidReply(const IpcContent *content)
 {
     LosProcessCB *curr = OsCurrProcessGet();
@@ -1045,7 +1062,9 @@ LITE_OS_SEC_TEXT STATIC BOOL IsValidReply(const IpcContent *content)
     }
     return TRUE;
 }
-/// 检查参数,并获取目标 任务ID
+/*!
+ * 检查参数,并获取目标 任务ID
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 CheckPara(IpcContent *content, UINT32 *dstTid)
 {
     UINT32 ret;
@@ -1116,7 +1135,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 CheckPara(IpcContent *content, UINT32 *dstTid)
     }
     return LOS_OK;
 }
-/// 写IPC消息队列,从用户空间到内核空间
+/*!
+ * 写IPC消息队列,从用户空间到内核空间
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 LiteIpcWrite(IpcContent *content)
 {
     UINT32 ret, intSave;
@@ -1176,7 +1197,9 @@ ERROR_COPY:
     LiteIpcNodeFree(pcb, buf);
     return ret;
 }
-/// 检查收到的消息
+/*!
+ * 检查收到的消息
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 CheckReceivedMsg(IpcListNode *node, IpcContent *content, LosTaskCB *tcb)
 {
     UINT32 ret = LOS_OK;
@@ -1226,7 +1249,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 CheckReceivedMsg(IpcListNode *node, IpcContent *c
     }
     return ret;
 }
-/// 读取IPC消息
+/*!
+ * 读取IPC消息
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 LiteIpcRead(IpcContent *content)
 {
     UINT32 intSave, ret;
@@ -1283,7 +1308,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 LiteIpcRead(IpcContent *content)
     EnableIpcNodeFreeByUser(OsCurrProcessGet(), (VOID *)node);
     return LOS_OK;
 }
-/// 处理 IPC 消息
+/*!
+ * 处理 IPC 消息
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 LiteIpcMsgHandle(IpcContent *con)
 {
     UINT32 ret = LOS_OK;
@@ -1353,7 +1380,9 @@ BUFFER_FREE:
     }
     return ret;
 }
-/// 处理命令
+/*!
+ * 处理命令
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 HandleCmsCmd(CmsCmdContent *content)
 {
     UINT32 ret = LOS_OK;
@@ -1414,7 +1443,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleGetVersion(IpcVersion *version)
     }
     return ret; 
 }
-///真正的 IPC 控制操作 
+/*!
+ * 真正的 IPC 控制操作
+ */
 LITE_OS_SEC_TEXT int LiteIpcIoctl(struct file *filep, int cmd, unsigned long arg)
 {
     UINT32 ret = LOS_OK;

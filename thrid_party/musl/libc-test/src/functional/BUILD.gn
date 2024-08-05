@@ -1,0 +1,86 @@
+import("../../test_template.gni")
+import("test_src_functional.gni")
+
+if (is_standard_system && musl_iterate_and_stats_api) {
+  functional_list += malloc_stats_list
+}
+
+foreach(s, functional_list) {
+  test_unittest(s) {
+    target_dir = "functional"
+  }
+}
+
+group("functional_test") {
+  testonly = true
+  deps = [ ":dso_shared" ]
+
+  foreach(s, functional_list) {
+    deps += [ ":${s}" ]
+  }
+}
+
+test_sharedlib("dl_multithread_test_dso") {
+}
+test_sharedlib("dlclose_recursive") {
+  cpp_file = true
+}
+test_sharedlib("dlclose_recursive_dlopen_so") {
+  cpp_file = true
+}
+test_sharedlib("dlclose_tls") {
+  cpp_file = true
+}
+test_sharedlib("dlopen_ns_dso") {
+}
+test_sharedlib("dlopen_so_dep_dlopen_ns_dso") {
+  deps = [ ":dlopen_ns_dso" ]
+}
+test_sharedlib("dlopen_for_load_by_global_dso") {
+}
+test_sharedlib("dlopen_for_load_by_local_dso") {
+}
+test_sharedlib("dlopen_dso") {
+}
+test_sharedlib("dlclose_reset_dso") {
+}
+test_sharedlib("tls_init_dso") {
+}
+test_sharedlib("tls_align_dso") {
+}
+test_sharedlib("atexit_dlclose_dso") {
+}
+test_sharedlib("dlopen_weak_deps") {
+}
+test_sharedlib("dlopen_weak") {
+  deps = [ ":dlopen_weak_deps" ]
+}
+test_sharedlib("dlopen_global") {
+  global = true
+}
+test_sharedlib("dlopen_local") {
+}
+
+group("dso_shared") {
+  testonly = true
+
+  deps = [
+    ":atexit_dlclose_dso",
+    ":dl_multithread_test_dso",
+    ":dlclose_recursive",
+    ":dlclose_recursive_dlopen_so",
+    ":dlclose_reset_dso",
+    ":dlclose_tls",
+    ":dlopen_dso",
+    ":dlopen_for_load_by_global_dso",
+    ":dlopen_for_load_by_local_dso",
+    ":dlopen_global",
+    ":dlopen_local",
+    ":dlopen_ns_dso",
+    ":dlopen_so_dep_dlopen_ns_dso",
+    ":dlopen_weak",
+    ":dlopen_weak_deps",
+    ":tls_align_dso",
+    ":tls_init_dso",
+  ]
+}

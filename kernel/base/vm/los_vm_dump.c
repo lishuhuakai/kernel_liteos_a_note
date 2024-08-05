@@ -83,7 +83,7 @@ const CHAR *OsGetRegionNameOrFilePath(LosVmMapRegion *region)
     }
     return "";
 }
-///
+
 INT32 OsRegionOverlapCheckUnlock(LosVmSpace *space, LosVmMapRegion *region)
 {
     LosVmMapRegion *regionTemp = NULL;
@@ -109,7 +109,9 @@ INT32 OsRegionOverlapCheckUnlock(LosVmSpace *space, LosVmMapRegion *region)
 
     return 0;
 }
-///shell task 进程虚拟内存的使用情况
+/*!
+ * shell task 进程虚拟内存的使用情况
+ */
 UINT32 OsShellCmdProcessVmUsage(LosVmSpace *space)
 {
     LosVmMapRegion *region = NULL;
@@ -173,9 +175,11 @@ UINT32 OsKProcessPmUsage(LosVmSpace *kSpace, UINT32 *actualPm)
     }
     (VOID)LOS_MuxRelease(vmSpaceListMux);
 
-    /* Kernel dynamic memory, include extended heap memory */	//内核动态内存，包括扩展堆内存
+    /* Kernel dynamic memory, include extended heap memory */
+	//内核动态内存，包括扩展堆内存
     memUsed += ((usedCount << PAGE_SHIFT) - UProcessUsed);
-    /* Remaining heap memory */	//剩余堆内存
+    /* Remaining heap memory */
+	//剩余堆内存
     memUsed -= freeMem;
 
     *actualPm = memUsed;
@@ -520,7 +524,9 @@ UINT32 OsVmPhySegPagesGet(LosVmPhysSeg *seg)
 
     return segFreePages;//返回剩余未分配的总物理页框
 }
-///dump 物理内存
+/*!
+ * dump 物理内存
+ */
 /***********************************************************
 *	phys_seg:物理页控制块地址信息
 *	base:第一个物理页地址，即物理页内存起始地址
@@ -575,6 +581,8 @@ VOID OsVmPhysDump(VOID)
 }
 /*!
  * 获取物理内存的使用信息，两个参数接走数据
+ * @param usedCount 使用了的内存的数目(单位页)
+ * @param totalCount 总内存数目(单位页)
  */
 VOID OsVmPhysUsedInfoGet(UINT32 *usedCount, UINT32 *totalCount)
 {

@@ -1,0 +1,4 @@
+#openbsd = https://github.com/openbsd/src.git
+lib/libc/string/strcasestr.c	openbsd	lib/libc/string/strcasestr.c	71ab85de86c9965af0a2d6132e10736e2dd4e37f
+lib/libc/string/strncpy.c	openbsd lib/libc/string/strncpy.c	9b9d2a55a62c8e82206c25f94fcc7f4e2765250e
+gnu/lib/libexecinfo/backtrace.c	openbsd gnu/lib/libexecinfo/backtrace.c	771fbea0148a7fe458cf2c657edb98b32659f150

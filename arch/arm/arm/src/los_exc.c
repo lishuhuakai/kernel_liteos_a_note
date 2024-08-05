@@ -156,28 +156,30 @@ STATIC UINT32 g_nextExcWaitCpu = INVALID_CPUID;
 /**
  * @brief 
  * @verbatim
-    6种异常情况下对应的栈,每一种异常模式都有其独立的堆栈,用不同的堆栈指针来索引,
-    这样当ARM进入异常模式的时候，程序就可以把一般通用寄存器压入堆栈，返回时再出栈，
-    保证了各种模式下程序的状态的完整性
+ *  6种异常情况下对应的栈,每一种异常模式都有其独立的堆栈,用不同的堆栈指针来索引,
+ *  这样当ARM进入异常模式的时候，程序就可以把一般通用寄存器压入堆栈，返回时再出栈，
+ *  保证了各种模式下程序的状态的完整性
 
-    用户模式，运行应用程序的普通模式。限制你的内存访问并且不能直接读取硬件设备。 
-    超级用户模式(SVC 模式)，主要用于 SWI(软件中断)和 OS(操作系统)。这个模式有额外的特权，
-        允许你进一步控制计算机。例如，你必须进入超级用户模式来读取一个插件(podule)。
-        这不能在用户模式下完成。 
-    中断模式(IRQ 模式)，用来处理发起中断的外设。这个模式也是有特权的。导致 IRQ 的设备有
-        键盘、 VSync (在发生屏幕刷新的时候)、IOC 定时器、串行口、硬盘、软盘、等等... 
-    快速中断模式(FIQ 模式)，用来处理发起快速中断的外设。这个模式是有特权的。导致 FIQ 的设备有
-        处理数据的软盘，串行端口。  
+ * 用户模式，运行应用程序的普通模式。限制你的内存访问并且不能直接读取硬件设备。 
+ * 超级用户模式(SVC 模式)，主要用于 SWI(软件中断)和 OS(操作系统)。这个模式有额外的特权，
+ *     允许你进一步控制计算机。例如，你必须进入超级用户模式来读取一个插件(podule)。
+ *     这不能在用户模式下完成。 
+ * 中断模式(IRQ 模式)，用来处理发起中断的外设。这个模式也是有特权的。导致 IRQ 的设备有
+ *     键盘、 VSync (在发生屏幕刷新的时候)、IOC 定时器、串行口、硬盘、软盘、等等... 
+ * 快速中断模式(FIQ 模式)，用来处理发起快速中断的外设。这个模式是有特权的。导致 FIQ 的设备有
+ *     处理数据的软盘，串行端口。  
         
-    IRQ 和 FIQ 之间的区别是对于 FIQ 你必须尽快处理你事情并离开这个模式。
-    IRQ 可以被 FIQ 所中断但 IRQ 不能中断 FIQ
+ * IRQ 和 FIQ 之间的区别是对于 FIQ 你必须尽快处理你事情并离开这个模式。
+ * IRQ 可以被 FIQ 所中断但 IRQ 不能中断 FIQ
  * @endverbatim
  */
 STATIC const StackInfo g_excStack[] = {
     {&__svc_stack, OS_EXC_SVC_STACK_SIZE, "svc_stack"}, //8K 主管模式堆栈.有些指令只能在SVC模式下运行
     {&__exc_stack, OS_EXC_STACK_SIZE, "exc_stack"}      //4K 异常处理堆栈
 };
-/// 获取系统状态
+/*!
+ * 获取系统状态
+ */
 UINT32 OsGetSystemStatus(VOID)
 {
     UINT32 flag;
@@ -322,7 +324,9 @@ UINT32 OsArmSharedPageFault(UINT32 excType, ExcContext *frame, UINT32 far, UINT3
     return ret;
 }
 #endif
-/// 异常类型
+/*!
+ * 异常类型
+ */
 STATIC VOID OsExcType(UINT32 excType, ExcContext *excBufAddr, UINT32 far, UINT32 fsr)
 {
     /* undefinited exception handling or software interrupt | 未定义的异常处理或软件中断 */
@@ -494,7 +498,9 @@ STATIC VOID OsExcRegsInfo(const ExcContext *excBufAddr)
                  excBufAddr->R7, excBufAddr->R8, excBufAddr->R9, excBufAddr->R10,
                  excBufAddr->R11, excBufAddr->R12, excBufAddr->regCPSR);
 }
-///注册异常处理钩子
+/*!
+ * 注册异常处理钩子
+ */
 LITE_OS_SEC_TEXT_INIT UINT32 LOS_ExcRegHook(EXC_PROC_FUNC excHook)
 {
     UINT32 intSave;
@@ -505,12 +511,16 @@ LITE_OS_SEC_TEXT_INIT UINT32 LOS_ExcRegHook(EXC_PROC_FUNC excHook)
 
     return LOS_OK;
 }
-///获取hook函数
+/*!
+ * 获取hook函数
+ */
 EXC_PROC_FUNC OsExcRegHookGet(VOID)
 {
     return g_excHook;
 }
-///dump 虚拟空间下异常虚拟地址线性区
+/*!
+ * dump 虚拟空间下异常虚拟地址线性区
+ */
 #ifdef LOSCFG_KERNEL_VM
 STATIC VOID OsDumpExcVaddrRegion(LosVmSpace *space, LosVmMapRegion *region)
 {
@@ -553,7 +563,9 @@ STATIC VOID OsDumpExcVaddrRegion(LosVmSpace *space, LosVmMapRegion *region)
         startPaddr = 0;
     }
 }
-///dump 进程使用的内存线性区
+/*!
+ * dump 进程使用的内存线性区
+ */
 STATIC VOID OsDumpProcessUsedMemRegion(LosProcessCB *runProcess, LosVmSpace *runspace, UINT16 vmmFlags)
 {
     LosVmMapRegion *region = NULL;
@@ -572,7 +584,9 @@ STATIC VOID OsDumpProcessUsedMemRegion(LosProcessCB *runProcess, LosVmSpace *run
     (VOID) OsRegionOverlapCheckUnlock(runspace, region);
     RB_SCAN_SAFE_END(&space->regionRbTree, pstRbNodeTemp, pstRbNodeNext)
 }
-///dump 进程使用的内存节点
+/*!
+ * dump 进程使用的内存节点
+ */
 STATIC VOID OsDumpProcessUsedMemNode(UINT16 vmmFlags)
 {
     LosProcessCB *runProcess = NULL;
@@ -634,7 +648,9 @@ VOID OsDumpContextMem(const ExcContext *excBufAddr)
         OsDumpMemByte(DUMPSIZE, (excBufAddr->SP - (DUMPSIZE >> 1)));
     }
 }
-///异常恢复,继续执行
+/*!
+ * 异常恢复,继续执行
+ */
 STATIC VOID OsExcRestore(VOID)
 {
     UINT32 currCpuid = ArchCurrCpuid();
@@ -647,7 +663,9 @@ STATIC VOID OsExcRestore(VOID)
 #endif
     OsSchedLockSet(0);
 }
-///用户态异常处理函数
+/*!
+ * 用户态异常处理函数
+ */
 STATIC VOID OsUserExcHandle(ExcContext *excBufAddr)
 {
     UINT32 intSave;
@@ -710,8 +728,10 @@ STATIC VOID OsUserExcHandle(ExcContext *excBufAddr)
     g_intCount[currCpu]++;
     PrintExcInfo("User mode exception ends unscheduled!\n");
 }
-///此函数用于验证fp或验证检查开始和结束范围
-//sp是上级函数即调用者的堆栈首地址，fp是上级函数的堆栈结束地址
+/*!
+ * 此函数用于验证fp或验证检查开始和结束范围
+ * sp是上级函数即调用者的堆栈首地址，fp是上级函数的堆栈结束地址
+ */
 /* this function is used to validate fp or validate the checking range start and end. */
 STATIC INLINE BOOL IsValidFP(UINTPTR regFP, UINTPTR start, UINTPTR end, vaddr_t *vaddr)
 {
@@ -743,7 +763,9 @@ STATIC INLINE BOOL IsValidFP(UINTPTR regFP, UINTPTR start, UINTPTR end, vaddr_t 
 
     return TRUE;
 }
-///找到一个合适的栈
+/*!
+ * 找到一个合适的栈
+ */
 STATIC INLINE BOOL FindSuitableStack(UINTPTR regFP, UINTPTR *start, UINTPTR *end, vaddr_t *vaddr)
 {
     UINT32 index, stackStart, stackEnd;
@@ -926,19 +948,25 @@ VOID BackTraceSub(UINTPTR regFP)
 {
     (VOID) BackTraceGet(regFP, NULL, OS_MAX_BACKTRACE);
 }
-///打印调用栈信息
+/*!
+ * 打印调用栈信息
+ */
 VOID BackTrace(UINT32 regFP) //fp:R11寄存器
 {
     PrintExcInfo("*******backtrace begin*******\n");
 
     BackTraceSub(regFP);
 }
-///异常接管模块的初始化
+/*!
+ * 异常接管模块的初始化
+ */
 VOID OsExcInit(VOID)
 {
     OsExcStackInfoReg(g_excStack, sizeof(g_excStack) / sizeof(g_excStack[0])); //异常模式下注册内核栈信息
 }
-///由注册后回调,发送异常情况下会回调这里执行,见于 OsUndefIncExcHandleEntry, OsExcHandleEntry ==函数
+/*!
+ * 由注册后回调,发送异常情况下会回调这里执行,见于 OsUndefIncExcHandleEntry, OsExcHandleEntry ==函数
+ */
 VOID OsExcHook(UINT32 excType, ExcContext *excBufAddr, UINT32 far, UINT32 fsr)
 {                                             //参考文档 https://gitee.com/openharmony/docs/blob/master/kernel/%E7%94%A8%E6%88%B7%E6%80%81%E5%BC%82%E5%B8%B8%E4%BF%A1%E6%81%AF%E8%AF%B4%E6%98%8E.md
     OsExcType(excType, excBufAddr, far, fsr); //1.打印异常的类型
@@ -970,7 +998,9 @@ VOID OsExcHook(UINT32 excType, ExcContext *excBufAddr, UINT32 far, UINT32 fsr)
 
     OsUserExcHandle(excBufAddr); //用户态下异常的处理
 }
-///打印调用栈信息
+/*!
+ * 打印调用栈信息
+ */
 VOID OsCallStackInfo(VOID)
 {
     UINT32 count = 0;
@@ -999,10 +1029,10 @@ VOID OsCallStackInfo(VOID)
     PRINTK("\n");
 }
 /***********************************************
-R11寄存器(frame pointer)
-在程序执行过程中（通常是发生了某种意外情况而需要进行调试），通过SP和FP所限定的stack frame，
-就可以得到母函数的SP和FP，从而得到母函数的stack frame（PC，LR，SP，FP会在函数调用的第一时间压栈），
-以此追溯，即可得到所有函数的调用顺序。
+ * R11寄存器(frame pointer)
+ * 在程序执行过程中（通常是发生了某种意外情况而需要进行调试），通过SP和FP所限定的stack frame，
+ * 就可以得到母函数的SP和FP，从而得到母函数的stack frame（PC，LR，SP，FP会在函数调用的第一时间压栈），
+ * 以此追溯，即可得到所有函数的调用顺序。
 ***********************************************/
 VOID OsTaskBackTrace(UINT32 taskID) //任务栈信息追溯
 {
@@ -1031,7 +1061,9 @@ VOID OsBackTrace(VOID)
     PrintExcInfo("runTask->taskID = %u\n", runTask->taskID);
     BackTrace(regFP);
 }
-///未定义的异常处理函数，由汇编调用 见于 los_hw_exc.s
+/*!
+ * 未定义的异常处理函数，由汇编调用 见于 los_hw_exc.s
+ */
 #ifdef LOSCFG_GDB
 VOID OsUndefIncExcHandleEntry(ExcContext *excBufAddr)
 {
@@ -1048,7 +1080,9 @@ VOID OsUndefIncExcHandleEntry(ExcContext *excBufAddr)
     while (1) {}
 }
 
-///预取指令异常处理函数，由汇编调用 见于 los_hw_exc.s
+/*!
+ * 预取指令异常处理函数，由汇编调用 见于 los_hw_exc.s
+ */
 #if __LINUX_ARM_ARCH__ >= 7
 VOID OsPrefetchAbortExcHandleEntry(ExcContext *excBufAddr)
 {
@@ -1069,7 +1103,9 @@ VOID OsPrefetchAbortExcHandleEntry(ExcContext *excBufAddr)
     while (1) {}
 }
 
-///数据中止异常处理函数，由汇编调用 见于 los_hw_exc.s
+/*!
+ * 数据中止异常处理函数，由汇编调用 见于 los_hw_exc.s
+ */
 VOID OsDataAbortExcHandleEntry(ExcContext *excBufAddr)
 {
     UINT32 far;
@@ -1095,7 +1131,9 @@ VOID OsDataAbortExcHandleEntry(ExcContext *excBufAddr)
 #define EXC_WAIT_INTER 50U  //异常等待间隔时间
 #define EXC_WAIT_TIME 2000U //异常等待时间
 
-///等待所有CPU停止
+/*!
+ * 等待所有CPU停止
+ */
 STATIC VOID WaitAllCpuStop(UINT32 cpuid)
 {
     UINT32 i;
@@ -1135,7 +1173,9 @@ STATIC VOID OsWaitOtherCoresHandleExcEnd(UINT32 currCpuid)
         LOS_Mdelay(EXC_WAIT_INTER);
     }
 }
-///检查所有CPU的状态
+/*!
+ * 检查所有CPU的状态
+ */
 STATIC VOID OsCheckAllCpuStatus(VOID)
 {
     UINT32 currCpuid = ArchCurrCpuid();
@@ -1197,7 +1237,9 @@ STATIC VOID OsCheckCpuStatus(VOID)
     g_currHandleExcCpuid = ArchCurrCpuid();
 #endif
 }
-///执行期间的优先处理 excBufAddr为CPU异常上下文，
+/*!
+ * 执行期间的优先处理 excBufAddr为CPU异常上下文，
+ */
 LITE_OS_SEC_TEXT VOID STATIC OsExcPriorDisposal(ExcContext *excBufAddr)
 {
     if ((excBufAddr->regCPSR & CPSR_MASK_MODE) == CPSR_USER_MODE) { //用户模式下，访问地址不能出用户空间
@@ -1219,7 +1261,9 @@ LITE_OS_SEC_TEXT VOID STATIC OsExcPriorDisposal(ExcContext *excBufAddr)
 #endif
 #endif
 }
-///异常信息头部打印
+/*!
+ * 异常信息头部打印
+ */
 LITE_OS_SEC_TEXT_INIT STATIC VOID OsPrintExcHead(UINT32 far)
 {
 #ifdef LOSCFG_BLACKBOX

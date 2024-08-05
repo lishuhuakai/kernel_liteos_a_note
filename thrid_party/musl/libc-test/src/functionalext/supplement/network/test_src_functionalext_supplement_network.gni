@@ -1,0 +1,60 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+functionalext_supplement_network_test = [
+  "__recvmmsg_time64",
+  "__h_errno_location",
+  "res_mkquery",
+  "res_query",
+  "sendmmsg",
+  "recvmmsg",
+  "sendmsg",
+  "setprotoent",
+  "shutdown",
+  "socketpair",
+  "if_indextoname",
+  "if_nametoindex",
+  "inet_ntop",
+  "inet_addr",
+  "inet_aton",
+  "inet_lnaof",
+  "inet_makeaddr",
+  "inet_netof",
+  "inet_network",
+  "inet_ntoa",
+  "send",
+  "accept4",
+  "getaddrinfo",
+  "listen",
+  "getifaddrs",
+  "gethostent",
+  "getnetent",
+  "htonl",
+  "htons",
+  "if_nameindex",
+  "dn_comp",
+  "getservbyname",
+  "getservbyport",
+  "hstrerror",
+  "ns_parse",
+  "proto",
+  "recvmsg",
+  "getpeername",
+  "freeifaddrs",
+  "getsockopt_network",
+  "gai_strerror",
+  "recv",
+  "freeaddrinfo",
+  "res_querydomain",
+  "dn_skipname",
+]
