@@ -49,9 +49,11 @@ extern "C" {
 #define SHM_MNI 192
 #define SHM_SEG 128
 #define SHM_ALL (SHM_MAX_PAGES)
-
+/*!
+ * 共享内存描述符
+ */
 struct shmIDSource {
-    struct shmid_ds ds;
+    struct shmid_ds ds; // 每个共享内存段在内核中都维护着一个内部结构shmid_ds
     UINT32 status;
     LOS_DL_LIST node;
 #ifdef LOSCFG_SHELL

@@ -22,17 +22,17 @@
 开始之前先说结论:
 ELF 分四块，其中三块是描述信息(也叫头信息)，另一块是内容，放的是所有段/区的内容。
 
-* 1. ELF头定义全局性信息
-* 2. Segment(段)头，内容描述段的名字，开始位置，类型，偏移，大小及每段由哪些区组成。
-* 3. 内容区，ELF有两个重要概念 `Segment`(段)和 `Section`(区)，段比区大，二者之间关系如下:
-  
-  * 每个`Segment`可以包含多个`Section`
-  * 每个`Section`可以属于多个`Segment`
-  * `Segment`之间可以有重合的部分
-  * 拿大家熟知的`.text`，`.data`，`.bss`举例，它们都叫区，但它们又属于`LOAD`段。
-* 4. `Section` (区)头，内容描述区的名字，开始位置，类型，偏移，大小等信息
-* ELF一体两面，面对不同的场景扮演不同的角色，这是理解ELF的关键，链接器只关注1，3(区)，4 的内容，加载器只关注1，2，3(段)的内容
-* 鸿蒙对`EFL`的定义在 `kernel\extended\dynload\include\los_ld_elf_pri.h`文件中
+1. ELF头定义全局性信息
+2. Segment(段)头，内容描述段的名字，开始位置，类型，偏移，大小及每段由哪些区组成。
+3. 内容区，ELF有两个重要概念 `Segment`(段)和 `Section`(区)，段比区大，二者之间关系如下:
+
++ 每个`Segment`可以包含多个`Section`
++ 每个`Section`可以属于多个`Segment`
++ `Segment`之间可以有重合的部分
++ 拿大家熟知的`.text`，`.data`，`.bss`举例，它们都叫区，但它们又属于`LOAD`段。
+4. `Section` (区)头，内容描述区的名字，开始位置，类型，偏移，大小等信息
+ELF一体两面，面对不同的场景扮演不同的角色，这是理解ELF的关键，链接器只关注1，3(区)，4 的内容，加载器只关注1，2，3(段)的内容
+鸿蒙对`EFL`的定义在 `kernel\extended\dynload\include\los_ld_elf_pri.h`文件中
 [<img src="assets/88/Elf-layout.png" style="zoom:50%;" />](https://gitee.com/weharmony/kernel_liteos_a_note)  
 
 ### 示例代码
@@ -129,11 +129,19 @@ ELF格式可以表达四种类型的二进制对象文件(object files):
 
 从上图可见，ELF格式文件整体可分为四大部分:
 
-* `ELF Header`: 在文件的开始，描述整个文件的组织。即`readelf -h app`看到的内容
-* `Program Header Table`: 告诉系统如何创建进程映像。用来构造进程映像的目标文件必须具有程序头部表，可重定位文件可以不需要这个表。表描述所有段(Segment)信息，即`readelf -l app`看到的前半部分内容。
-* `Segments`:段(`Segment`)由若干区(`Section`)组成。是从加载器角度来描述 `ELF` 文件。加载器只关心 `ELF header`， `Program header table` 和 `Segment` 这三部分内容。 在加载阶段可以忽略 section header table 来处理程序（所以很多加固手段删除了`section header table`）
-* `Sections`: 是从链接器角度来描述 `ELF` 文件。 链接器只关心 `ELF header`，`Sections` 以及 `Section header table` 这三部分内容。在链接阶段，可以忽略 `program header table` 来处理文件。
+* `ELF Header`: 在文件的开始，描述整个文件的组织。即`readelf -h app`看到的内容.
+
+* `Program Header Table`: 告诉系统如何创建进程映像。用来构造进程映像的目标文件必须具有程序头部表，可重定位文件可以不需要这个表。表描述所有段(Segment)信息，即`readelf -l app`看到的前半部分内容, 这里说明一下, 进程加载,`Program Header Table` 必不可少.
+
+  
+
+* `Segments`:段(`Segment`)由若干区(`Section`)组成。是从加载器角度来描述 `ELF` 文件。加载器只关心 `ELF header`， `Program header table` 和 `Segment` 这三部分内容。 在加载阶段可以忽略 `section header table` 来处理程序(所以很多加固手段删除了`section header table`).
+
+
+* `Sections`: 是从链接器角度(也就是编译的时候要解决的链接问题,不感兴趣的可以忽略)来描述 `ELF` 文件. 链接器只关心 `ELF header`，`Sections` 以及 `Section header table` 这三部分内容.在链接阶段,可以忽略 `program header table` 来处理文件.
+
 * `Section Header Table`:描述区(`Section`)信息的数组，每个元素对应一个区，通常包含在可重定位文件中，可执行文件中为可选(通常包含) 即`readelf -S app`看到的内容
+
 * 从图中可以看出 `Segment`:`Section`(M:N)是多对多的包含关系。`Segment`是由多个`Section`组成，`Section`也能属于多个段。
 
 ### ELF头信息
@@ -658,23 +666,9 @@ _start():
 
 这才看到了`0x1174`的`main`函数。所以真正的说法是:
 
-* 从内核动态加载的视角看，程序运行首个函数并不是`main`，而是`_start`。
-* 但从应用程序开发者视角看，`main`就是启动函数。
+* 从内核动态加载的视角看，程序运行首个函数并不是`main`，而是`_start`.
+* 但从应用程序开发者视角看，`main`就是启动函数.
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

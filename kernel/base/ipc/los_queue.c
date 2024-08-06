@@ -114,7 +114,7 @@ LITE_OS_SEC_TEXT_INIT LosQueueCB *OsAllQueueCBInit(LOS_DL_LIST *freeQueueList)
 
     UINT32 size = LOSCFG_BASE_IPC_QUEUE_LIMIT * sizeof(LosQueueCB);
     /* system resident memory, don't free */
-    LosQueueCB *allQueue = (LosQueueCB *)LOS_MemAlloc(m_aucSysMem0, size);
+    LosQueueCB *allQueue = (LosQueueCB *)LOS_MemAlloc(m_aucSysMem0, size); // 常驻内存
     if (allQueue == NULL) {
         return NULL;
     }
@@ -305,13 +305,15 @@ STATIC VOID OsQueueBufferOperate(LosQueueCB *queueCB, UINT32 operateType, VOID *
     queueNode = &(queueCB->queueHandle[(queuePosition * (queueCB->queueSize))]);//拿到队列节点
 
     if (OS_QUEUE_IS_READ(operateType)) {//读操作处理,读队列分两步走
+    	//1.先读出队列大小,由队列头四个字节表示
         if (memcpy_s(&msgDataSize, sizeof(UINT32), queueNode + queueCB->queueSize - sizeof(UINT32),
-            sizeof(UINT32)) != EOK) {//1.先读出队列大小,由队列头四个字节表示
+            sizeof(UINT32)) != EOK) {
             PRINT_ERR("get msgdatasize failed\n");
             return;
         }
         msgDataSize = (*bufferSize < msgDataSize) ? *bufferSize : msgDataSize;
-        if (memcpy_s(bufferAddr, *bufferSize, queueNode, msgDataSize) != EOK) {//2.读表示读走已有数据,所以相当于bufferAddr接着了queueNode的数据
+		//2.读表示读走已有数据,所以相当于bufferAddr接着了queueNode的数据
+        if (memcpy_s(bufferAddr, *bufferSize, queueNode, msgDataSize) != EOK) {
             PRINT_ERR("copy message to buffer failed\n");
             return;
         }
@@ -322,8 +324,9 @@ STATIC VOID OsQueueBufferOperate(LosQueueCB *queueCB, UINT32 operateType, VOID *
             PRINT_ERR("store message failed\n");//表示把外面数据写进来,所以相当于queueNode接着了bufferAddr的数据
             return;
         }
+		//2.写入消息数据的长度,sizeof(UINT32)
         if (memcpy_s(queueNode + queueCB->queueSize - sizeof(UINT32), sizeof(UINT32), bufferSize,
-            sizeof(UINT32)) != EOK) {//2.写入消息数据的长度,sizeof(UINT32)
+            sizeof(UINT32)) != EOK) {
             PRINT_ERR("store message size failed\n");
             return;
         }
@@ -368,8 +371,9 @@ UINT32 OsQueueOperate(UINT32 queueID, UINT32 operateType, VOID *bufferAddr, UINT
     if (ret != LOS_OK) {
         goto QUEUE_END;
     }
-
+	// readWriteableCnt是一个数组,包含两个元素,一个记录读,一个记录写
     if (queueCB->readWriteableCnt[readWrite] == 0) {//根据readWriteableCnt判断队列是否有消息读/写
+    	// 如果为0表示没有消息可读/可写
         if (timeout == LOS_NO_WAIT) {//不等待直接退出
             ret = OS_QUEUE_IS_READ(operateType) ? LOS_ERRNO_QUEUE_ISEMPTY : LOS_ERRNO_QUEUE_ISFULL;
             goto QUEUE_END;
@@ -389,6 +393,7 @@ UINT32 OsQueueOperate(UINT32 queueID, UINT32 operateType, VOID *bufferAddr, UINT
             goto QUEUE_END;
         }
     } else {
+    	// 消耗掉一条消息
         queueCB->readWriteableCnt[readWrite]--;//对应队列中计数器--,说明一条消息只能被读/写一次
     }
 

@@ -190,35 +190,35 @@ Fd（File Descriptor）是描述一个打开的文件/目录的描述符。当�
 
 * 普通文件描述符，系统总数量为512。
 
-    ```c
-    #define CONFIG_NFILE_DESCRIPTORS    512 // 系统文件描述符数量
-    ```
+```c
+#define CONFIG_NFILE_DESCRIPTORS    512 // 系统文件描述符数量
+```
 
 * Socket描述符，系统总规格为128。
   
-    ```c
-    #define LWIP_CONFIG_NUM_SOCKETS         128 //socket链接数量
-    #define CONFIG_NSOCKET_DESCRIPTORS  LWIP_CONFIG_NUM_SOCKETS 
-    ```
+```c
+#define LWIP_CONFIG_NUM_SOCKETS         128 //socket链接数量
+#define CONFIG_NSOCKET_DESCRIPTORS  LWIP_CONFIG_NUM_SOCKETS 
+```
 
 * 消息队列描述符，系统总规格为256。
   
-    ```c
-    #define CONFIG_NQUEUE_DESCRIPTORS    256
-    ```
+```c
+#define CONFIG_NQUEUE_DESCRIPTORS    256
+```
 
 请记住，在OpenHarmony内核中，在不同的层面会有两种文件句柄::
 
 * 系统文件描述符(`sysfd`)，由内核统一管理，和进程描述符形成映射关系，一个`sysfd`可以被多个`profd`映射，也就是说打开一个文件只会占用一个`sysfd`，但可以占用多个`profd`，即一个文件被多个进程打开。
 * 进程文件描述符(`profd`)，由进程管理的叫进程文件描述符，内核对不同进程中的`fd`进行隔离，即进程只能访问本进程的`fd`。举例说明之间的关系:
 
-  ```shell
-  文件            sysfd     profd
-  吃个桃桃.mp4        10    13(A进程)
-  吃个桃桃.mp4        10    3(B进程)
-  容嬷嬷被冤枉.txt    12    3(A进程)
-  容嬷嬷被冤枉.txt    12    3(C进程)
-  ```
+```shell
+文件            sysfd     profd
+吃个桃桃.mp4        10    13(A进程)
+吃个桃桃.mp4        10    3(B进程)
+容嬷嬷被冤枉.txt    12    3(A进程)
+容嬷嬷被冤枉.txt    12    3(C进程)
+```
 
 * 不同进程的相同`fd`往往指向不同的文件，但有三个`fd`例外
   * `STDIN_FILENO(fd = 0)`   标准输入     接收键盘的输入
@@ -228,86 +228,86 @@ Fd（File Descriptor）是描述一个打开的文件/目录的描述符。当�
 
 * 具体涉及结构体  
 
-  ```c
-  struct file_table_s {//进程fd <--> 系统FD绑定
-      intptr_t sysFd; /* system fd associate with the tg_filelist index */
-  };//sysFd的默认值是-1
-  struct fd_table_s {//进程fd表结构体
-      unsigned int max_fds;//进程的文件描述符最多有256个
-      struct file_table_s *ft_fds; /* process fd array associate with system fd *///系统分配给进程的FD数组 ，fd 默认是 -1
-      fd_set *proc_fds; //进程fd管理位，用bitmap管理FD使用情况，默认打开了 0，1，2        (stdin，stdout，stderr)
-      fd_set *cloexec_fds;
-      sem_t ft_sem; /* manage access to the file table */ //管理对文件表的访问的信号量
-  };
-  struct files_struct {//进程文件表结构体
-      int count;          //持有的文件数量
-      struct fd_table_s *fdt; //持有的文件表
-      unsigned int file_lock; //文件互斥锁
-      unsigned int next_fd;   //下一个fd
-  #ifdef VFS_USING_WORKDIR
-      spinlock_t workdir_lock; //工作区目录自旋锁
-      char workdir[PATH_MAX];  //工作区路径，最大 256个字符
-  #endif
-  };
-  typedef struct ProcessCB {
-  #ifdef LOSCFG_FS_VFS
-      struct files_struct *files;        /**< Files held by the process */ //进程所持有的所有文件，注者称之为进程的文件管理器
-  #endif //每个进程都有属于自己的文件管理器，记录对文件的操作。 注意:一个文件可以被多个进程操作
-  }
-  ```
+```c
+struct file_table_s {//进程fd <--> 系统FD绑定
+    intptr_t sysFd; /* system fd associate with the tg_filelist index */
+};//sysFd的默认值是-1
+struct fd_table_s {//进程fd表结构体
+    unsigned int max_fds;//进程的文件描述符最多有256个
+    struct file_table_s *ft_fds; /* process fd array associate with system fd *///系统分配给进程的FD数组 ，fd 默认是 -1
+    fd_set *proc_fds; //进程fd管理位，用bitmap管理FD使用情况，默认打开了 0，1，2        (stdin，stdout，stderr)
+    fd_set *cloexec_fds;
+    sem_t ft_sem; /* manage access to the file table */ //管理对文件表的访问的信号量
+};
+struct files_struct {//进程文件表结构体
+    int count;          //持有的文件数量
+    struct fd_table_s *fdt; //持有的文件表
+    unsigned int file_lock; //文件互斥锁
+    unsigned int next_fd;   //下一个fd
+    #ifdef VFS_USING_WORKDIR
+    spinlock_t workdir_lock; //工作区目录自旋锁
+    char workdir[PATH_MAX];  //工作区路径，最大 256个字符
+    #endif
+};
+typedef struct ProcessCB {
+    #ifdef LOSCFG_FS_VFS
+    struct files_struct *files;        /**< Files held by the process */ //进程所持有的所有文件，注者称之为进程的文件管理器
+    #endif //每个进程都有属于自己的文件管理器，记录对文件的操作。 注意:一个文件可以被多个进程操作
+}
+```
 
   **解读**
 
   * 鸿蒙的每个进程`ProcessCB`都有属于自己的进程的文件描述符`files_struct`，该进程和文件系统有关的信息都由它表达。
   * 搞清楚 `files_struct`，`fd_table_s`，`file_table_s`三个结构体的关系就明白了进度描述符和系统描述符的关系。
   * `fd_table_s`是由`alloc_fd_table`分配的一个结构体数组，用于存放进程的文件描述符
-  
-    ```c
-    //分配进程文件表，初始化 fd_table_s 结构体中每个数据，包括系统FD(0，1，2)的绑定
-    static struct fd_table_s * alloc_fd_table(unsigned int numbers)
+
+```c
+//分配进程文件表，初始化 fd_table_s 结构体中每个数据，包括系统FD(0，1，2)的绑定
+static struct fd_table_s * alloc_fd_table(unsigned int numbers)
+{
+    struct fd_table_s *fdt;
+    void *data;
+    fdt = LOS_MemAlloc(m_aucSysMem0， sizeof(struct fd_table_s));//申请内存
+    if (!fdt)
     {
-      struct fd_table_s *fdt;
-      void *data;
-      fdt = LOS_MemAlloc(m_aucSysMem0， sizeof(struct fd_table_s));//申请内存
-      if (!fdt)
-        {
-          goto out;
-        }
-      fdt->max_fds = numbers;//最大数量
-      if (!numbers)
-        {
-          fdt->ft_fds = NULL;
-          fdt->proc_fds = NULL;
-          return fdt;
-        }
-      data = LOS_MemAlloc(m_aucSysMem0， numbers * sizeof(struct file_table_s));//这是和系统描述符的绑定
-      if (!data)
-        {
-          goto out_fdt;
-        }
-      fdt->ft_fds = data;//这其实是个 int[] 数组，
-      for (int i = STDERR_FILENO + 1; i < numbers; i++)
-        {
-            fdt->ft_fds[i].sysFd = -1;//默认的系统描述符都为-1，即还没有和任何系统文件描述符绑定
-        }
-      data = LOS_MemAlloc(m_aucSysMem0， sizeof(fd_set));//管理FD的 bitmap 
-      if (!data)
-        {
-          goto out_arr;
-        }
-      (VOID)memset_s(data， sizeof(fd_set)， 0， sizeof(fd_set));
-      fdt->proc_fds = data;
-      alloc_std_fd(fdt);//分配标准的0，1，2系统文件描述符，这样做的结果是任务进程都可以写系统文件(0，1，2)
-      (void)sem_init(&fdt->ft_sem， 0， 1);//互斥量初始化
-      return fdt;
-    out_arr:
-      (VOID)LOS_MemFree(m_aucSysMem0， fdt->ft_fds);
-    out_fdt:
-      (VOID)LOS_MemFree(m_aucSysMem0， fdt);
-    out:
-      return NULL;
+        goto out;
     }
-    ```
+    fdt->max_fds = numbers;//最大数量
+    if (!numbers)
+    {
+        fdt->ft_fds = NULL;
+        fdt->proc_fds = NULL;
+        return fdt;
+    }
+    data = LOS_MemAlloc(m_aucSysMem0， numbers * sizeof(struct file_table_s));//这是和系统描述符的绑定
+    if (!data)
+    {
+        goto out_fdt;
+    }
+    fdt->ft_fds = data;//这其实是个 int[] 数组，
+    for (int i = STDERR_FILENO + 1; i < numbers; i++)
+    {
+        fdt->ft_fds[i].sysFd = -1;//默认的系统描述符都为-1，即还没有和任何系统文件描述符绑定
+    }
+    data = LOS_MemAlloc(m_aucSysMem0， sizeof(fd_set));//管理FD的 bitmap 
+    if (!data)
+    {
+        goto out_arr;
+    }
+    (VOID)memset_s(data， sizeof(fd_set)， 0， sizeof(fd_set));
+    fdt->proc_fds = data;
+    alloc_std_fd(fdt);//分配标准的0，1，2系统文件描述符，这样做的结果是任务进程都可以写系统文件(0，1，2)
+    (void)sem_init(&fdt->ft_sem， 0， 1);//互斥量初始化
+    return fdt;
+    out_arr:
+    (VOID)LOS_MemFree(m_aucSysMem0， fdt->ft_fds);
+    out_fdt:
+    (VOID)LOS_MemFree(m_aucSysMem0， fdt);
+    out:
+    return NULL;
+}
+```
 
   * `file_table_s`记录 `sysfd`和`profd`的绑定关系.`fdt->ft_fds[i].sysFd`中的`i`就是`profd`
 

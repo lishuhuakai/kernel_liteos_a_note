@@ -78,7 +78,9 @@ extern UINT32 g_taskScheduled;
 
 typedef struct TagTaskCB LosTaskCB;
 typedef BOOL (*SCHED_TL_FIND_FUNC)(UINTPTR, UINTPTR);
-//获取当前调度经历了多少个时间周期
+/*!
+ * 获取当前调度经历了多少个时间周期
+ */
 STATIC INLINE UINT64 OsGetCurrSchedTimeCycle(VOID)
 {
     return HalClockGetCycles();
@@ -98,7 +100,7 @@ typedef struct {
 } HPFQueue;
 
 typedef struct {
-    HPFQueue queueList[OS_PRIORITY_QUEUE_NUM]; //
+    HPFQueue queueList[OS_PRIORITY_QUEUE_NUM];
     UINT32   queueBitmap;
 } HPFRunqueue;
 /*!

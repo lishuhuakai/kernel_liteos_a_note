@@ -12,22 +12,22 @@
  * @file    hm_liteipc.c
  * @brief 轻量级进程间通信
  * @link LiteIPC http://weharmonyos.com/openharmony/zh-cn/device-dev/kernel/kernel-small-bundles-ipc.html @endlink
-   @verbatim
-   基本概念
-	   LiteIPC是OpenHarmony LiteOS-A内核提供的一种新型IPC（Inter-Process Communication，即进程间通信）机制，
-	   不同于传统的System V IPC机制，LiteIPC主要是为RPC（Remote Procedure Call，即远程过程调用）而设计的，
-	   而且是通过设备文件的方式对上层提供接口的，而非传统的API函数方式。
-	   
-	   LiteIPC中有两个主要概念，一个是ServiceManager，另一个是Service。整个系统只能有一个ServiceManager，
-	   而Service可以有多个。ServiceManager有两个主要功能：一是负责Service的注册和注销，二是负责管理Service的
-	   访问权限（只有有权限的任务（Task）可以向对应的Service发送IPC消息）。
-   
-   运行机制
-	   首先将需要接收IPC消息的任务通过ServiceManager注册成为一个Service，然后通过ServiceManager为该Service
-	   任务配置访问权限，即指定哪些任务可以向该Service任务发送IPC消息。LiteIPC的核心思想就是在内核态为
-	   每个Service任务维护一个IPC消息队列，该消息队列通过LiteIPC设备文件向上层用户态程序分别提供代表收取
-	   IPC消息的读操作和代表发送IPC消息的写操作。
-   @endverbatim
+ *  @verbatim
+ *  基本概念
+ *	   LiteIPC是OpenHarmony LiteOS-A内核提供的一种新型IPC（Inter-Process Communication，即进程间通信）机制，
+ *	   不同于传统的System V IPC机制，LiteIPC主要是为RPC（Remote Procedure Call，即远程过程调用）而设计的，
+ *	   而且是通过设备文件的方式对上层提供接口的，而非传统的API函数方式。
+ *	   
+ *	   LiteIPC中有两个主要概念，一个是ServiceManager，另一个是Service。整个系统只能有一个ServiceManager，
+ *	   而Service可以有多个。ServiceManager有两个主要功能：一是负责Service的注册和注销，二是负责管理Service的
+ *	   访问权限（只有有权限的任务（Task）可以向对应的Service发送IPC消息）。
+ *  
+ * 运行机制
+ *	   首先将需要接收IPC消息的任务通过ServiceManager注册成为一个Service，然后通过ServiceManager为该Service
+ *	   任务配置访问权限，即指定哪些任务可以向该Service任务发送IPC消息。LiteIPC的核心思想就是在内核态为
+ *	   每个Service任务维护一个IPC消息队列，该消息队列通过LiteIPC设备文件向上层用户态程序分别提供代表收取
+ *	   IPC消息的读操作和代表发送IPC消息的写操作。
+ *  @endverbatim
  * @version 
  * @author  weharmonyos.com | 鸿蒙研究站 | 每天死磕一点点
  * @date    2021-11-22
@@ -139,10 +139,6 @@ STATIC const struct file_operations_vfs g_liteIpcFops = {
 
 /*!
  * @brief OsLiteIpcInit	初始化LiteIPC模块
- *
- * @return	
- *
- * @see
  */
 LITE_OS_SEC_TEXT_INIT UINT32 OsLiteIpcInit(VOID)
 {
@@ -171,9 +167,6 @@ LOS_MODULE_INIT(OsLiteIpcInit, LOS_INIT_LEVEL_KMOD_EXTENDED);//内核IPC模块�
  * @brief LiteIpcOpen
  * 以VFS方式为当前进程创建IPC消息池 
  * @param filep	
- * @return	
- *
- * @see
  */
 LITE_OS_SEC_TEXT STATIC int LiteIpcOpen(struct file *filep)
 {
@@ -194,7 +187,9 @@ LITE_OS_SEC_TEXT STATIC int LiteIpcClose(struct file *filep)
 {
     return 0;
 }
-/// 池是否已经映射
+/*!
+ * 池是否已经映射
+ */
 LITE_OS_SEC_TEXT STATIC BOOL IsPoolMapped(ProcIpcInfo *ipcInfo)
 {
     return (ipcInfo->pool.uvaddr != NULL) && (ipcInfo->pool.kvaddr != NULL) &&
@@ -207,9 +202,6 @@ LITE_OS_SEC_TEXT STATIC BOOL IsPoolMapped(ProcIpcInfo *ipcInfo)
  * 如此用户地址和内核地址指向同一个物理地址
  * @param pcb	
  * @param region	
- * @return	
- *
- * @see
  */
 LITE_OS_SEC_TEXT STATIC INT32 DoIpcMmap(LosProcessCB *pcb, LosVmMapRegion *region)
 {
@@ -256,7 +248,10 @@ LITE_OS_SEC_TEXT STATIC INT32 DoIpcMmap(LosProcessCB *pcb, LosVmMapRegion *regio
     (VOID)LOS_MuxRelease(&pcb->vmSpace->regionMux);
     return ret;
 }
-///将参数线性区设为IPC专用区
+/*!
+ * 将参数线性区设为IPC专用区
+ *@param region 线性区域
+ */
 LITE_OS_SEC_TEXT STATIC int LiteIpcMmap(struct file *filep, LosVmMapRegion *region)
 {
     int ret = 0;
@@ -273,7 +268,8 @@ LITE_OS_SEC_TEXT STATIC int LiteIpcMmap(struct file *filep, LosVmMapRegion *regi
         return -EEXIST;
     }
     if (ipcInfo->pool.uvaddr != NULL) {//ipc池已在进程空间有地址
-        regionTemp = LOS_RegionFind(pcb->vmSpace, (VADDR_T)(UINTPTR)ipcInfo->pool.uvaddr);//在指定进程空间中找到所在线性区
+    	//在指定进程空间中找到所在线性区
+        regionTemp = LOS_RegionFind(pcb->vmSpace, (VADDR_T)(UINTPTR)ipcInfo->pool.uvaddr);
         if (regionTemp != NULL) {
             (VOID)LOS_RegionFree(pcb->vmSpace, regionTemp);//先释放线性区
         }
@@ -311,7 +307,9 @@ ERROR_REGION_OUT:
     }
     return ret;
 }
-///初始化进程的IPC内存池
+/*!
+ * 初始化进程的IPC内存池
+ */
 LITE_OS_SEC_TEXT_INIT STATIC UINT32 LiteIpcPoolInit(ProcIpcInfo *ipcInfo)
 {
     ipcInfo->pool.uvaddr = NULL;
@@ -321,7 +319,9 @@ LITE_OS_SEC_TEXT_INIT STATIC UINT32 LiteIpcPoolInit(ProcIpcInfo *ipcInfo)
     LOS_ListInit(&ipcInfo->ipcUsedNodelist);//上面将挂已使用的节点
     return LOS_OK;
 }
-///创建IPC消息内存池
+/*!
+ * 创建IPC消息内存池
+ */
 LITE_OS_SEC_TEXT_INIT STATIC ProcIpcInfo *LiteIpcPoolCreate(VOID)
 {
     ProcIpcInfo *ipcInfo = LOS_MemAlloc(m_aucSysMem1, sizeof(ProcIpcInfo));//从内核堆内存中申请IPC控制体
@@ -339,9 +339,6 @@ LITE_OS_SEC_TEXT_INIT STATIC ProcIpcInfo *LiteIpcPoolCreate(VOID)
  * @brief LiteIpcPoolReInit	重新初始化进程的IPC消息内存池
  *
  * @param parent	
- * @return	
- *
- * @see
  */
 LITE_OS_SEC_TEXT ProcIpcInfo *LiteIpcPoolReInit(const ProcIpcInfo *parent)
 {
@@ -356,7 +353,9 @@ LITE_OS_SEC_TEXT ProcIpcInfo *LiteIpcPoolReInit(const ProcIpcInfo *parent)
     ipcInfo->ipcTaskID = INVAILD_ID;
     return ipcInfo;
 }
-/// 释放进程的IPC消息内存池
+/*!
+ * 释放进程的IPC消息内存池
+ */
 STATIC VOID LiteIpcPoolDelete(ProcIpcInfo *ipcInfo, UINT32 processID)
 {
     UINT32 intSave;
@@ -382,7 +381,9 @@ STATIC VOID LiteIpcPoolDelete(ProcIpcInfo *ipcInfo, UINT32 processID)
         }
     }
 }
-/// 销毁指定进程的IPC池
+/*!
+ * 销毁指定进程的IPC池
+ */
 LITE_OS_SEC_TEXT UINT32 LiteIpcPoolDestroy(UINT32 processID)
 {
     LosProcessCB *pcb = OS_PCB_FROM_PID(processID);
@@ -396,7 +397,9 @@ LITE_OS_SEC_TEXT UINT32 LiteIpcPoolDestroy(UINT32 processID)
     pcb->ipcInfo = NULL;
     return LOS_OK;
 }
-/// 申请并初始化一个任务IPC
+/*!
+ * 申请并初始化一个任务IPC
+ */
 LITE_OS_SEC_TEXT_INIT STATIC IpcTaskInfo *LiteIpcTaskInit(VOID)
 {
     IpcTaskInfo *taskInfo = LOS_MemAlloc((VOID *)m_aucSysMem1, sizeof(IpcTaskInfo));
@@ -423,7 +426,9 @@ LITE_OS_SEC_TEXT STATIC VOID EnableIpcNodeFreeByUser(LosProcessCB *pcb, VOID *bu
         IPC_UNLOCK(intSave);
     }
 }
-/// 注意这可是从内核空间的IPC池中申请内存
+/*!
+ * 注意这可是从内核空间的IPC池中申请内存
+ */
 LITE_OS_SEC_TEXT STATIC VOID *LiteIpcNodeAlloc(LosProcessCB *pcb, UINT32 size)
 {
     VOID *ptr = LOS_MemAlloc(pcb->ipcInfo->pool.kvaddr, size);
@@ -431,14 +436,18 @@ LITE_OS_SEC_TEXT STATIC VOID *LiteIpcNodeAlloc(LosProcessCB *pcb, UINT32 size)
                pcb->processID, pcb->ipcInfo->pool.kvaddr, ptr, size);
     return ptr;
 }
-/// 从IPC内存池中释放一个IPC节点
+/*!
+ * 从IPC内存池中释放一个IPC节点
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 LiteIpcNodeFree(LosProcessCB *pcb, VOID *buf)
 {
     PRINT_INFO("LiteIpcNodeFree pid:%d, pool:%x buf:%x\n",
                pcb->processID, pcb->ipcInfo->pool.kvaddr, buf);
     return LOS_MemFree(pcb->ipcInfo->pool.kvaddr, buf);
 }
-///指定buf 是否是IPC节点,这个函数不应该命名为 Is...容易误导 ,应改为 Free... @note_thinking
+/*!
+ * 指定buf 是否是IPC节点,这个函数不应该命名为 Is...容易误导 ,应改为 Free... @note_thinking
+ */
 LITE_OS_SEC_TEXT STATIC BOOL IsIpcNode(LosProcessCB *pcb, const VOID *buf)
 {
     IpcUsedNode *node = NULL;
@@ -456,21 +465,27 @@ LITE_OS_SEC_TEXT STATIC BOOL IsIpcNode(LosProcessCB *pcb, const VOID *buf)
     IPC_UNLOCK(intSave);
     return FALSE;
 }
-/// 获得IPC用户空间地址
+/*!
+ * 获得IPC用户空间地址
+ */
 LITE_OS_SEC_TEXT STATIC INTPTR GetIpcUserAddr(const LosProcessCB *pcb, INTPTR kernelAddr)
 {
     IpcPool pool = pcb->ipcInfo->pool;
     INTPTR offset = (INTPTR)(pool.uvaddr) - (INTPTR)(pool.kvaddr);//先计算偏移量,注意这里应该是个负数,因为内核空间在高地址位
     return kernelAddr + offset; //再获取用户空间地址
 }
-/// 获得IPC内核空间地址
+/*!
+ * 获得IPC内核空间地址
+ */
 LITE_OS_SEC_TEXT STATIC INTPTR GetIpcKernelAddr(const LosProcessCB *pcb, INTPTR userAddr)
 {
     IpcPool pool = pcb->ipcInfo->pool;
     INTPTR offset = (INTPTR)(pool.uvaddr) - (INTPTR)(pool.kvaddr); //先计算偏移量,注意这里应该是个负数,因为用户空间在低地址位
     return userAddr - offset;
 }
-/// 检查指定地址在当前进程已使用的BUF
+/*!
+ * 检查指定地址在当前进程已使用的BUF
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 CheckUsedBuffer(const VOID *node, IpcListNode **outPtr)
 {
     VOID *ptr = NULL;
@@ -487,7 +502,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 CheckUsedBuffer(const VOID *node, IpcListNode **o
     *outPtr = (IpcListNode *)ptr;//参数带走节点,内核空间地址
     return LOS_OK;
 }
-/// 获取任务ID
+/*!
+ * 获取任务ID
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 GetTid(UINT32 serviceHandle, UINT32 *taskID)
 {
     if (serviceHandle >= MAX_SERVICE_NUM) {//超过任务数
@@ -508,7 +525,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 GetTid(UINT32 serviceHandle, UINT32 *taskID)
     return -EINVAL;
 #endif
 }
-/// 任务 注册服务,`LiteIPC`的核心思想就是在内核态为每个`Service`任务维护一个`IPC`消息队列, 一个任务可以创建多个服务
+/*!
+ * 任务 注册服务,`LiteIPC`的核心思想就是在内核态为每个`Service`任务维护一个`IPC`消息队列, 一个任务可以创建多个服务
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 GenerateServiceHandle(UINT32 taskID, HandleStatus status, UINT32 *serviceHandle)
 {
     (VOID)LOS_MuxLock(&g_serviceHandleMapMux, LOS_WAIT_FOREVER);
@@ -532,7 +551,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 GenerateServiceHandle(UINT32 taskID, HandleStatus
     (VOID)LOS_MuxUnlock(&g_serviceHandleMapMux);
     return -EINVAL;
 }
-/// 刷新指定服务, 多刷几次状态就变了, result != 0 时,服务停止
+/*!
+ * 刷新指定服务, 多刷几次状态就变了, result != 0 时,服务停止
+ */
 LITE_OS_SEC_TEXT STATIC VOID RefreshServiceHandle(UINT32 serviceHandle, UINT32 result)
 {
 #if (USE_TASKID_AS_HANDLE == 0)
@@ -552,9 +573,6 @@ LITE_OS_SEC_TEXT STATIC VOID RefreshServiceHandle(UINT32 serviceHandle, UINT32 r
  * 2. serviceHandle服务所属的任务可以访问taskID所在的进程
  * @param serviceHandle	服务ID
  * @param taskID	
- * @return	
- *
- * @see
  */
 LITE_OS_SEC_TEXT STATIC UINT32 AddServiceAccess(UINT32 taskID, UINT32 serviceHandle)
 {
@@ -571,10 +589,12 @@ LITE_OS_SEC_TEXT STATIC UINT32 AddServiceAccess(UINT32 taskID, UINT32 serviceHan
         return -EINVAL;
     }
     tcb->ipcTaskInfo->accessMap[pcb->processID] = TRUE;
-    pcb->ipcInfo->access[serviceTid] = TRUE;
+    pcb->ipcInfo->access[serviceTid] = TRUE; // 允许给其他进程发送ipc消息
     return LOS_OK;
 }
-/// 参数服务是否有访问当前进程的权限,实际中会有A进程的任务去给B进程发送IPC信息,所以需要鉴权 
+/*!
+ * 参数服务是否有访问当前进程的权限,实际中会有A进程的任务去给B进程发送IPC信息,所以需要鉴权 
+ */
 LITE_OS_SEC_TEXT STATIC BOOL HasServiceAccess(UINT32 serviceHandle)
 {
     UINT32 serviceTid = 0;
@@ -602,7 +622,9 @@ LITE_OS_SEC_TEXT STATIC BOOL HasServiceAccess(UINT32 serviceHandle)
 
     return taskCB->ipcTaskInfo->accessMap[curr->processID];
 }
-///将当前任务设置成进程ipc的任务ID
+/*!
+ * 将当前任务设置成进程ipc的任务ID
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 SetIpcTask(VOID)
 {
     if (OsCurrProcessGet()->ipcInfo->ipcTaskID == INVAILD_ID) { //未设置时
@@ -612,7 +634,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 SetIpcTask(VOID)
     PRINT_ERR("Liteipc curprocess %d IpcTask already set!\n", OsCurrProcessGet()->processID);
     return -EINVAL;
 }
-///是否设置ipc任务ID
+/*!
+ * 是否设置ipc任务ID
+ */
 LITE_OS_SEC_TEXT BOOL IsIpcTaskSet(VOID)
 {
     if (OsCurrProcessGet()->ipcInfo->ipcTaskID == INVAILD_ID) {
@@ -620,7 +644,9 @@ LITE_OS_SEC_TEXT BOOL IsIpcTaskSet(VOID)
     }
     return TRUE;
 }
-/// 获取IPC任务ID
+/*!
+ * 获取IPC任务ID
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 GetIpcTaskID(LosProcessCB *pcb, UINT32 *ipcTaskID)
 {
     if (pcb->ipcInfo->ipcTaskID == INVAILD_ID) {
@@ -629,7 +655,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 GetIpcTaskID(LosProcessCB *pcb, UINT32 *ipcTaskID
     *ipcTaskID = pcb->ipcInfo->ipcTaskID;
     return LOS_OK;
 }
-/// serviceHandle 给 processID 发送死亡/结束消息, serviceHandle 为 taskID
+/*!
+ * serviceHandle 给 processID 发送死亡/结束消息, serviceHandle 为 taskID
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 SendDeathMsg(UINT32 processID, UINT32 serviceHandle)
 {
     UINT32 ipcTaskID;
@@ -657,7 +685,9 @@ LITE_OS_SEC_TEXT STATIC UINT32 SendDeathMsg(UINT32 processID, UINT32 serviceHand
     content.outMsg->code = 0;
     return LiteIpcWrite(&content);
 }
-/// 删除指定的Service
+/*!
+ * 删除指定的Service
+ */
 LITE_OS_SEC_TEXT VOID LiteIpcRemoveServiceHandle(UINT32 taskID)
 {
     UINT32 j;
@@ -721,7 +751,9 @@ LITE_OS_SEC_TEXT VOID LiteIpcRemoveServiceHandle(UINT32 taskID)
     (VOID)LOS_MemFree(m_aucSysMem1, ipcTaskInfo);
     taskCB->ipcTaskInfo = NULL;
 }
-/// 设置CMS
+/*!
+ * 设置CMS
+ */
 LITE_OS_SEC_TEXT STATIC UINT32 SetCms(UINTPTR maxMsgSize)
 {
     if (maxMsgSize < sizeof(IpcMsg)) {
@@ -747,8 +779,12 @@ LITE_OS_SEC_TEXT STATIC UINT32 SetCms(UINTPTR maxMsgSize)
     (VOID)LOS_MuxUnlock(&g_serviceHandleMapMux);
     return -EEXIST;
 }
-/// 是否设置了 ServiceManager 整个系统只能有一个ServiceManager，而Service可以有多个。
-/// ServiceManager有两个主要功能：一是负责Service的注册和注销，二是负责管理Service的访问权限（只有有权限的任务（Task）可以向对应的Service发送IPC消息）。
+/*!
+ * 是否设置了 ServiceManager 整个系统只能有一个ServiceManager，而Service可以有多个。
+ * ServiceManager有两个主要功能：
+ * 一是负责Service的注册和注销，
+ * 二是负责管理Service的访问权限（只有有权限的任务（Task）可以向对应的Service发送IPC消息）。
+ */
 LITE_OS_SEC_TEXT STATIC BOOL IsCmsSet(VOID)
 {
     BOOL ret;
@@ -761,21 +797,27 @@ LITE_OS_SEC_TEXT STATIC BOOL IsCmsSet(VOID)
     (VOID)LOS_MuxUnlock(&g_serviceHandleMapMux);
     return ret;
 }
-/// 指定任务是否为 ServiceManager
+/*!
+ * 指定任务是否为 ServiceManager
+ */
 LITE_OS_SEC_TEXT STATIC BOOL IsCmsTask(UINT32 taskID)
 {
     BOOL ret;
     (VOID)LOS_MuxLock(&g_serviceHandleMapMux, LOS_WAIT_FOREVER);
 #if (USE_TASKID_AS_HANDLE == 1)
-    ret = IsCmsSet() ? (OS_TCB_FROM_TID(taskID)->processCB == OS_TCB_FROM_TID(g_cmsTask.taskID)->processCB) : FALSE;//对比任务的进程和已注册ServiceManager是否一致
+	//对比任务的进程和已注册ServiceManager是否一致
+    ret = IsCmsSet() ? (OS_TCB_FROM_TID(taskID)->processCB == OS_TCB_FROM_TID(g_cmsTask.taskID)->processCB) : FALSE;
 #else
+	// g_serviceHandleMap[0] 为 ServiceManager, 把ServiceManager和service放一块很怪!!! @note_thinking 
     ret = IsCmsSet() ? (OS_TCB_FROM_TID(taskID)->processCB ==
-        OS_TCB_FROM_TID(g_serviceHandleMap[0].taskID)->processCB) : FALSE; // g_serviceHandleMap[0] 为 ServiceManager, 把ServiceManager和service放一块很怪!!! @note_thinking 
+        OS_TCB_FROM_TID(g_serviceHandleMap[0].taskID)->processCB) : FALSE;
 #endif
     (VOID)LOS_MuxUnlock(&g_serviceHandleMapMux);
     return ret;
 }
-/// 任务是否活跃
+/*!
+ * 任务是否活跃
+ */
 LITE_OS_SEC_TEXT STATIC BOOL IsTaskAlive(UINT32 taskID)
 {
     LosTaskCB *tcb = NULL;
@@ -848,7 +890,8 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandlePtr(LosProcessCB *pcb, SpecialObj *obj, BOO
     return LOS_OK;
 }
 /*!
- * 按服务的方式处理,此处推断 Svc 应该是 service 的简写 @note_thinking
+ * 按服务的方式处理,此处推断 Svc 应该是 service 的简写
+ *@param isRollback 是否回滚
  */
 LITE_OS_SEC_TEXT STATIC UINT32 HandleSvc(UINT32 dstTid, SpecialObj *obj, BOOL isRollback)
 {
@@ -859,7 +902,7 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleSvc(UINT32 dstTid, SpecialObj *obj, BOOL is
                 PRINT_ERR("Liteipc HandleSvc wrong svc token\n");
                 return -EINVAL;
             }
-            UINT32 selfTid = LOS_CurTaskIDGet();
+            UINT32 selfTid = LOS_CurTaskIDGet(); // 获得本任务的id
             LosTaskCB *tcb = OS_TCB_FROM_TID(selfTid);
             if (tcb->ipcTaskInfo == NULL) {
                 tcb->ipcTaskInfo = LiteIpcTaskInit();
@@ -870,7 +913,7 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleSvc(UINT32 dstTid, SpecialObj *obj, BOOL is
                 PRINT_ERR("Liteipc GenerateServiceHandle failed.\n");
                 return ret;
             }
-            obj->content.svc.handle = serviceHandle;
+            obj->content.svc.handle = serviceHandle; // 记录下句柄
             (VOID)LOS_MuxLock(&g_serviceHandleMapMux, LOS_WAIT_FOREVER);
             AddServiceAccess(dstTid, serviceHandle);
             (VOID)LOS_MuxUnlock(&g_serviceHandleMapMux);
@@ -1178,7 +1221,8 @@ LITE_OS_SEC_TEXT STATIC UINT32 LiteIpcWrite(IpcContent *content)
         PRINT_ERR("%s, %d\n", __FUNCTION__, __LINE__);
         goto ERROR_COPY;
     }
-    /* add data to list and wake up dest task *///向列表添加数据并唤醒目标任务
+    /* add data to list and wake up dest task */
+	//向列表添加数据并唤醒目标任务
     SCHEDULER_LOCK(intSave);
     LOS_ListTailInsert(&(tcb->ipcTaskInfo->msgListHead), &(buf->listNode));//把消息控制体挂到目标任务的IPC链表头上
     OsHookCall(LOS_HOOK_TYPE_IPC_WRITE, &buf->msg, dstTid, pcb->processID, tcb->waitFlag);
@@ -1271,7 +1315,8 @@ LITE_OS_SEC_TEXT STATIC UINT32 LiteIpcRead(IpcContent *content)
     do {//注意这里是个死循环
         SCHEDULER_LOCK(intSave);
         if (LOS_ListEmpty(listHead)) {//链表为空 ?
-            OsTaskWaitSetPendMask(OS_TASK_WAIT_LITEIPC, OS_INVALID_VALUE, timeout);//设置当前任务要等待的信息
+        	//设置当前任务要等待的信息
+            OsTaskWaitSetPendMask(OS_TASK_WAIT_LITEIPC, OS_INVALID_VALUE, timeout);
             OsHookCall(LOS_HOOK_TYPE_IPC_TRY_READ, syncFlag ? MT_REPLY : MT_REQUEST, tcb->waitFlag);//向hook模块输入等待日志信息
             ret = tcb->ops->wait(tcb, &g_ipcPendlist, timeout);//将任务挂到全局链表上,任务进入等IPC信息,等待时间(timeout),此处产生调度,将切换到别的任务执行
 			//如果一个消息在超时前到达,则任务会被唤醒执行,返回就不是LOS_ERRNO_TSK_TIMEOUT
@@ -1393,7 +1438,8 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleCmsCmd(CmsCmdContent *content)
     if (IsCmsTask(LOS_CurTaskIDGet()) == FALSE) {//当前任务是否为ServiceManager
         return -EACCES;
     }
-    if (copy_from_user((void *)(&localContent), (const void *)content, sizeof(CmsCmdContent)) != LOS_OK) {//将数据从用户空间拷贝到内核栈空间
+	//将数据从用户空间拷贝到内核栈空间,拷贝localContent
+    if (copy_from_user((void *)(&localContent), (const void *)content, sizeof(CmsCmdContent)) != LOS_OK) {
         PRINT_ERR("%s, %d\n", __FUNCTION__, __LINE__);
         return -EINVAL;
     }
@@ -1402,7 +1448,8 @@ LITE_OS_SEC_TEXT STATIC UINT32 HandleCmsCmd(CmsCmdContent *content)
             if ((localContent.taskID != 0) && (IsTaskAlive(localContent.taskID) == FALSE)) {
                 return -EINVAL;
             }
-            ret = GenerateServiceHandle(localContent.taskID, HANDLE_REGISTED, &(localContent.serviceHandle));//注册服务,得到服务ID
+			//注册服务,得到服务ID
+            ret = GenerateServiceHandle(localContent.taskID, HANDLE_REGISTED, &(localContent.serviceHandle));
             if (ret == LOS_OK) {
                 ret = copy_to_user((void *)content, (const void *)(&localContent), sizeof(CmsCmdContent));//多了个服务ID,将数据拷贝回用户空间,
             }
@@ -1465,7 +1512,7 @@ LITE_OS_SEC_TEXT int LiteIpcIoctl(struct file *filep, int cmd, unsigned long arg
 	// 二是负责管理Service的访问权限（只有有权限的任务（Task）可以向对应的Service发送IPC消息）。
     switch (cmd) {
         case IPC_SET_CMS:
-            return (INT32)SetCms(arg); //设置ServiceManager , 整个系统只能有一个ServiceManager
+            return (INT32)SetCms(arg); //设置ServiceManager, 整个系统只能有一个ServiceManager
         case IPC_CMS_CMD: // 控制命令,创建/删除/添加权限 
             return (INT32)HandleCmsCmd((CmsCmdContent *)(UINTPTR)arg);
         case IPC_GET_VERSION:
@@ -1475,8 +1522,8 @@ LITE_OS_SEC_TEXT int LiteIpcIoctl(struct file *filep, int cmd, unsigned long arg
                 PRINT_ERR("Liteipc ServiceManager not set!\n");
                 return -EINVAL;
             }
-            return (INT32)SetIpcTask();//将当前任务设置成当前进程的IPC任务ID
-        case IPC_SEND_RECV_MSG://发送和接受消息,代表消息内容
+            return (INT32)SetIpcTask(); //将当前任务设置成当前进程的IPC任务ID
+        case IPC_SEND_RECV_MSG:// 发送和接受消息,代表消息内容
             if (arg == 0) {
                 return -EINVAL;
             }

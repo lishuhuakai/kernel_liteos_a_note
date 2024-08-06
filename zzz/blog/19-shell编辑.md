@@ -213,11 +213,11 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
 {
     const CHAR ch = c;
     INT32 ret;
- //不是回车键和字符串结束，且偏移量为0
+ 	//不是回车键和字符串结束，且偏移量为0
     if ((shellCB->shellBufOffset == 0) && (ch != '\n') && (ch != '\0')) {
         (VOID)memset_s(shellCB->shellBuf， SHOW_MAX_LEN， 0， SHOW_MAX_LEN);//重置buf
     }
- //遇到回车或换行
+ 	//遇到回车或换行
     if ((ch == '\r') || (ch == '\n')) {
         if (shellCB->shellBufOffset < (SHOW_MAX_LEN - 1)) {
             shellCB->shellBuf[shellCB->shellBufOffset] = '\0';//字符串结束
@@ -259,7 +259,6 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
         shellCB->shellBufOffset++;//偏移量增加
         outputFunc("%c"， ch);//向终端输出字符
     }
-
     shellCB->shellKeyType = STAT_NOMAL_KEY;//普通字符
 }
 ```
@@ -272,7 +271,7 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
   * 按方向键 要显示上/下一个命令的内容，一直按就一直显示上上/下下命令。
   * 按`tab`键 是要补齐命令的内容，目前鸿蒙支持如下命令:
 
-    ```
+```
         arp           cat           cd            chgrp         chmod         chown         cp            cpup          
         date          dhclient      dmesg         dns           format        free          help          hwi           
         ifconfig      ipdebug       kill          log           ls            lsfd          memcheck      mkdir         
@@ -280,15 +279,15 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
         reset         rm            rmdir         sem           statfs        su            swtmr         sync          
         systeminfo    task          telnet        test          tftp          touch         umount        uname         
         watch         writeproc  
-    ```
+```
 
-    例如:当在控制台按下 `ch`和 `tab`键后会输出以下三个
+例如:当在控制台按下 `ch`和 `tab`键后会输出以下三个
 
-    ```
+```
     chgrp         chmod         chown
-    ```
+```
 
-    内容，这些功能对使用者而已看似再平常不过，但都需要内核一一实现。
+内容，这些功能对使用者而已看似再平常不过，但都需要内核一一实现。
 * `shellBuf`存储编辑结果，当按下回车键时，将结果保存并交付给下一个阶段使用。
 
 

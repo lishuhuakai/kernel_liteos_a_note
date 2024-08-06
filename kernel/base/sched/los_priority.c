@@ -65,7 +65,9 @@ STATIC VOID HPFTimeSliceUpdate(SchedRunqueue *rq, LosTaskCB *taskCB, UINT64 curr
 STATIC INT32 HPFParamCompare(const SchedPolicy *sp1, const SchedPolicy *sp2);
 STATIC VOID HPFPriorityInheritance(LosTaskCB *owner, const SchedParam *param);
 STATIC VOID HPFPriorityRestore(LosTaskCB *owner, const LOS_DL_LIST *list, const SchedParam *param);
-//优先级调度算法操作
+/*!
+ * 优先级调度算法操作
+ */
 const STATIC SchedOps g_priorityOps = {
     .dequeue = HPFDequeue,
     .enqueue = HPFEnqueue,
@@ -245,7 +247,9 @@ STATIC INLINE VOID PriQueInsert(HPFRunqueue *rq, LosTaskCB *taskCB)
     taskCB->taskStatus &= ~OS_TASK_STATUS_BLOCKED;
     taskCB->taskStatus |= OS_TASK_STATUS_READY;
 }
-//入就绪队列
+/*!
+ * 入就绪队列
+ */
 STATIC VOID HPFEnqueue(SchedRunqueue *rq, LosTaskCB *taskCB)
 {
 #ifdef LOSCFG_SCHED_HPF_DEBUG
@@ -255,7 +259,9 @@ STATIC VOID HPFEnqueue(SchedRunqueue *rq, LosTaskCB *taskCB)
 #endif
     PriQueInsert(rq->hpfRunqueue, taskCB);
 }
-//出就绪队列
+/*!
+ * 出就绪队列
+ */
 STATIC VOID HPFDequeue(SchedRunqueue *rq, LosTaskCB *taskCB)
 {
     SchedHPF *sched = (SchedHPF *)&taskCB->sp;

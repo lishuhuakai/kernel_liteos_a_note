@@ -40,7 +40,9 @@
 
 #ifdef LOSCFG_KERNEL_SMP
 STATIC struct SmpOps *g_smpOps = NULL;
-/// 多核中次级CPU核初始化,每个核都会调用一次
+/*!
+ * 多核中次级CPU核初始化,每个核都会调用一次
+ */
 STATIC VOID OsSmpSecondaryInit(VOID *arg)
 {
     UNUSED(arg);
@@ -56,7 +58,9 @@ STATIC VOID OsSmpSecondaryInit(VOID *arg)
 
     OsSchedStart();
 }
-/// 设置多核操作接口, 通过外部注册
+/*!
+ * 设置多核操作接口, 通过外部注册
+ */
 VOID LOS_SmpOpsSet(struct SmpOps *ops)
 {
     g_smpOps = ops;

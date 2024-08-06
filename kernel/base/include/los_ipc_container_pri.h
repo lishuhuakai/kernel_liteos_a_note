@@ -42,7 +42,9 @@ typedef struct TagQueueCB LosQueueCB;
 typedef struct OsMux LosMux;
 typedef LosMux pthread_mutex_t;
 typedef struct ProcessCB LosProcessCB;
-//IPC容器
+/*!
+ * IPC容器
+ */
 typedef struct IpcContainer {
     Atomic rc;
     LosQueueCB *allQueue;	//队列控制块（读写分离模式）

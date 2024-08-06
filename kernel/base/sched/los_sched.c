@@ -500,7 +500,7 @@ VOID OsSchedResched(VOID)
     if (runTask == newTask) {
         return;
     }
-	// 进程切换
+	// task切换
     SchedTaskSwitch(rq, runTask, newTask);
 }
 

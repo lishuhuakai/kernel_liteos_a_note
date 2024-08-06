@@ -208,6 +208,9 @@ ERROR:
     VM_ERR("ShmInit fail\n");
     return NULL;
 }
+/*!
+ * 共享内存初始化
+ */
 UINT32 ShmInit(VOID)
 {
 #ifndef LOSCFG_IPC_CONTAINER
@@ -272,14 +275,13 @@ STATIC VOID ShmPagesRefDec(struct shmIDSource *seg)
     }
 }
 
-/**
+/*!
  * @brief 为共享段分配物理内存
  * 例如:参数size = 4097, LOS_Align(size, PAGE_SIZE) = 8192
  * 分配页数    size >> PAGE_SHIFT = 2页 
  * @param key 
  * @param size 
  * @param shmflg 
- * @return STATIC 
  */
 STATIC INT32 ShmAllocSegCheck(key_t key, size_t *size, INT32 *segNum)
 {
@@ -319,7 +321,7 @@ STATIC INT32 ShmAllocSeg(key_t key, size_t size, INT32 shmflg)
     struct shmIDSource *seg = NULL;
     size_t count;
 
-    INT32 ret = ShmAllocSegCheck(key, &size, &segNum);
+    INT32 ret = ShmAllocSegCheck(key, &size, &segNum); // 寻找一个空闲的共享内存槽位
     if (ret < 0) {
         return ret;
     }
@@ -575,17 +577,14 @@ STATIC INT32 ShmPermCheck(struct shmIDSource *seg, mode_t mode)
  * @brief ShmGet	
  *	得到一个共享内存标识符或创建一个共享内存对象
  * @param key	建立新共享内存对象 标识符是IPC对象的内部名。为使多个合作进程能够在同一IPC对象上汇聚，需要提供一个外部命名方案。
-		为此，每个IPC对象都与一个键（key）相关联，这个键作为该对象的外部名,无论何时创建IPC结构（通过msgget、semget、shmget创建），
-		都应给IPC指定一个键, key_t由ftok创建,ftok当然在本工程里找不到,所以要写这么多.
- * @param shmflg	IPC_CREAT IPC_EXCL
-			IPC_CREAT：	在创建新的IPC时，如果key参数是IPC_PRIVATE或者和当前某种类型的IPC结构无关，则需要指明flag参数的IPC_CREAT标志位，
-						则用来创建一个新的IPC结构。（如果IPC结构已存在，并且指定了IPC_CREAT，则IPC_CREAT什么都不做，函数也不出错）
-			IPC_EXCL：	此参数一般与IPC_CREAT配合使用来创建一个新的IPC结构。如果创建的IPC结构已存在函数就出错返回，
-						返回EEXIST（这与open函数指定O_CREAT和O_EXCL标志原理相同）
+ *		为此，每个IPC对象都与一个键（key）相关联，这个键作为该对象的外部名,无论何时创建IPC结构（通过msgget、semget、shmget创建），
+ *		都应给IPC指定一个键, key_t由ftok创建,ftok当然在本工程里找不到,所以要写这么多.
+ * @param shmflg	可选值有IPC_CREAT以及IPC_EXCL
+ *			IPC_CREAT：	在创建新的IPC时，如果key参数是IPC_PRIVATE或者和当前某种类型的IPC结构无关，则需要指明flag参数的IPC_CREAT标志位，
+ *						则用来创建一个新的IPC结构。（如果IPC结构已存在，并且指定了IPC_CREAT，则IPC_CREAT什么都不做，函数也不出错）
+ *			IPC_EXCL：	此参数一般与IPC_CREAT配合使用来创建一个新的IPC结构。如果创建的IPC结构已存在函数就出错返回，
+ *						返回EEXIST（这与open函数指定O_CREAT和O_EXCL标志原理相同）
  * @param size	新建的共享内存大小，以字节为单位
- * @return	
- *
- * @see
  */
 INT32 ShmGet(key_t key, size_t size, INT32 shmflg)
 {
@@ -595,11 +594,11 @@ INT32 ShmGet(key_t key, size_t size, INT32 shmflg)
     SYSV_SHM_LOCK();
 
     if (key == IPC_PRIVATE) {
-        ret = ShmAllocSeg(key, size, shmflg);
+        ret = ShmAllocSeg(key, size, shmflg); // 分配共享内存,返回句柄
     } else {
         ret = ShmFindSegByKey(key);//通过key查找资源ID
         if (ret < 0) {
-            if (((UINT32)shmflg & IPC_CREAT) == 0) {//
+            if (((UINT32)shmflg & IPC_CREAT) == 0) {// 没有找到无需创建,返回错误即可
                 ret = -ENOENT;
                 goto ERROR;
             } else {
@@ -649,6 +648,9 @@ INT32 ShmatParamCheck(const VOID *shmaddr, INT32 shmflg)
 }
 /*!
  * 分配一个共享线性区并映射好
+ *@param seg 共享内存描述符
+ *@param shmaddr 共享内存的起始地址
+ *@param prot 共享内存的属性
  */
 LosVmMapRegion *ShmatVmmAlloc(struct shmIDSource *seg, const VOID *shmaddr,
                               INT32 shmflg, UINT32 prot)
@@ -705,7 +707,7 @@ ERROR:
  * @param shmid	是shmget()函数返回的共享内存标识符
  * @return	
  * 如果shmat成功执行，那么内核将使与该共享存储相关的shmid_ds结构中的shm_nattch计数器值加1
-   shmid 就是个索引,就跟进程和线程的ID一样 g_shmSegs[shmid] shmid > 192个
+ *  shmid 就是个索引,就跟进程和线程的ID一样 g_shmSegs[shmid] shmid > 192个
  * @see
  */
 VOID *ShmAt(INT32 shmid, const VOID *shmaddr, INT32 shmflg)
@@ -769,9 +771,9 @@ ERROR:
  * 此函数可以对shmid指定的共享存储进行多种操作（删除、取信息、加锁、解锁等）
  * @param buf	是一个结构指针，它指向共享内存模式和访问权限的结构。
  * @param cmd	command是要采取的操作，它可以取下面的三个值 ：
-	IPC_STAT：把shmid_ds结构中的数据设置为共享内存的当前关联值，即用共享内存的当前关联值覆盖shmid_ds的值。
-	IPC_SET：如果进程有足够的权限，就把共享内存的当前关联值设置为shmid_ds结构中给出的值
-	IPC_RMID：删除共享内存段
+ *	IPC_STAT：把shmid_ds结构中的数据设置为共享内存的当前关联值，即用共享内存的当前关联值覆盖shmid_ds的值。
+ *	IPC_SET：如果进程有足够的权限，就把共享内存的当前关联值设置为shmid_ds结构中给出的值
+ *	IPC_RMID：删除共享内存段
  * @param shmid	是shmget()函数返回的共享内存标识符
  * @return	
  *

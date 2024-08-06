@@ -134,7 +134,7 @@ typedef struct { // IpcMsg->data 包含三种子消息,也要将它们读到内�
     ObjContent  content;///< 内容
 } SpecialObj;
 
-/**
+/*!
  * @brief 消息的类型
  */
 typedef enum {	
@@ -172,8 +172,10 @@ typedef enum {
     LITEIPC_FLAG_DEFAULT = 0, // send and reply | 发送并回复
     LITEIPC_FLAG_ONEWAY,      // send message only | 仅发送信息
 } IpcFlag;
-
-typedef struct {//IPC 消息结构体
+/*!
+ * IPC 消息结构体
+ */
+typedef struct {
     MsgType        type;       	/**< cmd type, decide the data structure below | 命令类型，决定下面的数据结构*/
     SvcIdentity    target;    	/**< serviceHandle or targetTaskId, depending on type | 因命令类型不同而异*/
     UINT32         code;      	/**< service function code | 服务功能代码*/
