@@ -252,12 +252,16 @@ typedef struct {//时间片结构体，任务轮询
     UINT16 timeout;  /**< Expiration duration | 有效期*/
 } OsTaskRobin;
 
-/// 通过任务ID获取任务实体，task由任务池分配，本质是个数组，彼此都挨在一块
+/*!
+ * 通过任务ID获取任务实体，task由任务池分配，本质是个数组，彼此都挨在一块
+ */
 STATIC INLINE LosTaskCB *OsGetTaskCB(UINT32 taskID)
 {
     return OS_TCB_FROM_TID(taskID);
 }
-/// 任务是否在使用
+/*!
+ * 任务是否在使用
+ */
 STATIC INLINE BOOL OsTaskIsUnused(const LosTaskCB *taskCB)
 {
     return ((taskCB->taskStatus & OS_TASK_STATUS_UNUSED) != 0);

@@ -15,23 +15,23 @@
 
 ### 几个概念
 
-您肯定听过 `API`，`Posix`，`C`语言库函数，系统调用这些概念，但之间有什么区别和联系，估计一些人没弄明白，本篇重点把它们整明白了。
+您肯定听过 `API`,`Posix`,`C`语言库函数,系统调用这些概念,但之间有什么区别和联系,估计一些人没弄明白,本篇重点把它们整明白了.
 
-* `API` ： 搞应用开发的同学不会陌生，应用编程接口的缩写 ，它是对函数的定义，规定了这个函数的功能。任何公司，个人都可以定义自有特色的`API`。可以称之为 **私有标准** 。打个比方就相当于是**地方方言**，十里不同音，只有这个地方的人能搞懂，对外会带来极高的沟通成本。
-* `Posix`：`Unix`开源后很多公司都推出了不同的版本的`Unix`系统。他们的`API`各不相同。这给软件的移植带来了很大的困难。于是`IEEE`制定了基于`Unix`的可移植操作系统接口，目的是为了统一这些 **私有标准** ， 可以称之为 **公共的类Unix接口标准**，所以`posix`标准也是一种`API`，`IEEE`这个协会很牛，制定过很多标准，涵盖太空、计算机、电信、生物医学、电力及消费性电子产品等领域，可以说是**科技界标准话事人**。对应**地方方言**，它就相当于是**普通话**，其实呢它也是一种方言。
-* C语言库函数： 是基于`Posix`标准的具体实现, 相当于**中国人说的普通话**。
-* 系统调用： 是内核对外提供的服务总称， 它一般被C语言库函数所调用， 相当于政府对老百姓的办事窗口， 想访问内部资源就需要填表格， 走流程。
+* `API` : 搞应用开发的同学不会陌生,应用编程接口的缩写 ,它是对函数的定义,规定了这个函数的功能.任何公司,个人都可以定义自有特色的`API`.可以称之为 **私有标准** .打个比方就相当于是**地方方言**,十里不同音,只有这个地方的人能搞懂,对外会带来极高的沟通成本.
+* `Posix`:`Unix`开源后很多公司都推出了不同的版本的`Unix`系统.他们的`API`各不相同.这给软件的移植带来了很大的困难.于是`IEEE`制定了基于`Unix`的可移植操作系统接口,目的是为了统一这些 **私有标准** , 可以称之为 **公共的类Unix接口标准**,所以`posix`标准也是一种`API`,`IEEE`这个协会很牛,制定过很多标准,涵盖太空,计算机,电信,生物医学,电力及消费性电子产品等领域,可以说是**科技界标准话事人**.对应**地方方言**,它就相当于是**普通话**,其实呢它也是一种方言.
+* C语言库函数: 是基于`Posix`标准的具体实现, 相当于**中国人说的普通话**.
+* 系统调用: 是内核对外提供的服务总称, 它一般被C语言库函数所调用, 相当于政府对老百姓的办事窗口, 想访问内部资源就需要填表格, 走流程.
 
 ### POSIX简介
 
-当前的POSIX主要分为四个部分：
+当前的POSIX主要分为四个部分:
 
-* **XBD**(Base Definitions)：包含一些通用的术语、概念、接口以及工具函数(cd,mkdir, cp,mv等)和头文件定义(stdio.h, stdlib.h,pthread.h等)。
-* **XSH**(System Interfaces)：包含系统服务函数的定义,例如线程、套接字、标准IO、信号处理、错误处理等。
-* **XCU**(Shell and Utilities)：包含shell脚本书写的语法、关键字以及工具函数(break,cd,cp,continue,pwd,return)的定义。
-* **XRAT**(Rationale)：包含与本标准有关的历史信息以及采用或舍弃某功能的扩展基本原理。
+* **XBD**(Base Definitions):包含一些通用的术语,概念,接口以及工具函数(cd,mkdir, cp,mv等)和头文件定义(stdio.h, stdlib.h,pthread.h等).
+* **XSH**(System Interfaces):包含系统服务函数的定义,例如线程,套接字,标准IO,信号处理,错误处理等.
+* **XCU**(Shell and Utilities):包含shell脚本书写的语法,关键字以及工具函数(break,cd,cp,continue,pwd,return)的定义.
+* **XRAT**(Rationale):包含与本标准有关的历史信息以及采用或舍弃某功能的扩展基本原理.
   [具体查看 >> 官方网站 |](http://get.posixcertified.ieee.org/)[opengroup](http://www.opengroup.org/certification/idx/posix.html)
-  目前单一UNIX规范第4版中定义了 `1447` 个接口。
+  目前单一UNIX规范第4版中定义了 `1447` 个接口.
 
     |XBD|XSH|XCU|全部的|
     |-|-|-|-|-|
@@ -81,43 +81,43 @@ syscall/
 系统调用的实现函数
     `OsArmA32SyscallHandle`,实现过程在 **v95.xx 鸿蒙内核源码分析(系统调用篇)** 中详细说明
 
-进程控制类系统调用，主要有：
+进程控制类系统调用,主要有:
 
-* 创建和终止进程的系统调用。
-* 获得和设置进程属性的系统调用。
-* 等待某事件出现的系统调用。
-* `SysFork`，`SysWait`，`SysSetProcessGroupID`，`SysGetUserID`，`SysSchedYield`，`SysThreadJoin`，`SysIoctl`
+* 创建和终止进程的系统调用.
+* 获得和设置进程属性的系统调用.
+* 等待某事件出现的系统调用.
+* `SysFork`,`SysWait`,`SysSetProcessGroupID`,`SysGetUserID`,`SysSchedYield`,`SysThreadJoin`,`SysIoctl`
 
-文件操纵类系统调用，主要有：
+文件操纵类系统调用,主要有:
 
-* 创建和删除文件。
-* 打开和关闭文件的系统调用。
-* 读和写文件的系统调用。
-* `SysPipe`，`SysOpen`，`SysStat`，`SysRead`，`SysWrite`，`SysCreat`，`SysIoctl`
+* 创建和删除文件.
+* 打开和关闭文件的系统调用.
+* 读和写文件的系统调用.
+* `SysPipe`,`SysOpen`,`SysStat`,`SysRead`,`SysWrite`,`SysCreat`,`SysIoctl`
 
-进程通讯类系统调用，主要有：
+进程通讯类系统调用,主要有:
 
-* `SysMqOpen`，`SysSigAction`，`SysKill`，`SysMqNotify`，`SysMqTimedSend`
+* `SysMqOpen`,`SysSigAction`,`SysKill`,`SysMqNotify`,`SysMqTimedSend`
 
-网络类系统调用，主要有：
+网络类系统调用,主要有:
 
-* `SysSocket`，`SysBind`，`SysConnect`，`SysListen`，`SysAccept`，`SysRecv`
+* `SysSocket`,`SysBind`,`SysConnect`,`SysListen`,`SysAccept`,`SysRecv`
 
-信息配置类系统调用，主要有：
+信息配置类系统调用,主要有:
 
-* `SysReboot`，`SysInfo`，`SysGetrusage`，`SysSysconf`
+* `SysReboot`,`SysInfo`,`SysGetrusage`,`SysSysconf`
 
-时间类系统调用，主要有：
+时间类系统调用,主要有:
 
-* `SysTimerCreate`，`SysTimerDelete`，`SysClockGettime`，`SysSetiTimer`
+* `SysTimerCreate`,`SysTimerDelete`,`SysClockGettime`,`SysSetiTimer`
 
-内存类系统调用，主要有：
+内存类系统调用,主要有:
 
-* `SysMmap`，`SysMunmap`，`SysBrk`，`SysMremap`，`SysShmGet`，`SysShmAt`，`SysShmCtl`，`SysShmDt`
+* `SysMmap`,`SysMunmap`,`SysBrk`,`SysMremap`,`SysShmGet`,`SysShmAt`,`SysShmCtl`,`SysShmDt`
 
 ## musl | C标准库函数
 
-`musl`，一种`C`标准库，[官方网站](https://musl.libc.org/) ，主要使用于以`Linux`内核为主的操作系统上，鸿蒙内核也使用了它，目标为嵌入式系统与移动设备，采用`MIT`许可证发布。作者为瑞奇·费尔克（`Rich Felker`）。开发此库的目的是写一份干净、高效、符合标准的`C`标准库。`Musl`声称与`POSIX 2008`标准和`C11`标准兼容。`musl`是一个非常庞大提供给应用程序使用的工具库，例如: 学习C语言的第一段代码
+`musl`,一种`C`标准库,[官方网站](https://musl.libc.org/) ,主要使用于以`Linux`内核为主的操作系统上,鸿蒙内核也使用了它,目标为嵌入式系统与移动设备,采用`MIT`许可证发布.作者为瑞奇·费尔克(`Rich Felker`).开发此库的目的是写一份干净,高效,符合标准的`C`标准库.`Musl`声称与`POSIX 2008`标准和`C11`标准兼容.`musl`是一个非常庞大提供给应用程序使用的工具库,例如: 学习C语言的第一段代码
 
 ```c
 #include <stdio.h>
@@ -127,7 +127,7 @@ int main() {
 }
 ```
 
-中的`printf`就是由`stdio.h`提供，由标准库实现的。这是个可变参数实现函数。
+中的`printf`就是由`stdio.h`提供,由标准库实现的.这是个可变参数实现函数.
 
 ```c
 int printf(const char *restrict fmt, ...)
@@ -221,15 +221,15 @@ __cp_cancel:
  b __cancel
 ```
 
-* 其中最重要的命令就是 svc 0，通过这条指令切换到 `svc` 模式（`svc` 替代了以前的 `swi` 指令，是 `arm` 提供的系统调用指令），进入到软件中断处理函数（ `SWI handler` ）。
+* 其中最重要的命令就是 svc 0,通过这条指令切换到 `svc` 模式(`svc` 替代了以前的 `swi` 指令,是 `arm` 提供的系统调用指令),进入到软件中断处理函数( `SWI handler` ).
 
 ### 问题
 
-那可能有人会问了，操作系统有抽象层，那硬件有没有抽象层，规定处理器内核与外设的接口，统一了内核访问外设寄存器的方法，从而简化了软件的开发，提高重用度，降低软硬件接口开发成本。有的，就是`CMSIS`( Cortex Microcontroller Software Interface Standard)缩写，中文为Cortex系列微控制器软件接口标准。此标准是ARM公司，芯片供应商以及软件供应商共同制定的，包含以下组件：
+那可能有人会问了,操作系统有抽象层,那硬件有没有抽象层,规定处理器内核与外设的接口,统一了内核访问外设寄存器的方法,从而简化了软件的开发,提高重用度,降低软硬件接口开发成本.有的,就是`CMSIS`( Cortex Microcontroller Software Interface Standard)缩写,中文为Cortex系列微控制器软件接口标准.此标准是ARM公司,芯片供应商以及软件供应商共同制定的,包含以下组件:
 
-* `CMSIS-CORE`：提供与 Cortex-M0、Cortex-M3、Cortex-M4、SC000 和 SC300 处理器与外围寄存器之间的接口
-* `CMSIS-DSP`：包含以定点（分数 q7、q15、q31）和单精度浮点（32 位）实现的 60 多种函数的 DSP 库
-* `CMSIS-RTOS API`：用于线程控制、资源和时间管理的实时操作系统的标准化编程接口
-* `CMSIS-SVD`：包含完整微控制器系统（包括外设）的程序员视图的系统视图描述 XML 文件
-此标准可进行全面扩展，以确保适用于所有 Cortex-M 处理器系列微控制器。其中包括所有设备：从最小的 8 KB 设备，直至带有精密通信外设（例如以太网或 USB）的设备。（内核外设功能的内存要求小于 1 KB 代码，低于 10 字节 RAM）。
+* `CMSIS-CORE`:提供与 Cortex-M0,Cortex-M3,Cortex-M4,SC000 和 SC300 处理器与外围寄存器之间的接口
+* `CMSIS-DSP`:包含以定点(分数 q7,q15,q31)和单精度浮点(32 位)实现的 60 多种函数的 DSP 库
+* `CMSIS-RTOS API`:用于线程控制,资源和时间管理的实时操作系统的标准化编程接口
+* `CMSIS-SVD`:包含完整微控制器系统(包括外设)的程序员视图的系统视图描述 XML 文件
+此标准可进行全面扩展,以确保适用于所有 Cortex-M 处理器系列微控制器.其中包括所有设备:从最小的 8 KB 设备,直至带有精密通信外设(例如以太网或 USB)的设备.(内核外设功能的内存要求小于 1 KB 代码,低于 10 字节 RAM).
 

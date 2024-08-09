@@ -222,7 +222,9 @@ LITE_OS_SEC_TEXT_INIT UINT32 LOS_SemDelete(UINT32 semHandle)
 ERR_HANDLER:
     OS_RETURN_ERROR_P2(errLine, errNo);
 }
-///对外接口 申请指定的信号量，并设置超时时间
+/*!
+ * 对外接口 申请指定的信号量，并设置超时时间
+ */
 LITE_OS_SEC_TEXT UINT32 LOS_SemPend(UINT32 semHandle, UINT32 timeout)
 {
     UINT32 intSave;
@@ -283,7 +285,9 @@ OUT:
     SCHEDULER_UNLOCK(intSave);
     return retErr;
 }
-///以不安全的方式释放指定的信号量,所谓不安全指的是不用自旋锁
+/*!
+ * 以不安全的方式释放指定的信号量,所谓不安全指的是不用自旋锁
+ */
 LITE_OS_SEC_TEXT UINT32 OsSemPostUnsafe(UINT32 semHandle, BOOL *needSched)
 {
     LosTaskCB *resumedTask = NULL;
@@ -311,7 +315,9 @@ LITE_OS_SEC_TEXT UINT32 OsSemPostUnsafe(UINT32 semHandle, BOOL *needSched)
     OsHookCall(LOS_HOOK_TYPE_SEM_POST, semPosted, resumedTask);
     return LOS_OK;
 }
-///对外接口 释放指定的信号量
+/*!
+ * 对外接口 释放指定的信号量
+ */
 LITE_OS_SEC_TEXT UINT32 LOS_SemPost(UINT32 semHandle)
 {
     UINT32 intSave;

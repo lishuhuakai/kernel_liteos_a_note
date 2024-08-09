@@ -18,32 +18,32 @@
 
 ### 阅读之前的说明
 
-先说明，本篇很长，也很枯燥，若不是绝对的技术偏执狂是看不下去的。将通过一段简单代码去跟踪编译成ELF格式后的内容。看看`ELF`究竟长了怎样的一副花花肠子，用`readelf`命令去窥视ELF的全貌，最后用`objdump`命令反汇编`ELF`。找到了大家熟悉`main`函数。
+先说明,本篇很长,也很枯燥,若不是绝对的技术偏执狂是看不下去的.将通过一段简单代码去跟踪编译成ELF格式后的内容.看看`ELF`究竟长了怎样的一副花花肠子,用`readelf`命令去窥视ELF的全貌,最后用`objdump`命令反汇编`ELF`.找到了大家熟悉`main`函数.
 开始之前先说结论:
-ELF 分四块，其中三块是描述信息(也叫头信息)，另一块是内容，放的是所有段/区的内容。
+ELF 分四块,其中三块是描述信息(也叫头信息),另一块是内容,放的是所有段/区的内容.
 
 1. ELF头定义全局性信息
-2. Segment(段)头，内容描述段的名字，开始位置，类型，偏移，大小及每段由哪些区组成。
-3. 内容区，ELF有两个重要概念 `Segment`(段)和 `Section`(区)，段比区大，二者之间关系如下:
+2. Segment(段)头,内容描述段的名字,开始位置,类型,偏移,大小及每段由哪些区组成.
+3. 内容区,ELF有两个重要概念 `Segment`(段)和 `Section`(区),段比区大,二者之间关系如下:
 
 + 每个`Segment`可以包含多个`Section`
 + 每个`Section`可以属于多个`Segment`
 + `Segment`之间可以有重合的部分
-+ 拿大家熟知的`.text`，`.data`，`.bss`举例，它们都叫区，但它们又属于`LOAD`段。
-4. `Section` (区)头，内容描述区的名字，开始位置，类型，偏移，大小等信息
-ELF一体两面，面对不同的场景扮演不同的角色，这是理解ELF的关键，链接器只关注1，3(区)，4 的内容，加载器只关注1，2，3(段)的内容
++ 拿大家熟知的`.text`,`.data`,`.bss`举例,它们都叫区,但它们又属于`LOAD`段.
+4. `Section` (区)头,内容描述区的名字,开始位置,类型,偏移,大小等信息
+ELF一体两面,面对不同的场景扮演不同的角色,这是理解ELF的关键,链接器只关注1,3(区),4 的内容,加载器只关注1,2,3(段)的内容
 鸿蒙对`EFL`的定义在 `kernel\extended\dynload\include\los_ld_elf_pri.h`文件中
 [<img src="assets/88/Elf-layout.png" style="zoom:50%;" />](https://gitee.com/weharmony/kernel_liteos_a_note)  
 
 ### 示例代码
 
-在windows目录`E:\harmony\docker\case_code_100`下创建 `main.c` 文件，如下:
+在windows目录`E:\harmony\docker\case_code_100`下创建 `main.c` 文件,如下:
 
 ```c
 #include <stdio.h>
 void say_hello(char *who)
 {
-    printf("hello， %s!\n"， who);
+    printf("hello, %s!\n", who);
 }
 char *my_name = "harmony os";
 
@@ -54,9 +54,9 @@ int main()
 }    
 ```
 
-因在[v50.xx (编译环境篇) | docker编译鸿蒙真的很香](https://my。oschina。net/weharmony/blog/5028613)
+因在[v50.xx (编译环境篇) | docker编译鸿蒙真的很香](https://my.oschina.net/weharmony/blog/5028613)
 
-篇中已做好了环境映射，所以文件会同时出现在docker中。编译生成`ELF`->运行->`readelf -h`查看`app`头部信息。
+篇中已做好了环境映射,所以文件会同时出现在docker中.编译生成`ELF`->运行->`readelf -h`查看`app`头部信息.
 
 ```shell
 root@5e3abe332c5a:/home/docker/case_code_100# ls
@@ -65,12 +65,12 @@ root@5e3abe332c5a:/home/docker/case_code_100# gcc -o app main.c
 root@5e3abe332c5a:/home/docker/case_code_100# ls
 app  main.c
 root@5e3abe332c5a:/home/docker/case_code_100# ./app
-hello， harmony os!
+hello, harmony os!
 ```
 
 ### 名正才言顺
 
-一下是关于ELF的所有中英名词对照。建议先仔细看一篇再看系列篇部分。
+一下是关于ELF的所有中英名词对照.建议先仔细看一篇再看系列篇部分.
 
 ```txt
 可执行可连接格式 : ELF(Executable and Linking Format)
@@ -101,93 +101,93 @@ ELF文件头:ELF header
 
 ### ELF历史
 
-* ELF(Executable and Linking Format)，即"可执行可连接格式"，最初由UNIX系统实验室(UNIX System Laboratories – USL)做为应用程序二进制接口(Application Binary Interface - ABI)的一部分而制定和发布。是鸿蒙的主要可执行文件格式。
+* ELF(Executable and Linking Format),即"可执行可连接格式",最初由UNIX系统实验室(UNIX System Laboratories – USL)做为应用程序二进制接口(Application Binary Interface - ABI)的一部分而制定和发布.是鸿蒙的主要可执行文件格式.
 
-* ELF的最大特点在于它有比较广泛的适用性，通用的二进制接口定义使之可以平滑地移植到多种不同的操作环境上。这样，不需要为每一种操作系统都定义一套不同的接口，因此减少了软件的重复编码与编译，加强了软件的可移植性。
+* ELF的最大特点在于它有比较广泛的适用性,通用的二进制接口定义使之可以平滑地移植到多种不同的操作环境上.这样,不需要为每一种操作系统都定义一套不同的接口,因此减少了软件的重复编码与编译,加强了软件的可移植性.
 
 ### ELF整体布局
 
-ELF规范中把ELF文件宽泛地称为"目标文件 (object file)"，这与我们平时的理解不同。一般地，我们把经过编译但没有连接的文件(比如Unix/Linux上的.o文件)称为目标文件，而ELF文件仅指连接好的可执行文件；在ELF规范中，所有符合ELF格式规范的都称为ELF文件，也称为目标文件，这两个名字是相同的，而经过编译但没有连接的文件则称为"可重定位文件 (relocatable file)"或"待重定位文件 (relocatable file)"。本文采用与此规范相同的命名方式，所以当提到可重定位文件时，一般可以理解为惯常所说的目标文件；而提到目标文件时，即指各种类型的ELF文件。
+ELF规范中把ELF文件宽泛地称为"目标文件 (object file)",这与我们平时的理解不同.一般地,我们把经过编译但没有连接的文件(比如Unix/Linux上的.o文件)称为目标文件,而ELF文件仅指连接好的可执行文件;在ELF规范中,所有符合ELF格式规范的都称为ELF文件,也称为目标文件,这两个名字是相同的,而经过编译但没有连接的文件则称为"可重定位文件 (relocatable file)"或"待重定位文件 (relocatable file)".本文采用与此规范相同的命名方式,所以当提到可重定位文件时,一般可以理解为惯常所说的目标文件;而提到目标文件时,即指各种类型的ELF文件.
 
 ELF格式可以表达四种类型的二进制对象文件(object files):
 
-* 可重定位文件(relocatable file)，用于与其它目标文件进行连接以构建可执行文件或动态链接库。可重定位文件就是常说的目标文件，由源文件编译而成，但还没有连接成可执行文件。在UNIX系统下，一般有扩展名".o"。之所以称其为"可重定位"，是因为在这些文件中，如果引用到其它目标文件或库文件中定义的符号（变量或者函数）的话，只是给出一个名字，这里还并不知道这个符号在哪里，其具体的地址是什么。需要在连接的过程中，把对这些外部符号的引用重新定位到其真正定义的位置上，所以称目标文件为"可重定位"或者"待重定位"的。
-* 可执行文件(executable file)包含代码和数据，是可以直接运行的程序。其代码和数据都有固定的地址 （或相对于基地址的偏移 ），系统可根据这些地址信息把程序加载到内存执行。
-* 共享目标文件(shared object file)，即动态连接库文件。它在以下两种情况下被使用:第一，在连接过程中与其它动态链接库或可重定位文件一起构建新的目标文件；第二，在可执行文件被加载的过程中，被动态链接到新的进程中，成为运行代码的一部分。包含了代码和数据，这些数据是在链接时被链接器（ld）和运行时动态链接器（ld.so.l、libc.so.l、ld-linux.so.l）使用的。
-* 核心转储文件(core dump file，就是core dump文件)
+* 可重定位文件(relocatable file),用于与其它目标文件进行连接以构建可执行文件或动态链接库.可重定位文件就是常说的目标文件,由源文件编译而成,但还没有连接成可执行文件.在UNIX系统下,一般有扩展名".o".之所以称其为"可重定位",是因为在这些文件中,如果引用到其它目标文件或库文件中定义的符号(变量或者函数)的话,只是给出一个名字,这里还并不知道这个符号在哪里,其具体的地址是什么.需要在连接的过程中,把对这些外部符号的引用重新定位到其真正定义的位置上,所以称目标文件为"可重定位"或者"待重定位"的.
+* 可执行文件(executable file)包含代码和数据,是可以直接运行的程序.其代码和数据都有固定的地址 (或相对于基地址的偏移 ),系统可根据这些地址信息把程序加载到内存执行.
+* 共享目标文件(shared object file),即动态连接库文件.它在以下两种情况下被使用:第一,在连接过程中与其它动态链接库或可重定位文件一起构建新的目标文件;第二,在可执行文件被加载的过程中,被动态链接到新的进程中,成为运行代码的一部分.包含了代码和数据,这些数据是在链接时被链接器(ld)和运行时动态链接器(ld.so.l,libc.so.l,ld-linux.so.l)使用的.
+* 核心转储文件(core dump file,就是core dump文件)
   
      ```  shell
-     可重定位文件用在编译和链接阶段。
-     可执行文件用在程序运行阶段。
-     共享库则同时用在编译链接和运行阶段，本篇 app 就是个 DYN，可直接运行。
+     可重定位文件用在编译和链接阶段.
+     可执行文件用在程序运行阶段.
+     共享库则同时用在编译链接和运行阶段,本篇 app 就是个 DYN,可直接运行.
           Type:                              DYN (Shared object file)
      ```
 
-在不同阶段，我们可以用不同视角来理解`ELF`文件，整体布局如下图所示:
+在不同阶段,我们可以用不同视角来理解`ELF`文件,整体布局如下图所示:
 
 [![kernel_liteos_a_note](https://weharmonyos.oss-cn-hangzhou.aliyuncs.com/resources/51/elf.png)](https://gitee.com/weharmony/kernel_liteos_a_note)
 
-从上图可见，ELF格式文件整体可分为四大部分:
+从上图可见,ELF格式文件整体可分为四大部分:
 
-* `ELF Header`: 在文件的开始，描述整个文件的组织。即`readelf -h app`看到的内容.
+* `ELF Header`: 在文件的开始,描述整个文件的组织.即`readelf -h app`看到的内容.
 
-* `Program Header Table`: 告诉系统如何创建进程映像。用来构造进程映像的目标文件必须具有程序头部表，可重定位文件可以不需要这个表。表描述所有段(Segment)信息，即`readelf -l app`看到的前半部分内容, 这里说明一下, 进程加载,`Program Header Table` 必不可少.
+* `Program Header Table`: 告诉系统如何创建进程映像.用来构造进程映像的目标文件必须具有程序头部表,可重定位文件可以不需要这个表.表描述所有段(Segment)信息,即`readelf -l app`看到的前半部分内容, 这里说明一下, 进程加载,`Program Header Table` 必不可少.
 
   
 
-* `Segments`:段(`Segment`)由若干区(`Section`)组成。是从加载器角度来描述 `ELF` 文件。加载器只关心 `ELF header`， `Program header table` 和 `Segment` 这三部分内容。 在加载阶段可以忽略 `section header table` 来处理程序(所以很多加固手段删除了`section header table`).
+* `Segments`:段(`Segment`)由若干区(`Section`)组成.是从加载器角度来描述 `ELF` 文件.加载器只关心 `ELF header`, `Program header table` 和 `Segment` 这三部分内容. 在加载阶段可以忽略 `section header table` 来处理程序(所以很多加固手段删除了`section header table`).
 
 
-* `Sections`: 是从链接器角度(也就是编译的时候要解决的链接问题,不感兴趣的可以忽略)来描述 `ELF` 文件. 链接器只关心 `ELF header`，`Sections` 以及 `Section header table` 这三部分内容.在链接阶段,可以忽略 `program header table` 来处理文件.
+* `Sections`: 是从链接器角度(也就是编译的时候要解决的链接问题,不感兴趣的可以忽略)来描述 `ELF` 文件. 链接器只关心 `ELF header`,`Sections` 以及 `Section header table` 这三部分内容.在链接阶段,可以忽略 `program header table` 来处理文件.
 
-* `Section Header Table`:描述区(`Section`)信息的数组，每个元素对应一个区，通常包含在可重定位文件中，可执行文件中为可选(通常包含) 即`readelf -S app`看到的内容
+* `Section Header Table`:描述区(`Section`)信息的数组,每个元素对应一个区,通常包含在可重定位文件中,可执行文件中为可选(通常包含) 即`readelf -S app`看到的内容
 
-* 从图中可以看出 `Segment`:`Section`(M:N)是多对多的包含关系。`Segment`是由多个`Section`组成，`Section`也能属于多个段。
+* 从图中可以看出 `Segment`:`Section`(M:N)是多对多的包含关系.`Segment`是由多个`Section`组成,`Section`也能属于多个段.
 
 ### ELF头信息
 
-`ELF`头部信息对应鸿蒙源码结构体为 `LDElf32Ehdr`， 各字段含义已一一注解，很容易理解。
+`ELF`头部信息对应鸿蒙源码结构体为 `LDElf32Ehdr`, 各字段含义已一一注解,很容易理解.
 
 ```c
 //kernel\extended\dynload\include\los_ld_elf_pri.h
 /* Elf header */
 #define LD_EI_NIDENT           16
 typedef struct {
- //含前16个字节，又可细分成class、data、version等字段，具体含义不用太关心，只需知道前4个字节点包含`ELF`关键字，
+ //含前16个字节,又可细分成class,data,version等字段,具体含义不用太关心,只需知道前4个字节点包含`ELF`关键字,
  //这样可以判断当前文件是否是ELF格式
  UINT8  elfIdent[LD_EI_NIDENT]; /* Magic number and other info */
- //表示具体ELF类型，可重定位文件/可执行文件/共享库文件
+ //表示具体ELF类型,可重定位文件/可执行文件/共享库文件
  UINT16 elfType;    /* Object file type */
  //表示cpu架构
  UINT16 elfMachine; /* Architecture */
  //表示文件版本号
  UINT32 elfVersion; /* Object file version */
- //对应`Entry point address`，程序入口函数地址，通过进程虚拟地址空间地址表达
+ //对应`Entry point address`,程序入口函数地址,通过进程虚拟地址空间地址表达
  UINT32 elfEntry;   /* Entry point virtual address */
- //对应`Start of program headers`，表示program header table在文件内的偏移位置
+ //对应`Start of program headers`,表示program header table在文件内的偏移位置
  UINT32 elfPhoff;   /* Program header table file offset */
- //对应`Start of section headers`，表示section header table在文件内的偏移位置
+ //对应`Start of section headers`,表示section header table在文件内的偏移位置
  UINT32 elfShoff; /* Section header table file offset */
  //表示与CPU处理器架构相关的信息
  UINT32 elfFlags;     /* Processor-specific flags */
- //对应`Size of this header`，表示本ELF header自身的长度
+ //对应`Size of this header`,表示本ELF header自身的长度
  UINT16 elfHeadSize;  /* ELF header size in bytes */
- //对应`Size of program headers`，表示program header table中每个元素的大小
+ //对应`Size of program headers`,表示program header table中每个元素的大小
  UINT16 elfPhEntSize; /* Program header table entry size */
- //对应`Number of program headers`，表示program header table中元素个数
+ //对应`Number of program headers`,表示program header table中元素个数
  UINT16 elfPhNum; /* Program header table entry count */
- //对应`Size of section headers`，表示section header table中每个元素的大小
+ //对应`Size of section headers`,表示section header table中每个元素的大小
  UINT16 elfShEntSize; /* Section header table entry size */
- //对应`Number of section headers`，表示section header table中元素的个数
+ //对应`Number of section headers`,表示section header table中元素的个数
  UINT16 elfShNum; /* Section header table entry count */
- //对应`Section header string table index`，表示描述各section字符名称的string table在section header table中的下标
+ //对应`Section header string table index`,表示描述各section字符名称的string table在section header table中的下标
  UINT16 elfShStrIndex;   /* Section header string table index */
 } LDElf32Ehdr;
 root@5e3abe332c5a:/home/docker/case_code_100# readelf -h app
 ELF Header:
   Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
   Class:                             ELF64
-  Data:                              2's complement， little endian
+  Data:                              2's complement, little endian
   Version:                           1 (current)
   OS/ABI:                            UNIX - System V
   ABI Version:                       0
@@ -208,8 +208,8 @@ ELF Header:
 
 **解读**
 
-显示的信息，就是 ELF header 中描述的所有内容了。这个内容与结构体 `LDElf32Ehdr` 中的成员变量是一一对应的！
-`Size of this header: 64 (bytes)`也就是说：ELF header 部分的内容，一共是 64 个字节。64个字节码长啥样可以用命令`od -Ax -t x1 -N 64 app`看，并对照结构体`LDElf32Ehdr`来理解。
+显示的信息,就是 ELF header 中描述的所有内容了.这个内容与结构体 `LDElf32Ehdr` 中的成员变量是一一对应的！
+`Size of this header: 64 (bytes)`也就是说:ELF header 部分的内容,一共是 64 个字节.64个字节码长啥样可以用命令`od -Ax -t x1 -N 64 app`看,并对照结构体`LDElf32Ehdr`来理解.
 
 ```shell
 root@5e3abe332c5a:/home/docker/case_code_100/51# od -Ax -t x1 -N 64 app
@@ -220,23 +220,23 @@ root@5e3abe332c5a:/home/docker/case_code_100/51# od -Ax -t x1 -N 64 app
 000040
 ```
 
-简单解释一下命令的几个选项：
+简单解释一下命令的几个选项:
 
 ```shell
--Ax: 显示地址的时候，用十六进制来表示。如果使用 -Ad，意思就是用十进制来显示地址;
--t -x1: 显示字节码内容的时候，使用十六进制(x)，每次显示一个字节(1);
--N 64：只需要读取64个字节;
+-Ax: 显示地址的时候,用十六进制来表示.如果使用 -Ad,意思就是用十进制来显示地址;
+-t -x1: 显示字节码内容的时候,使用十六进制(x),每次显示一个字节(1);
+-N 64:只需要读取64个字节;
 ```
 
-这里留意这几个内容，下面会说明，先记住。
+这里留意这几个内容,下面会说明,先记住.
 
 ```shell
-Entry point address:               0x1060     //代码区 .text 起始位置，即程序运行开始位置
+Entry point address:               0x1060     //代码区 .text 起始位置,即程序运行开始位置
 Size of program headers:           56 (bytes) //每个段头大小
 Number of program headers:         13         //段数量
 Size of section headers:           64 (bytes) //每个区头大小
 Number of section headers:         31         //区数量
-Section header string table index: 30         //字符串数组索引，该区记录所有区名称
+Section header string table index: 30         //字符串数组索引,该区记录所有区名称
 ```
 
 ### 段(Segment)头信息
@@ -249,33 +249,33 @@ Section header string table index: 30         //字符串数组索引，该区�
 typedef struct {
     //段类型
     UINT32 type;     /* Segment type */ 
-    //此数据成员给出本段内容在文件中的位置，即段内容的开始位置相对于文件开头的偏移量。
+    //此数据成员给出本段内容在文件中的位置,即段内容的开始位置相对于文件开头的偏移量.
     UINT32 offset;   /* Segment file offset */
-    //此数据成员给出本段内容的开始位置在进程空间中的虚拟地址。
+    //此数据成员给出本段内容的开始位置在进程空间中的虚拟地址.
     UINT32 vAddr;    /* Segment virtual address */
-    //此数据成员给出本段内容的开始位置在进程空间中的物理地址。对于目前大多数现代操作系统而言，
-    //应用程序中段的物理地址事先是不可知的，所以目前这个成员多数情况下保留不用，或者被操作系统改作它用。
+    //此数据成员给出本段内容的开始位置在进程空间中的物理地址.对于目前大多数现代操作系统而言,
+    //应用程序中段的物理地址事先是不可知的,所以目前这个成员多数情况下保留不用,或者被操作系统改作它用.
     UINT32 phyAddr;  /* Segment physical address */
-    //此数据成员给出本段内容在文件中的大小，单位是字节，可以是0。
+    //此数据成员给出本段内容在文件中的大小,单位是字节,可以是0.
     UINT32 fileSize; /* Segment size in file */
-    //此数据成员给出本段内容在内容镜像中的大小，单位是字节，可以是0。
+    //此数据成员给出本段内容在内容镜像中的大小,单位是字节,可以是0.
     UINT32 memSize;  /* Segment size in memory */
-    //此数据成员给出了本段内容的属性。
+    //此数据成员给出了本段内容的属性.
     UINT32 flags;    /* Segment flags */
-    //对于可装载的段来说，其p_vaddr和p_offset的值至少要向内存页面大小对齐。
+    //对于可装载的段来说,其p_vaddr和p_offset的值至少要向内存页面大小对齐.
     UINT32 align;    /* Segment alignment */
 } LDElf32Phdr;
 ```
 
 **解读**
 
-用`readelf -l`查看`app`段头部表内容，先看命令返回的前半部分:
+用`readelf -l`查看`app`段头部表内容,先看命令返回的前半部分:
 
 ```shell
 root@5e3abe332c5a:/home/docker/case_code_100# readelf -l app 
 Elf file type is DYN (Shared object file)
 Entry point 0x1060
-There are 13 program headers， starting at offset 64
+There are 13 program headers, starting at offset 64
 Program Headers:
   Type           Offset     VirtAddr   PhysAddr      FileSiz            MemSiz              Flags  Align
   PHDR           0x00000040 0x00000040 0x00000040    0x00000000000002d8 0x00000000000002d8  R      0x8
@@ -294,28 +294,28 @@ Program Headers:
   GNU_RELRO      0x00002db8 0x00003db8 0x00003db8    0x0000000000000248 0x0000000000000248  R      0x1   # 0x2db8
 ```
 
-数一下一共13个段，其实在ELF头信息也告诉了我们共13个段
+数一下一共13个段,其实在ELF头信息也告诉了我们共13个段
 
 ```shell
 Size of program headers:           56 (bytes)//每个段头大小
 Number of program headers:         13        //段数量
 ```
 
-仔细看下这些段的开始地址和大小，发现有些段是重叠的。那是因为一个区可以被多个段所拥有。例如:`0x2db8` 对应的 `.init_array`区就被第四`LOAD` 和 `GNU_RELRO`两段所共有。
+仔细看下这些段的开始地址和大小,发现有些段是重叠的.那是因为一个区可以被多个段所拥有.例如:`0x2db8` 对应的 `.init_array`区就被第四`LOAD` 和 `GNU_RELRO`两段所共有.
 
-`PHDR`，此类型header元素描述了 `program header table` 自身的信息。从这里的内容看出，示例程序的 `program header table` 在文件中的偏移(`Offset`)为`0x40`，即64号字节处。该段映射到进程空间的虚拟地址(`VirtAddr`)为`0x40`。`PhysAddr`暂时不用，其保持和`VirtAddr`一致。该段占用的文件大小`FileSiz`为`0x2d8`。运行时占用进程空间内存大小`MemSiz`也为`0x2d8`。`Flags`标记表示该段的读写权限，这里`R`表示只读，`Align`对齐为8，表明本段按8字节对齐。
+`PHDR`,此类型header元素描述了 `program header table` 自身的信息.从这里的内容看出,示例程序的 `program header table` 在文件中的偏移(`Offset`)为`0x40`,即64号字节处.该段映射到进程空间的虚拟地址(`VirtAddr`)为`0x40`.`PhysAddr`暂时不用,其保持和`VirtAddr`一致.该段占用的文件大小`FileSiz`为`0x2d8`.运行时占用进程空间内存大小`MemSiz`也为`0x2d8`.`Flags`标记表示该段的读写权限,这里`R`表示只读,`Align`对齐为8,表明本段按8字节对齐.
 
-`INTERP`，此类型header元素描述了一个特殊内存段，该段内存记录了动态加载解析器的访问路径字符串。示例程序中，该段内存位于文件偏移`0x318`处，即紧跟`program header table` 。映射的进程虚拟地址空间地址为`0x318`。文件长度和内存映射长度均为`0x1c`，即28个字符，具体内容为`/lib64/ld-linux-x86-64.so。2`。段属性为只读，并按字节对齐。
+`INTERP`,此类型header元素描述了一个特殊内存段,该段内存记录了动态加载解析器的访问路径字符串.示例程序中,该段内存位于文件偏移`0x318`处,即紧跟`program header table` .映射的进程虚拟地址空间地址为`0x318`.文件长度和内存映射长度均为`0x1c`,即28个字符,具体内容为`/lib64/ld-linux-x86-64.so.2`.段属性为只读,并按字节对齐.
 
-`LOAD`，此类型`header`元素描述了**可加载到进程空间的代码区或数据区**:
+`LOAD`,此类型`header`元素描述了**可加载到进程空间的代码区或数据区**:
 
-* 其第二段包含了代码区，文件内偏移为0x1000，文件大小为0x225，映射到进程地址0x001000处，属性为只读可执行(RE)，段地址按0x1000(4K)边界对齐。
-* 其第四段包含了数据区，文件内偏移为0x2db8，文件大小为0x260，映射到进程地址0x003db8处，属性为可读可写(RW)，段地址也按0x1000(4K)边界对齐。
+* 其第二段包含了代码区,文件内偏移为0x1000,文件大小为0x225,映射到进程地址0x001000处,属性为只读可执行(RE),段地址按0x1000(4K)边界对齐.
+* 其第四段包含了数据区,文件内偏移为0x2db8,文件大小为0x260,映射到进程地址0x003db8处,属性为可读可写(RW),段地址也按0x1000(4K)边界对齐.
   
 
-`DYNAMIC`，此类型`header`元素描述了动态加载段，其内部通常包含了一个名为`。dynamic`的动态加载区。这也是一个数组，每个元素描述了与动态加载相关的各方面信息，将在系列篇(动态加载篇)中介绍。该段是从文件偏移`0x2dc8`处开始，长度为`0x1f0`，并映射到进程的`0x3dc8`。可见该段和上一个段`LOAD4 0x2db8`是有重叠的。
+`DYNAMIC`,此类型`header`元素描述了动态加载段,其内部通常包含了一个名为`.dynamic`的动态加载区.这也是一个数组,每个元素描述了与动态加载相关的各方面信息,将在系列篇(动态加载篇)中介绍.该段是从文件偏移`0x2dc8`处开始,长度为`0x1f0`,并映射到进程的`0x3dc8`.可见该段和上一个段`LOAD4 0x2db8`是有重叠的.
 
-`GNU_STACK`，可执行栈，即栈区，在加载段的过程中，当发现存在PT_GNU_STACK，也就是GNU_STACK segment 的存在，如果存在这个这个段的话，看这个段的 flags 是否有可执行权限，来设置对应的值。必须为RW方式。
+`GNU_STACK`,可执行栈,即栈区,在加载段的过程中,当发现存在PT_GNU_STACK,也就是GNU_STACK segment 的存在,如果存在这个这个段的话,看这个段的 flags 是否有可执行权限,来设置对应的值.必须为RW方式.
 
 再看命令返回内容的后半部分-**段区映射关系** :
 
@@ -337,19 +337,19 @@ Number of program headers:         13        //段数量
    12     .init_array .fini_array .dynamic .got
 ```
 
-13个段和31个区的映射关系，右边其实不止31个区，是因为一个区( `Section` )可以共属于多个段( `Segment` )，例如 `.dynamic` ，`.interp`，`.got`
-Segment:Section(M:N)是多对多的包含关系.Segment是由多个Section组成，Section也能属于多个段。这个很重要，说第二遍了。
+13个段和31个区的映射关系,右边其实不止31个区,是因为一个区( `Section` )可以共属于多个段( `Segment` ),例如 `.dynamic` ,`.interp`,`.got`
+Segment:Section(M:N)是多对多的包含关系.Segment是由多个Section组成,Section也能属于多个段.这个很重要,说第二遍了.
 
 * `INTERP`段只包含了`.interp`区
-* `LOAD2`段包含`.interp`、`.plt`、`.text`等区，`.text`代码区位于这个段。 这个段是 `RE`属性，只读可执行的。
-* `LOAD4`包含`.dynamic`、`.data`、`.bss`等区， 数据区位于这个段。这个段是 `RW` 属性，可读可写。 `.data`、`.bss`都是数据区，有何区别呢？
-* `.data(ZI data)`它用来存放初始化了的(initailized)全局变量(global)和初始化了的静态变量(static)。
-* `.bss(RW data )`它用来存放未初始化的(uninitailized)全局变量(global)和未初始化的静态变量。
-* `DYNAMIC`段包含`.dynamic`区。
+* `LOAD2`段包含`.interp`,`.plt`,`.text`等区,`.text`代码区位于这个段. 这个段是 `RE`属性,只读可执行的.
+* `LOAD4`包含`.dynamic`,`.data`,`.bss`等区, 数据区位于这个段.这个段是 `RW` 属性,可读可写. `.data`,`.bss`都是数据区,有何区别呢？
+* `.data(ZI data)`它用来存放初始化了的(initailized)全局变量(global)和初始化了的静态变量(static).
+* `.bss(RW data )`它用来存放未初始化的(uninitailized)全局变量(global)和未初始化的静态变量.
+* `DYNAMIC`段包含`.dynamic`区.
 
 ### 区表
 
-区(section)头表信息对应鸿蒙源码结构体为 `LDElf32Shdr`，
+区(section)头表信息对应鸿蒙源码结构体为 `LDElf32Shdr`,
 
 ```c
 //kernel\extended\dynload\include\los_ld_elf_pri.h
@@ -373,19 +373,19 @@ typedef struct {
     UINT32 shInfo;      /* Additional section information */
     //表示区的对齐单位
     UINT32 shAddrAlign; /* Section alignment */
-    //表示区中每个元素的大小(如果该区为一个数组的话，否则该值为0)
+    //表示区中每个元素的大小(如果该区为一个数组的话,否则该值为0)
     UINT32 shEntSize;   /* Entry size if section holds table */
 } LDElf32Shdr;
 ```
 
-示例程序共生成31个区。其实在头文件中也已经告诉我们了
+示例程序共生成31个区.其实在头文件中也已经告诉我们了
 
 ```shell
 Size of section headers:           64 (bytes)//每个区头大小
 Number of section headers:         31        //区数量
 ```
 
-通过`readelf -S`命令看看示例程序中 section header table的内容，如下所示。
+通过`readelf -S`命令看看示例程序中 section header table的内容,如下所示.
 
 ```shell
 Section Headers:
@@ -422,15 +422,15 @@ Section Headers:
 [29] .strtab           STRTAB     0000000000000000 00003690 0000000000000216 0000000000000000          0    0    1
 [30] .shstrtab         STRTAB     0000000000000000 000038a6 000000000000011a 0000000000000000          0    0    1
 Key to Flags:
-  W (write)， A (alloc)， X (execute)， M (merge)， S (strings)， I (info)，
-  L (link order)， O (extra OS processing required)， G (group)， T (TLS)，
-  C (compressed)， x (unknown)， o (OS specific)， E (exclude)，
-  l (large)， p (processor specific)
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  l (large), p (processor specific)
 ```
 
 ### String Table
 
-在 ELF header 的最后 `2` 个字节是 `0x1e` `0x00`，即`30`。 它对应结构体中的成员 `elfShStrIndex`，意思是这个 `ELF` 文件中，字符串表是一个普通的 `Section`，在这个 `Section` 中，存储了 `ELF` 文件中使用到的所有的字符串。
+在 ELF header 的最后 `2` 个字节是 `0x1e` `0x00`,即`30`. 它对应结构体中的成员 `elfShStrIndex`,意思是这个 `ELF` 文件中,字符串表是一个普通的 `Section`,在这个 `Section` 中,存储了 `ELF` 文件中使用到的所有的字符串.
 我们使用`readelf -x`读出下标30区的数据:
 
 ```shell
@@ -457,37 +457,37 @@ Hex dump of section '.shstrtab':
   0x00000110 002e636f 6d6d656e 7400              ..comment.
 ```
 
-可以发现，这里其实是一堆字符串，这些字符串对应的就是各个区的名字。因此 `section header table` 中每个元素的 `Name` 字段其实是这个 `string table` 的索引。为节省空间而做的设计，再回头看看 `ELF header` 中的 `elfShStrIndex`:
+可以发现,这里其实是一堆字符串,这些字符串对应的就是各个区的名字.因此 `section header table` 中每个元素的 `Name` 字段其实是这个 `string table` 的索引.为节省空间而做的设计,再回头看看 `ELF header` 中的 `elfShStrIndex`:
 
 ```shell
-Section header string table index: 30 //字符串数组索引，该区记录所有区名称
+Section header string table index: 30 //字符串数组索引,该区记录所有区名称
 ```
 
-它的值正好就是30，指向了当前的 `string table` 。
+它的值正好就是30,指向了当前的 `string table` .
 
 ### 符号表 Symbol Table
 
-Section Header Table中，还有一类`SYMTAB`(DYNSYM)区，该区叫符号表。符号表中的每个元素对应一个符号，记录了每个符号对应的实际数值信息，通常用在重定位过程中或问题定位过程中，进程执行阶段并不加载符号表。符号表对应鸿蒙源码结构体为 `LDElf32Sym`。
+Section Header Table中,还有一类`SYMTAB`(DYNSYM)区,该区叫符号表.符号表中的每个元素对应一个符号,记录了每个符号对应的实际数值信息,通常用在重定位过程中或问题定位过程中,进程执行阶段并不加载符号表.符号表对应鸿蒙源码结构体为 `LDElf32Sym`.
 
 ```c
 //kernel\extended\dynload\include\los_ld_elf_pri.h
 /* Symbol table */
 typedef struct {
-    //表示符号对应的源码字符串，为对应String Table中的索引
+    //表示符号对应的源码字符串,为对应String Table中的索引
     UINT32 stName;  /* Symbol table name (string tbl index) */
     //表示符号对应的数值
     UINT32 stValue; /* Symbol table value */
     //表示符号对应数值的空间占用大小
     UINT32 stSize;  /* Symbol table size */
-    //表示符号的相关信息 如符号类型(变量符号、函数符号)
+    //表示符号的相关信息 如符号类型(变量符号,函数符号)
     UINT8 stInfo;   /* Symbol table type and binding */
     UINT8 stOther;  /* Symbol table visibility */
-    //表示与该符号相关的区的索引，例如函数符号与对应的代码区相关
+    //表示与该符号相关的区的索引,例如函数符号与对应的代码区相关
     UINT16 stShndx; /* Section table index */
 } LDElf32Sym;
 ```
 
-用`readelf -s`读出示例程序中的符号表，如下所示
+用`readelf -s`读出示例程序中的符号表,如下所示
 
 ```shell
 root@5e3abe332c5a:/home/docker/case_code_100# readelf -s app
@@ -554,8 +554,8 @@ Symbol table '.symtab' contains 67 entries:
     63: 0000000000001149    43 FUNC    GLOBAL DEFAULT   16 say_hello
 ```
 
-`main`函数符号对应的数值为`0x1174`，其类型为`FUNC`，大小为30字节，对应的代码区索引为16。
-`say_hello`函数符号对应数值为`0x1149`，其类型为`FUNC`，大小为43字节，对应的代码区索引同为16。
+`main`函数符号对应的数值为`0x1174`,其类型为`FUNC`,大小为30字节,对应的代码区索引为16.
+`say_hello`函数符号对应数值为`0x1149`,其类型为`FUNC`,大小为43字节,对应的代码区索引同为16.
 
 ```shell
 Section Header Table:
@@ -564,7 +564,7 @@ Section Header Table:
 
 ### 反汇编代码区
 
-在理解了`String Table`和`Symbol Table`的作用后，通过`objdump`反汇编来理解一下`.text`代码区:
+在理解了`String Table`和`Symbol Table`的作用后,通过`objdump`反汇编来理解一下`.text`代码区:
 
 ```assembly
 root@5e3abe332c5a:/home/docker/case_code_100# objdump -j .text -l -C -S app
@@ -573,13 +573,13 @@ root@5e3abe332c5a:/home/docker/case_code_100# objdump -j .text -l -C -S app
 say_hello():
     1149:       f3 0f 1e fa             endbr64
     114d:       55                      push   %rbp
-    114e:       48 89 e5                mov    %rsp，%rbp
-    1151:       48 83 ec 10             sub    $0x10，%rsp
-    1155:       48 89 7d f8             mov    %rdi，-0x8(%rbp)
-    1159:       48 8b 45 f8             mov    -0x8(%rbp)，%rax
-    115d:       48 89 c6                mov    %rax，%rsi
-    1160:       48 8d 3d 9d 0e 00 00    lea    0xe9d(%rip)，%rdi        # 2004 <_IO_stdin_used+0x4>
-    1167:       b8 00 00 00 00          mov    $0x0，%eax
+    114e:       48 89 e5                mov    %rsp,%rbp
+    1151:       48 83 ec 10             sub    $0x10,%rsp
+    1155:       48 89 7d f8             mov    %rdi,-0x8(%rbp)
+    1159:       48 8b 45 f8             mov    -0x8(%rbp),%rax
+    115d:       48 89 c6                mov    %rax,%rsi
+    1160:       48 8d 3d 9d 0e 00 00    lea    0xe9d(%rip),%rdi        # 2004 <_IO_stdin_used+0x4>
+    1167:       b8 00 00 00 00          mov    $0x0,%eax
     116c:       e8 df fe ff ff          callq  1050 <printf@plt>
     1171:       90                      nop
     1172:       c9                      leaveq
@@ -589,31 +589,31 @@ say_hello():
 main():
     1174:       f3 0f 1e fa             endbr64
     1178:       55                      push   %rbp
-    1179:       48 89 e5                mov    %rsp，%rbp
-    117c:       48 8b 05 8d 2e 00 00    mov    0x2e8d(%rip)，%rax        # 4010 <my_name>
-    1183:       48 89 c7                mov    %rax，%rdi
+    1179:       48 89 e5                mov    %rsp,%rbp
+    117c:       48 8b 05 8d 2e 00 00    mov    0x2e8d(%rip),%rax        # 4010 <my_name>
+    1183:       48 89 c7                mov    %rax,%rdi
     1186:       e8 be ff ff ff          callq  1149 <say_hello>
-    118b:       b8 00 00 00 00          mov    $0x0，%eax
+    118b:       b8 00 00 00 00          mov    $0x0,%eax
     1190:       5d                      pop    %rbp
     1191:       c3                      retq
-    1192:       66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax，%rax，1)
+    1192:       66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
     1199:       00 00 00
     119c:       0f 1f 40 00             nopl   0x0(%rax)
 ```
 
-`0x1149` `0x1174`正是`say_hello`，`main`函数的入口地址。并看到了激动人心的指令:
+`0x1149` `0x1174`正是`say_hello`,`main`函数的入口地址.并看到了激动人心的指令:
 
 ```assembly
 1186:       e8 be ff ff ff          callq  1149 <say_hello>
 ```
 
-很佩服你还能看到这里，牛逼，牛逼! 看了这么久还记得开头的C代码的样子吗？ 再看一遍 : )
+很佩服你还能看到这里,牛逼,牛逼! 看了这么久还记得开头的C代码的样子吗？ 再看一遍 : )
 
 ```c
 #include <stdio.h>
 void say_hello(char *who)
 {
-    printf("hello， %s!\n"， who);
+    printf("hello, %s!\n", who);
 }
 char *my_name = "harmony os";
 int main()
@@ -622,22 +622,22 @@ int main()
     return 0;
 }
 root@5e3abe332c5a:/home/docker/case_code_100# ./app
-hello， harmony os!    
+hello, harmony os!    
 ```
 
-但是!!! 晕，怎么还有but，西卡西...，上面请大家记住的还有一个地方没说到
+但是!!! 晕,怎么还有but,西卡西...,上面请大家记住的还有一个地方没说到
 
 ```assembly
-Entry point address:               0x1060   //代码区 .text 起始位置，即程序运行开始位置
+Entry point address:               0x1060   //代码区 .text 起始位置,即程序运行开始位置
 ```
 
-它的地址并不是main函数位置`0x1174`，是`0x1060`!而且代码区的开始位置是`0x1060`没错的。
+它的地址并不是main函数位置`0x1174`,是`0x1060`!而且代码区的开始位置是`0x1060`没错的.
 
 ```assembly
 [16] .text  PROGBITS   0000000000001060  00001060   00000000000001b5  0000000000000000  AX       0     0     16
 ```
 
-难度`main`不是入口地址？ 那`0x1060`上放的是何方神圣，再查符号表发现是
+难度`main`不是入口地址？ 那`0x1060`上放的是何方神圣,再查符号表发现是
 
 ```assembly
     60: 0000000000001060    47 FUNC    GLOBAL DEFAULT   16 _start
@@ -649,25 +649,25 @@ Entry point address:               0x1060   //代码区 .text 起始位置，即
 0000000000001060 <_start>:
 _start():
     1060:       f3 0f 1e fa             endbr64
-    1064:       31 ed                   xor    %ebp，%ebp
-    1066:       49 89 d1                mov    %rdx，%r9
+    1064:       31 ed                   xor    %ebp,%ebp
+    1066:       49 89 d1                mov    %rdx,%r9
     1069:       5e                      pop    %rsi
-    106a:       48 89 e2                mov    %rsp，%rdx
-    106d:       48 83 e4 f0             and    $0xfffffffffffffff0，%rsp
+    106a:       48 89 e2                mov    %rsp,%rdx
+    106d:       48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
     1071:       50                      push   %rax
     1072:       54                      push   %rsp
-    1073:       4c 8d 05 96 01 00 00    lea    0x196(%rip)，%r8        # 1210 <__libc_csu_fini>
-    107a:       48 8d 0d 1f 01 00 00    lea    0x11f(%rip)，%rcx        # 11a0 <__libc_csu_init>
-    1081:       48 8d 3d ec 00 00 00    lea    0xec(%rip)，%rdi        # 1174 <main>
+    1073:       4c 8d 05 96 01 00 00    lea    0x196(%rip),%r8        # 1210 <__libc_csu_fini>
+    107a:       48 8d 0d 1f 01 00 00    lea    0x11f(%rip),%rcx        # 11a0 <__libc_csu_init>
+    1081:       48 8d 3d ec 00 00 00    lea    0xec(%rip),%rdi        # 1174 <main>
     1088:       ff 15 52 2f 00 00       callq  *0x2f52(%rip)        # 3fe0 <__libc_start_main@GLIBC_2.2.5>
     108e:       f4                      hlt
     108f:       90                      nop
 ```
 
-这才看到了`0x1174`的`main`函数。所以真正的说法是:
+这才看到了`0x1174`的`main`函数.所以真正的说法是:
 
-* 从内核动态加载的视角看，程序运行首个函数并不是`main`，而是`_start`.
-* 但从应用程序开发者视角看，`main`就是启动函数.
+* 从内核动态加载的视角看,程序运行首个函数并不是`main`,而是`_start`.
+* 但从应用程序开发者视角看,`main`就是启动函数.
   
 
 

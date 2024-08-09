@@ -15,58 +15,58 @@
 
 ### 基本概念 | 官方定义
 
-`VFS`（Virtual File System）是文件系统的虚拟层，它不是一个实际的文件系统，而是一个异构文件系统之上的软件粘合层，为用户提供统一的类Unix文件操作接口。由于不同类型的文件系统接口不统一，若系统中有多个文件系统类型，访问不同的文件系统就需要使用不同的非标准接口。而通过在系统中添加VFS层，提供统一的抽象接口，屏蔽了底层异构类型的文件系统的差异，使得访问文件系统的系统调用不用关心底层的存储介质和文件系统类型，提高开发效率。
+`VFS`(Virtual File System)是文件系统的虚拟层,它不是一个实际的文件系统,而是一个异构文件系统之上的软件粘合层,为用户提供统一的类Unix文件操作接口.由于不同类型的文件系统接口不统一,若系统中有多个文件系统类型,访问不同的文件系统就需要使用不同的非标准接口.而通过在系统中添加VFS层,提供统一的抽象接口,屏蔽了底层异构类型的文件系统的差异,使得访问文件系统的系统调用不用关心底层的存储介质和文件系统类型,提高开发效率.
 
-`OpenHarmony`内核中，`VFS`框架是通过在内存中的树结构来实现的，树的每个结点都是一个`Vnode`结构体，父子结点的关系以`PathCache`结构体保存。`VFS`最主要的两个功能是：
+`OpenHarmony`内核中,`VFS`框架是通过在内存中的树结构来实现的,树的每个结点都是一个`Vnode`结构体,父子结点的关系以`PathCache`结构体保存.`VFS`最主要的两个功能是:
 
-* 查找节点。
-* 统一调用（标准）。
+* 查找节点.
+* 统一调用(标准).
 
 `VFS`层具体实现包括四个方面:
 
-* 通过三大函数指针操作接口，实现对不同文件系统类型调用不同接口实现标准接口功能；
-* 通过`Vnode`与`PathCache`机制，提升路径搜索以及文件访问的性能；
-* 通过挂载点管理进行分区管理；
-* 通过FD管理进行进程间FD隔离等。
+* 通过三大函数指针操作接口,实现对不同文件系统类型调用不同接口实现标准接口功能;
+* 通过`Vnode`与`PathCache`机制,提升路径搜索以及文件访问的性能;
+* 通过挂载点管理进行分区管理;
+* 通过FD管理进行进程间FD隔离等.
 
 ### 三大操作接口
 
-`VFS`层通过函数指针的形式，将统一调用按照不同的文件系统类型，分发到不同文件系统中进行底层操作。各文件系统的各自实现一套Vnode操作(`VnodeOps`)、挂载点操作(`MountOps`)以及文件操作接口(`file_operations_vfs`)，并以函数指针结构体的形式存储于对应`Vnode`、挂载点、`File`结构体中，实现`VFS`层对下访问。这三个接口分别为:
+`VFS`层通过函数指针的形式,将统一调用按照不同的文件系统类型,分发到不同文件系统中进行底层操作.各文件系统的各自实现一套Vnode操作(`VnodeOps`),挂载点操作(`MountOps`)以及文件操作接口(`file_operations_vfs`),并以函数指针结构体的形式存储于对应`Vnode`,挂载点,`File`结构体中,实现`VFS`层对下访问.这三个接口分别为:
 
 #### VnodeOps | 操作 Vnode 节点
 
 ```c
 struct VnodeOps {
-    int (*Create)(struct Vnode *parent， const char *name， int mode， struct Vnode **vnode);//创建节点
-    int (*Lookup)(struct Vnode *parent， const char *name， int len， struct Vnode **vnode);//查询节点
+    int (*Create)(struct Vnode *parent, const char *name, int mode, struct Vnode **vnode);//创建节点
+    int (*Lookup)(struct Vnode *parent, const char *name, int len, struct Vnode **vnode);//查询节点
     //Lookup向底层文件系统查找获取inode信息
-    int (*Open)(struct Vnode *vnode， int fd， int mode， int flags);//打开节点
+    int (*Open)(struct Vnode *vnode, int fd, int mode, int flags);//打开节点
     int (*Close)(struct Vnode *vnode);//关闭节点
     int (*Reclaim)(struct Vnode *vnode);//回收节点
-    int (*Unlink)(struct Vnode *parent， struct Vnode *vnode， const char *fileName);//取消硬链接
-    int (*Rmdir)(struct Vnode *parent， struct Vnode *vnode， const char *dirName);//删除目录节点
-    int (*Mkdir)(struct Vnode *parent， const char *dirName， mode_t mode， struct Vnode **vnode);//创建目录节点
+    int (*Unlink)(struct Vnode *parent, struct Vnode *vnode, const char *fileName);//取消硬链接
+    int (*Rmdir)(struct Vnode *parent, struct Vnode *vnode, const char *dirName);//删除目录节点
+    int (*Mkdir)(struct Vnode *parent, const char *dirName, mode_t mode, struct Vnode **vnode);//创建目录节点
     /*
-    创建一个目录时，实际做了3件事：在其“父目录文件”中增加一个条目；分配一个inode；再分配一个存储块，
-    用来保存当前被创建目录包含的文件与子目录。被创建的“目录文件”中自动生成两个子目录的条目，名称分别是：“.”和“..”。
-    前者与该目录具有相同的inode号码，因此是该目录的一个“硬链接”。后者的inode号码就是该目录的父目录的inode号码。
-    所以，任何一个目录的"硬链接"总数，总是等于它的子目录总数（含隐藏目录）加2。即每个“子目录文件”中的“..”条目，
-    加上它自身的“目录文件”中的“.”条目，再加上“父目录文件”中的对应该目录的条目。
+    创建一个目录时,实际做了3件事:在其"父目录文件"中增加一个条目;分配一个inode;再分配一个存储块,
+    用来保存当前被创建目录包含的文件与子目录.被创建的"目录文件"中自动生成两个子目录的条目,名称分别是:"."和"..".
+    前者与该目录具有相同的inode号码,因此是该目录的一个"硬链接".后者的inode号码就是该目录的父目录的inode号码.
+    所以,任何一个目录的"硬链接"总数,总是等于它的子目录总数(含隐藏目录)加2.即每个"子目录文件"中的".."条目,
+    加上它自身的"目录文件"中的"."条目,再加上"父目录文件"中的对应该目录的条目.
     */
-    int (*Readdir)(struct Vnode *vnode， struct fs_dirent_s *dir);//读目录节点
-    int (*Opendir)(struct Vnode *vnode， struct fs_dirent_s *dir);//打开目录节点
-    int (*Rewinddir)(struct Vnode *vnode， struct fs_dirent_s *dir);//定位目录节点
-    int (*Closedir)(struct Vnode *vnode， struct fs_dirent_s *dir);//关闭目录节点
-    int (*Getattr)(struct Vnode *vnode， struct stat *st);//获取节点属性
-    int (*Setattr)(struct Vnode *vnode， struct stat *st);//设置节点属性
-    int (*Chattr)(struct Vnode *vnode， struct IATTR *attr);//改变节点属性(change attr)
-    int (*Rename)(struct Vnode *src， struct Vnode *dstParent， const char *srcName， const char *dstName);//重命名
-    int (*Truncate)(struct Vnode *vnode， off_t len);//缩减或扩展大小
-    int (*Truncate64)(struct Vnode *vnode， off64_t len);//缩减或扩展大小
-    int (*Fscheck)(struct Vnode *vnode， struct fs_dirent_s *dir);//检查功能
-    int (*Link)(struct Vnode *src， struct Vnode *dstParent， struct Vnode **dst， const char *dstName);
-    int (*Symlink)(struct Vnode *parentVnode， struct Vnode **newVnode， const char *path， const char *target);
-    ssize_t (*Readlink)(struct Vnode *vnode， char *buffer， size_t bufLen);
+    int (*Readdir)(struct Vnode *vnode, struct fs_dirent_s *dir);//读目录节点
+    int (*Opendir)(struct Vnode *vnode, struct fs_dirent_s *dir);//打开目录节点
+    int (*Rewinddir)(struct Vnode *vnode, struct fs_dirent_s *dir);//定位目录节点
+    int (*Closedir)(struct Vnode *vnode, struct fs_dirent_s *dir);//关闭目录节点
+    int (*Getattr)(struct Vnode *vnode, struct stat *st);//获取节点属性
+    int (*Setattr)(struct Vnode *vnode, struct stat *st);//设置节点属性
+    int (*Chattr)(struct Vnode *vnode, struct IATTR *attr);//改变节点属性(change attr)
+    int (*Rename)(struct Vnode *src, struct Vnode *dstParent, const char *srcName, const char *dstName);//重命名
+    int (*Truncate)(struct Vnode *vnode, off_t len);//缩减或扩展大小
+    int (*Truncate64)(struct Vnode *vnode, off64_t len);//缩减或扩展大小
+    int (*Fscheck)(struct Vnode *vnode, struct fs_dirent_s *dir);//检查功能
+    int (*Link)(struct Vnode *src, struct Vnode *dstParent, struct Vnode **dst, const char *dstName);
+    int (*Symlink)(struct Vnode *parentVnode, struct Vnode **newVnode, const char *path, const char *target);
+    ssize_t (*Readlink)(struct Vnode *vnode, char *buffer, size_t bufLen);
 };
 ```
 
@@ -75,9 +75,9 @@ struct VnodeOps {
 ```c
 //挂载操作
 struct MountOps {
-    int (*Mount)(struct Mount *mount， struct Vnode *vnode， const void *data);//挂载
-    int (*Unmount)(struct Mount *mount， struct Vnode **blkdriver);//卸载
-    int (*Statfs)(struct Mount *mount， struct statfs *sbp);//统计文件系统的信息，如该文件系统类型、总大小、可用大小等信息
+    int (*Mount)(struct Mount *mount, struct Vnode *vnode, const void *data);//挂载
+    int (*Unmount)(struct Mount *mount, struct Vnode **blkdriver);//卸载
+    int (*Statfs)(struct Mount *mount, struct statfs *sbp);//统计文件系统的信息,如该文件系统类型,总大小,可用大小等信息
 };
 ```
 
@@ -88,28 +88,28 @@ struct file_operations_vfs
 {
   int     (*open)(struct file *filep); //打开文件
   int     (*close)(struct file *filep); //关闭文件
-  ssize_t (*read)(struct file *filep， char *buffer， size_t buflen); //读文件
-  ssize_t (*write)(struct file *filep， const char *buffer， size_t buflen);//写文件
-  off_t   (*seek)(struct file *filep， off_t offset， int whence);//寻找，检索 文件
-  int     (*ioctl)(struct file *filep， int cmd， unsigned long arg);//对文件的控制命令
-  int     (*mmap)(struct file* filep， struct VmMapRegion *region);//内存映射实现<文件/设备 - 线性区的映射>
+  ssize_t (*read)(struct file *filep, char *buffer, size_t buflen); //读文件
+  ssize_t (*write)(struct file *filep, const char *buffer, size_t buflen);//写文件
+  off_t   (*seek)(struct file *filep, off_t offset, int whence);//寻找,检索 文件
+  int     (*ioctl)(struct file *filep, int cmd, unsigned long arg);//对文件的控制命令
+  int     (*mmap)(struct file* filep, struct VmMapRegion *region);//内存映射实现<文件/设备 - 线性区的映射>
   /* The two structures need not be common after this point */
 
 #ifndef CONFIG_DISABLE_POLL
-  int     (*poll)(struct file *filep， poll_table *fds); //轮询接口
+  int     (*poll)(struct file *filep, poll_table *fds); //轮询接口
 #endif
-  int     (*stat)(struct file *filep， struct stat* st); //统计接口
-  int     (*fallocate)(struct file* filep， int mode， off_t offset， off_t len);
-  int     (*fallocate64)(struct file *filep， int mode， off64_t offset， off64_t len);
+  int     (*stat)(struct file *filep, struct stat* st); //统计接口
+  int     (*fallocate)(struct file* filep, int mode, off_t offset, off_t len);
+  int     (*fallocate64)(struct file *filep, int mode, off64_t offset, off64_t len);
   int     (*fsync)(struct file *filep);
-  ssize_t (*readpage)(struct file *filep， char *buffer， size_t buflen);
+  ssize_t (*readpage)(struct file *filep, char *buffer, size_t buflen);
   int     (*unlink)(struct Vnode *vnode);
 };
 ```
 
 ### PathCache | 路径缓存
 
-`PathCache`是路径缓存，它通过哈希表存储，利用父节点`Vnode`的地址和子节点的文件名，可以从`PathCache`中快速查找到子节点对应的`Vnode`。当前`PageCache`仅支持缓存二进制文件，在初次访问文件时通过`mmap`映射到内存中，下次再访问时，直接从`PageCache`中读取，可以提升对同一个文件的读写速度。另外基于`PageCache`可实现以文件为基底的进程间通信。下图展示了文件/目录的查找流程。
+`PathCache`是路径缓存,它通过哈希表存储,利用父节点`Vnode`的地址和子节点的文件名,可以从`PathCache`中快速查找到子节点对应的`Vnode`.当前`PageCache`仅支持缓存二进制文件,在初次访问文件时通过`mmap`映射到内存中,下次再访问时,直接从`PageCache`中读取,可以提升对同一个文件的读写速度.另外基于`PageCache`可实现以文件为基底的进程间通信.下图展示了文件/目录的查找流程.
 
 ![img](assets/58/search.png)
 
@@ -139,10 +139,10 @@ int PathCacheInit(void)
 
 ### 挂载点管理
 
-当前OpenHarmony内核中，对系统中所有挂载点通过链表进行统一管理。挂载点结构体中，记录了该挂载分区内的所有Vnode。当分区卸载时，会释放分区内的所有Vnode。
+当前OpenHarmony内核中,对系统中所有挂载点通过链表进行统一管理.挂载点结构体中,记录了该挂载分区内的所有Vnode.当分区卸载时,会释放分区内的所有Vnode.
 
 ```c
-static LIST_HEAD *g_mountList = NULL;//挂载链表，上面挂的是系统所有挂载点
+static LIST_HEAD *g_mountList = NULL;//挂载链表,上面挂的是系统所有挂载点
 struct Mount {
     LIST_ENTRY mountList;              /* mount list */    //通过本节点将Mount挂到全局Mount链表上
     const struct MountOps *ops;        /* operations of mount */ //挂载操作函数 
@@ -153,16 +153,16 @@ struct Mount {
     int vnodeSize;                     /* size of vnode list */ //节点数量
     LIST_HEAD activeVnodeList;         /* list of active vnodes */ //激活的节点链表
     int activeVnodeSize;               /* szie of active vnodes list *///激活的节点数量
-    void *data;                        /* private data */ //私有数据，可使用这个成员作为一个指向它们自己内部数据的指针
+    void *data;                        /* private data */ //私有数据,可使用这个成员作为一个指向它们自己内部数据的指针
     uint32_t hashseed;                 /* Random seed for vfs hash */ //vfs 哈希随机种子
     unsigned long mountFlags;          /* Flags for mount */ //挂载标签
     char pathName[PATH_MAX];           /* path name of mount point */ //挂载点路径名称  /bin1/vs/sd
     char devName[PATH_MAX];            /* path name of dev point */  //设备名称 /dev/mmcblk0p0
 };
 //分配一个挂载点
-struct Mount* MountAlloc(struct Vnode* vnodeBeCovered， struct MountOps* fsop)
+struct Mount* MountAlloc(struct Vnode* vnodeBeCovered, struct MountOps* fsop)
 {
-    struct Mount* mnt = (struct Mount*)zalloc(sizeof(struct Mount));//申请一个mount结构体内存，小内存分配用 zalloc
+    struct Mount* mnt = (struct Mount*)zalloc(sizeof(struct Mount));//申请一个mount结构体内存,小内存分配用 zalloc
     if (mnt == NULL) {
         PRINT_ERR("MountAlloc failed no memory!\n");
         return NULL;
@@ -172,7 +172,7 @@ struct Mount* MountAlloc(struct Vnode* vnodeBeCovered， struct MountOps* fsop)
     LOS_ListInit(&mnt->vnodeList);//初始化索引节点链表
 
     mnt->vnodeBeCovered = vnodeBeCovered;//设备将装载到vnodeBeCovered节点上
-    vnodeBeCovered->newMount = mnt;//该节点不再是虚拟节点，而作为 设备结点
+    vnodeBeCovered->newMount = mnt;//该节点不再是虚拟节点,而作为 设备结点
 #ifdef LOSCFG_DRIVERS_RANDOM //随机值 驱动模块
     HiRandomHwInit();//随机值初始化
     (VOID)HiRandomHwGetInteger(&mnt->hashseed);//用于生成哈希种子
@@ -186,31 +186,31 @@ struct Mount* MountAlloc(struct Vnode* vnodeBeCovered， struct MountOps* fsop)
 
 ### fd管理 | 两种描述符/句柄的关系
 
-Fd（File Descriptor）是描述一个打开的文件/目录的描述符。当前OpenHarmony内核中，fd总规格为896，分为三种类型：
+Fd(File Descriptor)是描述一个打开的文件/目录的描述符.当前OpenHarmony内核中,fd总规格为896,分为三种类型:
 
-* 普通文件描述符，系统总数量为512。
+* 普通文件描述符,系统总数量为512.
 
 ```c
 #define CONFIG_NFILE_DESCRIPTORS    512 // 系统文件描述符数量
 ```
 
-* Socket描述符，系统总规格为128。
+* Socket描述符,系统总规格为128.
   
 ```c
 #define LWIP_CONFIG_NUM_SOCKETS         128 //socket链接数量
 #define CONFIG_NSOCKET_DESCRIPTORS  LWIP_CONFIG_NUM_SOCKETS 
 ```
 
-* 消息队列描述符，系统总规格为256。
+* 消息队列描述符,系统总规格为256.
   
 ```c
 #define CONFIG_NQUEUE_DESCRIPTORS    256
 ```
 
-请记住，在OpenHarmony内核中，在不同的层面会有两种文件句柄::
+请记住,在OpenHarmony内核中,在不同的层面会有两种文件句柄::
 
-* 系统文件描述符(`sysfd`)，由内核统一管理，和进程描述符形成映射关系，一个`sysfd`可以被多个`profd`映射，也就是说打开一个文件只会占用一个`sysfd`，但可以占用多个`profd`，即一个文件被多个进程打开。
-* 进程文件描述符(`profd`)，由进程管理的叫进程文件描述符，内核对不同进程中的`fd`进行隔离，即进程只能访问本进程的`fd`。举例说明之间的关系:
+* 系统文件描述符(`sysfd`),由内核统一管理,和进程描述符形成映射关系,一个`sysfd`可以被多个`profd`映射,也就是说打开一个文件只会占用一个`sysfd`,但可以占用多个`profd`,即一个文件被多个进程打开.
+* 进程文件描述符(`profd`),由进程管理的叫进程文件描述符,内核对不同进程中的`fd`进行隔离,即进程只能访问本进程的`fd`.举例说明之间的关系:
 
 ```shell
 文件            sysfd     profd
@@ -220,11 +220,11 @@ Fd（File Descriptor）是描述一个打开的文件/目录的描述符。当�
 容嬷嬷被冤枉.txt    12    3(C进程)
 ```
 
-* 不同进程的相同`fd`往往指向不同的文件，但有三个`fd`例外
+* 不同进程的相同`fd`往往指向不同的文件,但有三个`fd`例外
   * `STDIN_FILENO(fd = 0)`   标准输入     接收键盘的输入
   * `STDOUT_FILENO(fd = 1)`   标准输出     向屏幕输出
   * `STDERR_FILENO(fd = 2)`  标准错误  向屏幕输出
-  `sysfd`和所有的`profd`的(0，1，2)号都是它们。熟知的 `printf` 就是向 `STDOUT_FILENO`中写入数据。
+  `sysfd`和所有的`profd`的(0,1,2)号都是它们.熟知的 `printf` 就是向 `STDOUT_FILENO`中写入数据.
 
 * 具体涉及结构体  
 
@@ -234,8 +234,8 @@ struct file_table_s {//进程fd <--> 系统FD绑定
 };//sysFd的默认值是-1
 struct fd_table_s {//进程fd表结构体
     unsigned int max_fds;//进程的文件描述符最多有256个
-    struct file_table_s *ft_fds; /* process fd array associate with system fd *///系统分配给进程的FD数组 ，fd 默认是 -1
-    fd_set *proc_fds; //进程fd管理位，用bitmap管理FD使用情况，默认打开了 0，1，2        (stdin，stdout，stderr)
+    struct file_table_s *ft_fds; /* process fd array associate with system fd *///系统分配给进程的FD数组 ,fd 默认是 -1
+    fd_set *proc_fds; //进程fd管理位,用bitmap管理FD使用情况,默认打开了 0,1,2        (stdin,stdout,stderr)
     fd_set *cloexec_fds;
     sem_t ft_sem; /* manage access to the file table */ //管理对文件表的访问的信号量
 };
@@ -246,29 +246,29 @@ struct files_struct {//进程文件表结构体
     unsigned int next_fd;   //下一个fd
     #ifdef VFS_USING_WORKDIR
     spinlock_t workdir_lock; //工作区目录自旋锁
-    char workdir[PATH_MAX];  //工作区路径，最大 256个字符
+    char workdir[PATH_MAX];  //工作区路径,最大 256个字符
     #endif
 };
 typedef struct ProcessCB {
     #ifdef LOSCFG_FS_VFS
-    struct files_struct *files;        /**< Files held by the process */ //进程所持有的所有文件，注者称之为进程的文件管理器
-    #endif //每个进程都有属于自己的文件管理器，记录对文件的操作。 注意:一个文件可以被多个进程操作
+    struct files_struct *files;        /**< Files held by the process */ //进程所持有的所有文件,注者称之为进程的文件管理器
+    #endif //每个进程都有属于自己的文件管理器,记录对文件的操作. 注意:一个文件可以被多个进程操作
 }
 ```
 
   **解读**
 
-  * 鸿蒙的每个进程`ProcessCB`都有属于自己的进程的文件描述符`files_struct`，该进程和文件系统有关的信息都由它表达。
-  * 搞清楚 `files_struct`，`fd_table_s`，`file_table_s`三个结构体的关系就明白了进度描述符和系统描述符的关系。
-  * `fd_table_s`是由`alloc_fd_table`分配的一个结构体数组，用于存放进程的文件描述符
+  * 鸿蒙的每个进程`ProcessCB`都有属于自己的进程的文件描述符`files_struct`,该进程和文件系统有关的信息都由它表达.
+  * 搞清楚 `files_struct`,`fd_table_s`,`file_table_s`三个结构体的关系就明白了进度描述符和系统描述符的关系.
+  * `fd_table_s`是由`alloc_fd_table`分配的一个结构体数组,用于存放进程的文件描述符
 
 ```c
-//分配进程文件表，初始化 fd_table_s 结构体中每个数据，包括系统FD(0，1，2)的绑定
+//分配进程文件表,初始化 fd_table_s 结构体中每个数据,包括系统FD(0,1,2)的绑定
 static struct fd_table_s * alloc_fd_table(unsigned int numbers)
 {
     struct fd_table_s *fdt;
     void *data;
-    fdt = LOS_MemAlloc(m_aucSysMem0， sizeof(struct fd_table_s));//申请内存
+    fdt = LOS_MemAlloc(m_aucSysMem0, sizeof(struct fd_table_s));//申请内存
     if (!fdt)
     {
         goto out;
@@ -280,30 +280,30 @@ static struct fd_table_s * alloc_fd_table(unsigned int numbers)
         fdt->proc_fds = NULL;
         return fdt;
     }
-    data = LOS_MemAlloc(m_aucSysMem0， numbers * sizeof(struct file_table_s));//这是和系统描述符的绑定
+    data = LOS_MemAlloc(m_aucSysMem0, numbers * sizeof(struct file_table_s));//这是和系统描述符的绑定
     if (!data)
     {
         goto out_fdt;
     }
-    fdt->ft_fds = data;//这其实是个 int[] 数组，
+    fdt->ft_fds = data;//这其实是个 int[] 数组,
     for (int i = STDERR_FILENO + 1; i < numbers; i++)
     {
-        fdt->ft_fds[i].sysFd = -1;//默认的系统描述符都为-1，即还没有和任何系统文件描述符绑定
+        fdt->ft_fds[i].sysFd = -1;//默认的系统描述符都为-1,即还没有和任何系统文件描述符绑定
     }
-    data = LOS_MemAlloc(m_aucSysMem0， sizeof(fd_set));//管理FD的 bitmap 
+    data = LOS_MemAlloc(m_aucSysMem0, sizeof(fd_set));//管理FD的 bitmap 
     if (!data)
     {
         goto out_arr;
     }
-    (VOID)memset_s(data， sizeof(fd_set)， 0， sizeof(fd_set));
+    (VOID)memset_s(data, sizeof(fd_set), 0, sizeof(fd_set));
     fdt->proc_fds = data;
-    alloc_std_fd(fdt);//分配标准的0，1，2系统文件描述符，这样做的结果是任务进程都可以写系统文件(0，1，2)
-    (void)sem_init(&fdt->ft_sem， 0， 1);//互斥量初始化
+    alloc_std_fd(fdt);//分配标准的0,1,2系统文件描述符,这样做的结果是任务进程都可以写系统文件(0,1,2)
+    (void)sem_init(&fdt->ft_sem, 0, 1);//互斥量初始化
     return fdt;
     out_arr:
-    (VOID)LOS_MemFree(m_aucSysMem0， fdt->ft_fds);
+    (VOID)LOS_MemFree(m_aucSysMem0, fdt->ft_fds);
     out_fdt:
-    (VOID)LOS_MemFree(m_aucSysMem0， fdt);
+    (VOID)LOS_MemFree(m_aucSysMem0, fdt);
     out:
     return NULL;
 }

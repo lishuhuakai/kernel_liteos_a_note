@@ -1,7 +1,7 @@
 
 进程管理相关篇为: 
 
-* [v11.04 鸿蒙内核源码分析(调度故事) | 大郎，该喝药了](/blog/11.md)
+* [v11.04 鸿蒙内核源码分析(调度故事) | 大郎,该喝药了](/blog/11.md)
 * [v12.03 鸿蒙内核源码分析(进程控制块) | 可怜天下父母心](/blog/12.md)
 * [v13.01 鸿蒙内核源码分析(进程空间) | 有爱的地方才叫家 ](/blog/13.md)
 * [v14.01 鸿蒙内核源码分析(线性区) | 人要有空间才能好好相处](/blog/14.md)
@@ -13,29 +13,29 @@
 * [v20.01 鸿蒙内核源码分析(Shell解析) | 应用窥伺内核的窗口](/blog/20.md)
 
 
-系列篇从内核视角用一句话概括`shell`的底层实现为：**两个任务，三个阶段**。其本质是独立进程，因而划到进程管理模块。每次创建`shell`进程都会再创建两个任务。
+系列篇从内核视角用一句话概括`shell`的底层实现为:**两个任务,三个阶段**.其本质是独立进程,因而划到进程管理模块.每次创建`shell`进程都会再创建两个任务.
 
-* **客户端任务(ShellEntry)：** 负责接受来自终端(控制台)敲入的一个个字符，字符按`VT`规范组装成一句句的命令。
-* **服务端任务(ShellTask)：** 对命令进行解析并执行，将结果输出到控制台。
+* **客户端任务(ShellEntry):** 负责接受来自终端(控制台)敲入的一个个字符,字符按`VT`规范组装成一句句的命令.
+* **服务端任务(ShellTask):** 对命令进行解析并执行,将结果输出到控制台.
 
-而按命令生命周期可分三个阶段。
+而按命令生命周期可分三个阶段.
 
-* **编辑：** 鸿蒙在这个部分实现了一个简单的编辑器功能，处理控制台输入的每个字符，主要包括了对控制字符 例如 `<ESC>`，`\t`，`\b`，`\n`，`\r`，四个方向键`0x41` ~ `0x44` 的处理。
-* **解析：** 对编辑后的字符串进行解析，解析出命令项和参数项，找到对应的命令项执行函数。
-* **执行：** 命令可通过静态和动态两种方式注册到内核，解析出具体命令后在注册表中找到对应函数回调。将结果输出到控制台。
+* **编辑:** 鸿蒙在这个部分实现了一个简单的编辑器功能,处理控制台输入的每个字符,主要包括了对控制字符 例如 `<ESC>`,`\t`,`\b`,`\n`,`\r`,四个方向键`0x41` ~ `0x44` 的处理.
+* **解析:** 对编辑后的字符串进行解析,解析出命令项和参数项,找到对应的命令项执行函数.
+* **执行:** 命令可通过静态和动态两种方式注册到内核,解析出具体命令后在注册表中找到对应函数回调.将结果输出到控制台.
 
-编辑部分由客户端任务完成，后两个部分由服务端任务完成，命令全局注册由内核完成。
+编辑部分由客户端任务完成,后两个部分由服务端任务完成,命令全局注册由内核完成.
 
 * 本篇主要说 **客户端任务** 和 **编辑过程**
-* **服务端任务** 和 **解析/执行过程** 已在[(Shell解析篇)](https://weharmony.gitee.io/blog/72.html)中说明，请自行翻看。
+* **服务端任务** 和 **解析/执行过程** 已在[(Shell解析篇)](https://weharmony.gitee.io/blog/72.html)中说明,请自行翻看.
 
 ### 什么是 Shell
 
-从用户视角看，`shell`是用户窥视和操作内核的一个窗口，内核并非铁板一块，对应用层开了两个窗口，一个是系统调用，一个就是`shell`，由内核提供实现函数，由用户提供参数执行。区别是 `shell`是由独立的任务去完成，可通过将`shell`命令序列化编写成独立的，简单的`shell`程序，所以`shell`也是一门脚本语言，系统调用是依附于应用程序的任务去完成，能做的有限。通过`shell`窗口能看到 `cpu`的运行情况，内存的消耗情况，网络的链接状态等等。
+从用户视角看,`shell`是用户窥视和操作内核的一个窗口,内核并非铁板一块,对应用层开了两个窗口,一个是系统调用,一个就是`shell`,由内核提供实现函数,由用户提供参数执行.区别是 `shell`是由独立的任务去完成,可通过将`shell`命令序列化编写成独立的,简单的`shell`程序,所以`shell`也是一门脚本语言,系统调用是依附于应用程序的任务去完成,能做的有限.通过`shell`窗口能看到 `cpu`的运行情况,内存的消耗情况,网络的链接状态等等.
 
 ### 鸿蒙 Shell 代码在哪
 
-与`shell`对应的概念是`kernel`，在鸿蒙内核，这两部分代码是分开放的，`shell`代码在 [查看 shell 代码](https://gitee.com/weharmony/kernel_liteos_a_note/tree/master/shell) ，目录结构如下。
+与`shell`对应的概念是`kernel`,在鸿蒙内核,这两部分代码是分开放的,`shell`代码在 [查看 shell 代码](https://gitee.com/weharmony/kernel_liteos_a_note/tree/master/shell) ,目录结构如下.
 
 ```
 ├─include
@@ -67,7 +67,7 @@
 
 ### Shell 控制块
 
-跟进程，任务一样，每个概念的背后需要一个主结构体来的支撑，`shell`的主结构体就是`ShellCB`，掌握它就可以将`shell`拿捏的死死的，搞不懂这个结构体就读不懂`shell`的内核实现。所以在上面花再多功夫也不为过。
+跟进程,任务一样,每个概念的背后需要一个主结构体来的支撑,`shell`的主结构体就是`ShellCB`,掌握它就可以将`shell`拿捏的死死的,搞不懂这个结构体就读不懂`shell`的内核实现.所以在上面花再多功夫也不为过.
 
 ```c
 typedef struct {
@@ -75,56 +75,56 @@ typedef struct {
     UINT32   shellTaskHandle; //shell服务端任务ID
     UINT32   shellEntryHandle; //shell客户端任务ID
     VOID     *cmdKeyLink;  //待处理的shell命令链表
-    VOID     *cmdHistoryKeyLink;//已处理的历史记录链表，去重，10个
+    VOID     *cmdHistoryKeyLink;//已处理的历史记录链表,去重,10个
     VOID     *cmdMaskKeyLink; //主要用于方向键上下遍历历史命令
     UINT32   shellBufOffset; //buf偏移量
     UINT32   shellKeyType; //按键类型
     EVENT_CB_S shellEvent; //事件类型触发
     pthread_mutex_t keyMutex; //按键互斥量
     pthread_mutex_t historyMutex; //历史记录互斥量
-    CHAR     shellBuf[SHOW_MAX_LEN]; //shell命令buf，接受键盘的输入，需要对输入字符解析。
+    CHAR     shellBuf[SHOW_MAX_LEN]; //shell命令buf,接受键盘的输入,需要对输入字符解析.
     CHAR     shellWorkingDirectory[PATH_MAX];//shell的工作目录
 } ShellCB;
-//一个shell命令的结构体，命令有长有短，鸿蒙采用了可变数组的方式实现
+//一个shell命令的结构体,命令有长有短,鸿蒙采用了可变数组的方式实现
 typedef struct {
     UINT32 count; //字符数量
     LOS_DL_LIST list; //双向链表
-    CHAR cmdString[0]; //字符串，可变数组的一种实现方式。
+    CHAR cmdString[0]; //字符串,可变数组的一种实现方式.
 } CmdKeyLink;
 
 enum {
-    STAT_NOMAL_KEY， //普通的按键
-    STAT_ESC_KEY， //<ESC>键在VT控制规范中时控制的起始键
+    STAT_NOMAL_KEY, //普通的按键
+    STAT_ESC_KEY, //<ESC>键在VT控制规范中时控制的起始键
     STAT_MULTI_KEY //组合键
 };
 ```
 
 **解读**
 
-* 鸿蒙支持两种方式在控制台输入`Shell`命令，关于控制台请自行翻看控制台篇。
-  * 在串口工具中直接输入`Shell`命令 `CONSOLE_SERIAL`。
-  * 在`telnet`工具中输入`Shell`命令 `CONSOLE_TELNET`。
-* `shellTaskHandle`和`shellEntryHandle`编辑/处理`shell`命令的两个任务ID，本篇重点说后一个。
-* `cmdKeyLink`，`cmdHistoryKeyLink`，`cmdMaskKeyLink`是三个类型为`CmdKeyLink`的结构体，本质是双向链表，对应编辑`shell`命令过程中的三个功能。
+* 鸿蒙支持两种方式在控制台输入`Shell`命令,关于控制台请自行翻看控制台篇.
+  * 在串口工具中直接输入`Shell`命令 `CONSOLE_SERIAL`.
+  * 在`telnet`工具中输入`Shell`命令 `CONSOLE_TELNET`.
+* `shellTaskHandle`和`shellEntryHandle`编辑/处理`shell`命令的两个任务ID,本篇重点说后一个.
+* `cmdKeyLink`,`cmdHistoryKeyLink`,`cmdMaskKeyLink`是三个类型为`CmdKeyLink`的结构体,本质是双向链表,对应编辑`shell`命令过程中的三个功能.
   * `cmdKeyLink` 待执行的命令链表
-  * `cmdHistoryKeyLink` 存储命令历史记录的，即: `history`命令显示的内容
-  * `cmdMaskKeyLink` 记录按上下方向键输出的内容，这个有点难理解，自行在`shell`中按上下方向键自行体验
-* `shellBufOffset`和`shellBuf`是成对出现的，其中存放的就是用户敲入处理后的字符。
-* `keyMutex`和`historyMutex`为操作链表所需的互斥锁，内核用的最多的就是这类锁。
-* `shellEvent`用于任务之间的通讯，比如。
+  * `cmdHistoryKeyLink` 存储命令历史记录的,即: `history`命令显示的内容
+  * `cmdMaskKeyLink` 记录按上下方向键输出的内容,这个有点难理解,自行在`shell`中按上下方向键自行体验
+* `shellBufOffset`和`shellBuf`是成对出现的,其中存放的就是用户敲入处理后的字符.
+* `keyMutex`和`historyMutex`为操作链表所需的互斥锁,内核用的最多的就是这类锁.
+* `shellEvent`用于任务之间的通讯,比如.
   * `SHELL_CMD_PARSE_EVENT`:编辑完成了通知解析任务开始执行
-  * `CONSOLE_SHELL_KEY_EVENT`:收到来自控制台的`CTRL + C`信号产生的事件。
-* `shellKeyType` 按键的类型，分三种 普通，<ESC>键，组合键
-* `shellWorkingDirectory` 工作区就不用说了，从哪个目录进入`shell`的
+  * `CONSOLE_SHELL_KEY_EVENT`:收到来自控制台的`CTRL + C`信号产生的事件.
+* `shellKeyType` 按键的类型,分三种 普通,<ESC>键,组合键
+* `shellWorkingDirectory` 工作区就不用说了,从哪个目录进入`shell`的
 
 ### 创建 Shell
 
 ```c
 //shell进程的入口函数
-int main(int argc， char **argv)
+int main(int argc, char **argv)
 {
     //...
-    g_shellCB = shellCB;//全局变量，说明鸿蒙同时只支持一个shell进程
+    g_shellCB = shellCB;//全局变量,说明鸿蒙同时只支持一个shell进程
     return OsShellCreateTask(shellCB);//初始化两个任务
 }
 //创建shell任务
@@ -136,7 +136,7 @@ STATIC UINT32 OsShellCreateTask(ShellCB *shellCB)
     }
     return ShellEntryInit(shellCB);//通过控制台接收shell命令的任务初始化
 }
-//进入shell客户端任务初始化，这个任务负责编辑命令，处理命令产生的过程，例如如何处理方向键，退格键，回车键等
+//进入shell客户端任务初始化,这个任务负责编辑命令,处理命令产生的过程,例如如何处理方向键,退格键,回车键等
 LITE_OS_SEC_TEXT_MINOR UINT32 ShellEntryInit(ShellCB *shellCB)
 {
     UINT32 ret;
@@ -158,9 +158,9 @@ LITE_OS_SEC_TEXT_MINOR UINT32 ShellEntryInit(ShellCB *shellCB)
     initParam.pcName       = name;
     initParam.uwResved     = LOS_TASK_STATUS_DETACHED;
 
-    ret = LOS_TaskCreate(&shellCB->shellEntryHandle， &initParam);//创建任务
+    ret = LOS_TaskCreate(&shellCB->shellEntryHandle, &initParam);//创建任务
 #ifdef LOSCFG_PLATFORM_CONSOLE
-    (VOID)ConsoleTaskReg((INT32)shellCB->consoleID， shellCB->shellEntryHandle);//将任务注册到控制台
+    (VOID)ConsoleTaskReg((INT32)shellCB->consoleID, shellCB->shellEntryHandle);//将任务注册到控制台
 #endif
 
     return ret;
@@ -169,10 +169,10 @@ LITE_OS_SEC_TEXT_MINOR UINT32 ShellEntryInit(ShellCB *shellCB)
 
 **解读**
 
-* `main`为`shell`进程的主任务，每个进程都会创建一个默认的线程(任务)，这个任务的入口函数就是大家熟知的`main`函数，不清楚的自行翻看任务管理各篇有详细的说明。
-* 由`main`任务再创建两个任务，即本篇开头说的两个任务，本篇重点说其中的一个 `ShellEntry`，任务优先级为`9`，算是较高优先级。
-* 指定内核栈大小为`0x1000 = 4K` ，因任务只负责编辑处理控制台输入的字符，命令的执行在其他任务，所以4K的内核空间足够使用。
-* `ShellEntry`为入口函数，这个函数的实现为本篇的重点
+* `main`为`shell`进程的主任务,每个进程都会创建一个默认的线程(任务),这个任务的入口函数就是大家熟知的`main`函数,不清楚的自行翻看任务管理各篇有详细的说明.
+* 由`main`任务再创建两个任务,即本篇开头说的两个任务,本篇重点说其中的一个 `ShellEntry`,任务优先级为`9`,算是较高优先级.
+* 指定内核栈大小为`0x1000 = 4K` ,因任务只负责编辑处理控制台输入的字符,命令的执行在其他任务,所以4K的内核空间足够使用.
+* `ShellEntry`为入口函数,这个函数的实现为本篇的重点
 
 ### ShellEntry | 编辑过程
 
@@ -189,16 +189,16 @@ LITE_OS_SEC_TEXT_MINOR UINT32 ShellEntry(UINTPTR param)
         return 1;
     }
 
-    (VOID)memset_s(shellCB->shellBuf， SHOW_MAX_LEN， 0， SHOW_MAX_LEN);//重置shell命令buf
+    (VOID)memset_s(shellCB->shellBuf, SHOW_MAX_LEN, 0, SHOW_MAX_LEN);//重置shell命令buf
 
     while (1) {
 #ifdef LOSCFG_PLATFORM_CONSOLE
         if (!IsConsoleOccupied(consoleCB)) {//控制台是否被占用
 #endif
             /* is console ready for shell ？ */
-            n = read(consoleCB->fd， &ch， 1);//从控制台读取一个字符内容，字符一个个处理
+            n = read(consoleCB->fd, &ch, 1);//从控制台读取一个字符内容,字符一个个处理
             if (n == 1) {//如果能读到一个字符
-                ShellCmdLineParse(ch， (pf_OUTPUT)dprintf， shellCB);
+                ShellCmdLineParse(ch, (pf_OUTPUT)dprintf, shellCB);
             }
             if (is_nonblock(consoleCB)) {//在非阻塞模式下暂停 50ms
                 LOS_Msleep(50); /* 50: 50MS for sleep */
@@ -209,13 +209,13 @@ LITE_OS_SEC_TEXT_MINOR UINT32 ShellEntry(UINTPTR param)
     }
 }
 //对命令行内容解析
-LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， ShellCB *shellCB)
+LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c, pf_OUTPUT outputFunc, ShellCB *shellCB)
 {
     const CHAR ch = c;
     INT32 ret;
- 	//不是回车键和字符串结束，且偏移量为0
+ 	//不是回车键和字符串结束,且偏移量为0
     if ((shellCB->shellBufOffset == 0) && (ch != '\n') && (ch != '\0')) {
-        (VOID)memset_s(shellCB->shellBuf， SHOW_MAX_LEN， 0， SHOW_MAX_LEN);//重置buf
+        (VOID)memset_s(shellCB->shellBuf, SHOW_MAX_LEN, 0, SHOW_MAX_LEN);//重置buf
     }
  	//遇到回车或换行
     if ((ch == '\r') || (ch == '\n')) {
@@ -224,7 +224,7 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
         }
         shellCB->shellBufOffset = 0;
         (VOID)pthread_mutex_lock(&shellCB->keyMutex);
-        OsShellCmdPush(shellCB->shellBuf， shellCB->cmdKeyLink);//解析回车或换行
+        OsShellCmdPush(shellCB->shellBuf, shellCB->cmdKeyLink);//解析回车或换行
         (VOID)pthread_mutex_unlock(&shellCB->keyMutex);
         ShellNotify(shellCB);//通知任务解析shell命令
         return;
@@ -237,15 +237,15 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
         return;
     } else if (ch == 0x09) { /* 0x09: tab *///遇到tab键
         if ((shellCB->shellBufOffset > 0) && (shellCB->shellBufOffset < (SHOW_MAX_LEN - 1))) {
-            ret = OsTabCompletion(shellCB->shellBuf， &shellCB->shellBufOffset);//解析tab键
+            ret = OsTabCompletion(shellCB->shellBuf, &shellCB->shellBufOffset);//解析tab键
             if (ret > 1) {
-                outputFunc("OHOS # %s"， shellCB->shellBuf);//回调入参函数
+                outputFunc("OHOS # %s", shellCB->shellBuf);//回调入参函数
             }
         }
         return;
     }
     /* parse the up/down/right/left key */
-    ret = ShellCmdLineCheckUDRL(ch， shellCB);//解析上下左右键
+    ret = ShellCmdLineCheckUDRL(ch, shellCB);//解析上下左右键
     if (ret == LOS_OK) {
         return;
     }
@@ -257,7 +257,7 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
             shellCB->shellBuf[SHOW_MAX_LEN - 1] = '\0';//加入字符串结束符
         }
         shellCB->shellBufOffset++;//偏移量增加
-        outputFunc("%c"， ch);//向终端输出字符
+        outputFunc("%c", ch);//向终端输出字符
     }
     shellCB->shellKeyType = STAT_NOMAL_KEY;//普通字符
 }
@@ -265,11 +265,11 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
 
 **解读**
 
-* `ShellEntry`内部是个死循环，不断的读取控制台输入的每个字符，注意是按字符处理。
-* 处理四个方向，换行回车，`tab`，`backspace`，`delete`，`esc` 等控制键，相当于重新认识了下`Ascii`表。可以把`shell`终端理解为一个简单的编辑器。
-  * 按回车键 表示完成前面的输入，进入解析执行阶段。
-  * 按方向键 要显示上/下一个命令的内容，一直按就一直显示上上/下下命令。
-  * 按`tab`键 是要补齐命令的内容，目前鸿蒙支持如下命令:
+* `ShellEntry`内部是个死循环,不断的读取控制台输入的每个字符,注意是按字符处理.
+* 处理四个方向,换行回车,`tab`,`backspace`,`delete`,`esc` 等控制键,相当于重新认识了下`Ascii`表.可以把`shell`终端理解为一个简单的编辑器.
+  * 按回车键 表示完成前面的输入,进入解析执行阶段.
+  * 按方向键 要显示上/下一个命令的内容,一直按就一直显示上上/下下命令.
+  * 按`tab`键 是要补齐命令的内容,目前鸿蒙支持如下命令:
 
 ```
         arp           cat           cd            chgrp         chmod         chown         cp            cpup          
@@ -287,8 +287,8 @@ LITE_OS_SEC_TEXT_MINOR VOID ShellCmdLineParse(CHAR c， pf_OUTPUT outputFunc， 
     chgrp         chmod         chown
 ```
 
-内容，这些功能对使用者而已看似再平常不过，但都需要内核一一实现。
-* `shellBuf`存储编辑结果，当按下回车键时，将结果保存并交付给下一个阶段使用。
+内容,这些功能对使用者而已看似再平常不过,但都需要内核一一实现.
+* `shellBuf`存储编辑结果,当按下回车键时,将结果保存并交付给下一个阶段使用.
 
 
 

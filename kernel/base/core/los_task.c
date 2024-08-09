@@ -1128,7 +1128,9 @@ LITE_OS_SEC_TEXT UINT32 LOS_TaskDelay(UINT32 tick)
     SCHEDULER_UNLOCK(intSave);
     return ret;
 }
-///获取任务的优先级
+/*!
+ * 获取任务的优先级
+ */
 LITE_OS_SEC_TEXT_MINOR UINT16 LOS_TaskPriGet(UINT32 taskID)
 {
     UINT32 intSave;
