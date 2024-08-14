@@ -1,0 +1,65 @@
+root {
+    device_info {
+        match_attr = "hdf_manager";
+
+        template host {                    
+            hostName = "";
+            priority = 100;
+            template device{
+                template deviceNode {
+                    policy = 0;
+                    priority = 100;
+                    preload = 0;
+                    permission = 0664;
+                    moduleName = "";
+                    serviceName = "";
+                    deviceMatchAttr = "";
+                }
+            }
+        }
+
+        sample_host :: host {
+            hostName = "sample_host";
+            sample_device :: device {
+                device0 :: deviceNode {
+                    policy = 2;
+                    priority = 100;
+                    preload = 1;
+                    permission = 0664;
+                    moduleName = "sample_driver";
+                    serviceName = "sample_service";
+                }
+            }
+        }
+
+       platform :: host {
+            hostName = "platform_host";
+            priority = 50;
+
+           device_hello :: device {
+                device0 :: deviceNode {
+                    policy = 2;
+                    priority = 50;
+                    permission = 0644;
+                    moduleName = "HDF_PLATFORM_HELLO";
+                    serviceName = "hello_service";
+                }
+            }
+
+            device_i2c :: device {
+                device0 :: deviceNode {
+                    policy = 1;
+                    priority = 50;
+                    permission = 0644;
+                    moduleName = "HDF_PLATFORM_I2C";
+                    serviceName = "HDF_PLATFORM_I2C_0";
+                    deviceMatchAttr = "nxp_imx6ull_i2c_0";
+                }
+            }
+        }
+        storage :: host {
+        }
+        media :: host {
+        }
+    }
+}
